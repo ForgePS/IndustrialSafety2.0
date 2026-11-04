@@ -29,9 +29,13 @@ describe("courseContentRequirementMet", () => {
 
   it("keeps self-paced quizzes locked until required sections are done", () => {
     const course = { contentDelivery: "SELF_PACED" as const, sections: [videoSection] };
-    expect(courseContentRequirementMet({ ...course, progress: { quizAvailable: false } })).toBe(false);
+    expect(courseContentRequirementMet({ ...course, progress: { quizAvailable: false } })).toBe(
+      false,
+    );
     expect(courseContentRequirementMet({ ...course, progress: null })).toBe(false);
-    expect(courseContentRequirementMet({ ...course, progress: { quizAvailable: true } })).toBe(true);
+    expect(courseContentRequirementMet({ ...course, progress: { quizAvailable: true } })).toBe(
+      true,
+    );
   });
 
   it("treats older assignments with no delivery value as self-paced", () => {
@@ -40,7 +44,10 @@ describe("courseContentRequirementMet", () => {
 
   it("does not require anything when no sections are required", () => {
     expect(
-      courseContentRequirementMet({ sections: [{ ...videoSection, required: false }], progress: null }),
+      courseContentRequirementMet({
+        sections: [{ ...videoSection, required: false }],
+        progress: null,
+      }),
     ).toBe(true);
   });
 });

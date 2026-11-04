@@ -535,11 +535,7 @@ export class IndustrialTrainingAssignmentsService {
         feedbackEnabled: body.feedbackEnabled !== false,
         timerSeconds: body.timerSeconds == null ? null : Number(body.timerSeconds),
         contentDelivery,
-        contentPresentedAt: parseContentPresentedAt(
-          contentDelivery,
-          body.contentPresentedAt,
-          now,
-        ),
+        contentPresentedAt: parseContentPresentedAt(contentDelivery, body.contentPresentedAt, now),
         status: "ACTIVE",
         createdByUserId: principal.userId,
         createdAt: now,

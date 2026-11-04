@@ -335,10 +335,7 @@ export class NerisIncidentsService {
             eq(nerisIncidentFieldValues.incidentId, incidentId),
           ),
         )
-        .orderBy(
-          nerisIncidentFieldValues.sectionKey,
-          nerisIncidentFieldValues.createdAt,
-        );
+        .orderBy(nerisIncidentFieldValues.sectionKey, nerisIncidentFieldValues.createdAt);
     });
   }
 
