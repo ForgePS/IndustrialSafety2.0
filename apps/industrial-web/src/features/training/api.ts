@@ -3,6 +3,7 @@ import { fetchAllPersonnelRows } from "@/lib/personnel-roster-fetch";
 import type {
   QuizSettings,
   TrainingAssignment,
+  TrainingContentDelivery,
   TrainingGroup,
   TrainingMaterial,
   TrainingQuestion,
@@ -464,6 +465,8 @@ export const trainingApi = {
     optionCount?: number;
     feedbackEnabled?: boolean;
     timerSeconds?: number | null;
+    contentDelivery?: TrainingContentDelivery;
+    contentPresentedAt?: string | null;
     assigneeEmployeeNumbers?: string[];
     groupIds?: string[];
   }) => apiSend<TrainingAssignment>("/api/v1/industrial/training/assignments", "POST", body),
@@ -479,6 +482,8 @@ export const trainingApi = {
       optionCount?: number;
       feedbackEnabled?: boolean;
       timerSeconds?: number | null;
+      contentDelivery?: TrainingContentDelivery;
+      contentPresentedAt?: string | null;
       assigneeEmployeeNumbers?: string[];
     },
   ) =>

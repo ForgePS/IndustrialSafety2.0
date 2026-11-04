@@ -129,6 +129,8 @@ export type TrainingGroup = {
   updatedAt?: string;
 };
 
+export type TrainingContentDelivery = "SELF_PACED" | "GROUP_PRESENTED";
+
 export type TrainingAssignment = {
   id: string;
 
@@ -153,6 +155,11 @@ export type TrainingAssignment = {
   feedbackEnabled: boolean;
 
   timerSeconds?: number | null;
+
+  /** SELF_PACED, or GROUP_PRESENTED when an instructor showed the content and assignees only take the quiz. */
+  contentDelivery?: TrainingContentDelivery;
+
+  contentPresentedAt?: string | null;
 
   status: string;
 

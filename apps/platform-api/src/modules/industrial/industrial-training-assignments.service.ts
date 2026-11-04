@@ -26,6 +26,7 @@ import {
   indexByEmployeeNumberAliases,
 } from "./employee-number.js";
 import { notifyTrainingAssigned } from "./notify-training-assigned.js";
+import { parseContentDelivery, parseContentPresentedAt } from "./industrial-training-delivery.js";
 import { qrCodePngBuffer } from "./qr-svg.js";
 import { IndustrialTrainingLmsService } from "./industrial-training-lms.service.js";
 
@@ -469,12 +470,15 @@ export class IndustrialTrainingAssignmentsService {
       optionCount?: number;
       feedbackEnabled?: boolean;
       timerSeconds?: number | null;
+      contentDelivery?: string;
+      contentPresentedAt?: string | null;
       assigneeEmployeeNumbers?: string[];
       groupIds?: string[];
     },
   ) {
     const tenantId = this.tenant(principal);
     const title = String(body.title ?? "").trim();
+    const contentDelivery = parseContentDelivery(body.contentDelivery);
     const sourceId = String(body.sourceId ?? "").trim();
     if (!title) throw new ForgeError("VALIDATION_FAILED", "title is required");
     if (!sourceId) throw new ForgeError("VALIDATION_FAILED", "sourceId is required");
@@ -530,6 +534,12 @@ export class IndustrialTrainingAssignmentsService {
         optionCount,
         feedbackEnabled: body.feedbackEnabled !== false,
         timerSeconds: body.timerSeconds == null ? null : Number(body.timerSeconds),
+        contentDelivery,
+        contentPresentedAt: parseContentPresentedAt(
+          contentDelivery,
+          body.contentPresentedAt,
+          now,
+        ),
         status: "ACTIVE",
         createdByUserId: principal.userId,
         createdAt: now,
@@ -586,6 +596,8 @@ export class IndustrialTrainingAssignmentsService {
       optionCount?: number;
       feedbackEnabled?: boolean;
       timerSeconds?: number | null;
+      contentDelivery?: string;
+      contentPresentedAt?: string | null;
       assigneeEmployeeNumbers?: string[];
     },
   ) {
@@ -631,6 +643,20 @@ export class IndustrialTrainingAssignmentsService {
       }
       if (body.timerSeconds !== undefined) {
         patch.timerSeconds = body.timerSeconds == null ? null : Number(body.timerSeconds);
+      }
+      if (body.contentDelivery !== undefined || body.contentPresentedAt !== undefined) {
+        const delivery =
+          body.contentDelivery !== undefined
+            ? parseContentDelivery(body.contentDelivery)
+            : parseContentDelivery(existing.contentDelivery);
+        patch.contentDelivery = delivery;
+        patch.contentPresentedAt = parseContentPresentedAt(
+          delivery,
+          body.contentPresentedAt !== undefined
+            ? body.contentPresentedAt
+            : existing.contentPresentedAt?.toISOString(),
+          now,
+        );
       }
 
       await tx
@@ -1099,6 +1125,8 @@ export class IndustrialTrainingAssignmentsService {
         optionCount: row.optionCount,
         feedbackEnabled: row.feedbackEnabled,
         timerSeconds: row.timerSeconds,
+        contentDelivery: row.contentDelivery,
+        contentPresentedAt: row.contentPresentedAt,
         status: row.status,
         assigneeCount: mine.length,
         completedCount: done,

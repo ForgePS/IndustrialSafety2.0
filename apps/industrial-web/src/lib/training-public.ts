@@ -94,7 +94,26 @@ export type PublicCoursePlayer = {
   assigneeStatus: string;
   bestPercent?: number | null;
   material?: PublicCourseMaterial | null;
+  /** GROUP_PRESENTED: content was shown to the group, so sections are optional review. */
+  contentDelivery?: "SELF_PACED" | "GROUP_PRESENTED" | null;
+  contentPresentedAt?: string | null;
 };
+
+export function isGroupPresented(course: Pick<PublicCoursePlayer, "contentDelivery">): boolean {
+  return course.contentDelivery === "GROUP_PRESENTED";
+}
+
+/**
+ * Whether the learner has met the course-content requirement for the quiz.
+ * Group-presented assignments skip it; self-paced ones need every required section done.
+ */
+export function courseContentRequirementMet(
+  course: Pick<PublicCoursePlayer, "contentDelivery" | "sections" | "progress">,
+): boolean {
+  if (isGroupPresented(course)) return true;
+  if (!course.sections.length || !course.sections.some((s) => s.required)) return true;
+  return Boolean(course.progress?.quizAvailable);
+}
 
 export function resolveTrainingPublicToken(input: {
   pathname?: string | null | undefined;

@@ -5,6 +5,7 @@ import { ApiError } from "@forge/web-kit";
 import { trainingApi } from "@/features/training/api";
 import type {
   TrainingAssignment,
+  TrainingContentDelivery,
   TrainingGroup,
   TrainingMaterial,
   TrainingSource,
@@ -43,9 +44,17 @@ const emptyAssignmentForm = () => ({
   optionCount: 4,
   feedbackEnabled: true,
   timerSeconds: 0,
+  contentDelivery: "SELF_PACED" as TrainingContentDelivery,
+  /** yyyy-mm-dd; only used for GROUP_PRESENTED. */
+  contentPresentedAt: localDateInputValue(new Date()),
   assigneeEmployeeNumbers: [] as string[],
   groupIds: [] as string[],
 });
+
+function localDateInputValue(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
 
 export type AgencySection =
   | "dashboard"
@@ -396,6 +405,11 @@ export function TrainingAgencyPanel({
       optionCount: assignment.optionCount || 4,
       feedbackEnabled: assignment.feedbackEnabled !== false,
       timerSeconds: assignment.timerSeconds ?? 0,
+      contentDelivery:
+        assignment.contentDelivery === "GROUP_PRESENTED" ? "GROUP_PRESENTED" : "SELF_PACED",
+      contentPresentedAt: assignment.contentPresentedAt
+        ? localDateInputValue(new Date(assignment.contentPresentedAt))
+        : localDateInputValue(new Date()),
       assigneeEmployeeNumbers: (assignment.assignees ?? [])
         .map((a) => a.employeeNumber?.trim())
         .filter((n): n is string => Boolean(n)),
@@ -439,6 +453,12 @@ export function TrainingAgencyPanel({
       optionCount: assignmentForm.optionCount,
       feedbackEnabled: assignmentForm.feedbackEnabled,
       timerSeconds: assignmentForm.timerSeconds > 0 ? assignmentForm.timerSeconds : null,
+      contentDelivery: assignmentForm.contentDelivery,
+      contentPresentedAt:
+        assignmentForm.contentDelivery === "GROUP_PRESENTED" && assignmentForm.contentPresentedAt
+          ? // Noon local time keeps the stored date on the chosen day in any US timezone.
+            new Date(`${assignmentForm.contentPresentedAt}T12:00:00`).toISOString()
+          : null,
       assigneeEmployeeNumbers: assignmentForm.assigneeEmployeeNumbers,
       groupIds: assignmentForm.groupIds,
     };
@@ -1233,6 +1253,56 @@ export function TrainingAgencyPanel({
                       Show feedback
                     </label>
                   </div>
+                </div>
+                <div className="col-12">
+                  <div className="form-label mb-1">Course content</div>
+                  <div className="form-check">
+                    <input
+                      id="assign-delivery-self"
+                      type="radio"
+                      name="assign-delivery"
+                      className="form-check-input"
+                      checked={assignmentForm.contentDelivery === "SELF_PACED"}
+                      onChange={() =>
+                        setAssignmentForm((p) => ({ ...p, contentDelivery: "SELF_PACED" }))
+                      }
+                    />
+                    <label className="form-check-label" htmlFor="assign-delivery-self">
+                      Self-paced — each person views the course content before taking the quiz
+                    </label>
+                  </div>
+                  <div className="form-check">
+                    <input
+                      id="assign-delivery-group"
+                      type="radio"
+                      name="assign-delivery"
+                      className="form-check-input"
+                      checked={assignmentForm.contentDelivery === "GROUP_PRESENTED"}
+                      onChange={() =>
+                        setAssignmentForm((p) => ({ ...p, contentDelivery: "GROUP_PRESENTED" }))
+                      }
+                    />
+                    <label className="form-check-label" htmlFor="assign-delivery-group">
+                      Group presentation — content was shown to the group; each person only takes
+                      the quiz
+                    </label>
+                  </div>
+                  {assignmentForm.contentDelivery === "GROUP_PRESENTED" ? (
+                    <div className="mt-2" style={{ maxWidth: 240 }}>
+                      <label className="form-label small mb-1" htmlFor="assign-presented-at">
+                        Presented on
+                      </label>
+                      <input
+                        id="assign-presented-at"
+                        type="date"
+                        className="form-control form-control-sm"
+                        value={assignmentForm.contentPresentedAt}
+                        onChange={(e) =>
+                          setAssignmentForm((p) => ({ ...p, contentPresentedAt: e.target.value }))
+                        }
+                      />
+                    </div>
+                  ) : null}
                 </div>
                 <div className="col-md-6">
                   <div className="form-label">Assign to personnel</div>

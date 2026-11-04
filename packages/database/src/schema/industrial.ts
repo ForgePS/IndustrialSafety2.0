@@ -1450,6 +1450,9 @@ export const industrialTrainingAssignments = pgTable(
     optionCount: integer("option_count").notNull().default(4),
     feedbackEnabled: boolean("feedback_enabled").notNull().default(true),
     timerSeconds: integer("timer_seconds"),
+    /** SELF_PACED (assignee works through the course) or GROUP_PRESENTED (quiz only). */
+    contentDelivery: varchar("content_delivery", { length: 32 }).notNull().default("SELF_PACED"),
+    contentPresentedAt: timestamp("content_presented_at", { withTimezone: true }),
     status: varchar("status", { length: 64 }).notNull().default("ACTIVE"),
     publicTokenHash: varchar("public_token_hash", { length: 128 }),
     publicTokenIssuedAt: timestamp("public_token_issued_at", { withTimezone: true }),

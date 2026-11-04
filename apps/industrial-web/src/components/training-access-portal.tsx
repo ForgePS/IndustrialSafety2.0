@@ -5,9 +5,11 @@ import { ApiError, apiGet, apiSend } from "@forge/web-kit";
 import { TenantBrandHeader } from "@/components/tenant-brand-header";
 import {
   clearStoredPortalSession,
+  courseContentRequirementMet,
   defaultEmployeeNumberInput,
   formatClock,
   isEmployeeNumberComplete,
+  isGroupPresented,
   letterFor,
   readStoredPortalSession,
   updateEmployeeNumberInput,
@@ -926,6 +928,15 @@ export function TrainingAccessPortalForm({ token }: { token: string }) {
             ) : (
               <p className="small text-muted mb-2">Pass {course.passingPercent}%</p>
             )}
+            {isGroupPresented(course) && course.assigneeStatus !== "PASSED" ? (
+              <div className="alert alert-info small py-2">
+                This course was presented to your group
+                {course.contentPresentedAt
+                  ? ` on ${new Date(course.contentPresentedAt).toLocaleDateString()}`
+                  : ""}
+                . You can take the quiz now. Reviewing the content below is optional.
+              </div>
+            ) : null}
             {course.material && activeSession ? (
               <TrainingMaterialViewer
                 embedded
@@ -1022,9 +1033,7 @@ export function TrainingAccessPortalForm({ token }: { token: string }) {
                 busy ||
                 course.assigneeStatus === "PASSED" ||
                 !ackSavedAt ||
-                (course.sections.some((s) => s.required) &&
-                  !course.progress?.quizAvailable &&
-                  course.sections.length > 0)
+                !courseContentRequirementMet(course)
               }
               onClick={() => void startQuiz()}
             >
