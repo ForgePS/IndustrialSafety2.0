@@ -297,13 +297,10 @@ describe("NERIS Phase 2 incidents API", () => {
       .get(`/api/v1/tenants/${tenant.tenantId}/neris/incidents/${incidentId}/field-values`)
       .expect(200);
 
-    const row = read.body.data.find(
-      (item: { fieldId: string }) => item.fieldId === field.fieldId,
-    );
+    const row = read.body.data.find((item: { fieldId: string }) => item.fieldId === field.fieldId);
     expect(row).toBeTruthy();
     expect(row.valueText).toBe("CAD supplied value");
     expect(row.prefillSource).toBe("CAD");
     expect(row.userConfirmed).toBe(false);
   });
-
 });

@@ -82,10 +82,12 @@ async function applyUnits(
     const values = {
       isPrimary,
       unitRole: existing?.unitRole ?? "CAD_RESPONSE",
-      dispatchedAt: unit.dispatchedAt ? new Date(unit.dispatchedAt) : existing?.dispatchedAt ?? null,
-      enRouteAt: unit.enRouteAt ? new Date(unit.enRouteAt) : existing?.enRouteAt ?? null,
-      arrivedAt: unit.arrivedAt ? new Date(unit.arrivedAt) : existing?.arrivedAt ?? null,
-      clearedAt: unit.clearedAt ? new Date(unit.clearedAt) : existing?.clearedAt ?? null,
+      dispatchedAt: unit.dispatchedAt
+        ? new Date(unit.dispatchedAt)
+        : (existing?.dispatchedAt ?? null),
+      enRouteAt: unit.enRouteAt ? new Date(unit.enRouteAt) : (existing?.enRouteAt ?? null),
+      arrivedAt: unit.arrivedAt ? new Date(unit.arrivedAt) : (existing?.arrivedAt ?? null),
+      clearedAt: unit.clearedAt ? new Date(unit.clearedAt) : (existing?.clearedAt ?? null),
       deletedAt: null,
       updatedAt: now,
     };
@@ -272,7 +274,6 @@ async function recordUnknownPersonnel(
     });
   }
 }
-
 
 async function resolveForgeUnitId(
   tx: DatabaseTransaction,

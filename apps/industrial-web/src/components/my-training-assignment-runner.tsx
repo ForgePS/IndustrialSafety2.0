@@ -152,6 +152,7 @@ export function MyTrainingAssignmentRunner({ assignmentId }: { assignmentId: str
   }
 
   const passed = String(assignment?.myStatus ?? "").toUpperCase() === "PASSED";
+  const groupPresented = assignment?.contentDelivery === "GROUP_PRESENTED";
 
   return (
     <div className="container-xxl flex-grow-1 container-p-y">
@@ -182,6 +183,15 @@ export function MyTrainingAssignmentRunner({ assignmentId }: { assignmentId: str
               {assignment.myBestPercent != null ? ` · Best ${assignment.myBestPercent}%` : ""}
               {assignment.dueAt ? ` · Due ${String(assignment.dueAt).slice(0, 10)}` : ""}
             </div>
+            {groupPresented && !passed ? (
+              <div className="alert alert-info small py-2">
+                This course was presented to your group
+                {assignment.contentPresentedAt
+                  ? ` on ${new Date(assignment.contentPresentedAt).toLocaleDateString()}`
+                  : ""}
+                . You can take the quiz now. Reviewing the material is optional.
+              </div>
+            ) : null}
             <div className="d-flex flex-wrap gap-2">
               {material ? (
                 <button
@@ -212,7 +222,9 @@ export function MyTrainingAssignmentRunner({ assignmentId }: { assignmentId: str
                   onChange={(e) => setAcknowledged(e.target.checked)}
                 />
                 <label className="form-check-label" htmlFor="my-training-ack">
-                  I reviewed the training material and understand the requirements.
+                  {groupPresented
+                    ? "I attended the group presentation of this training and understand the requirements."
+                    : "I reviewed the training material and understand the requirements."}
                 </label>
               </div>
             ) : null}

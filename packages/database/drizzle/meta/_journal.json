@@ -778,6 +778,13 @@
       "when": 1791734800000,
       "tag": "0112_industrial_workers_comp_forms_s1",
       "breakpoints": true
+    },
+    {
+      "idx": 112,
+      "version": "7",
+      "when": 1791821200000,
+      "tag": "0113_industrial_training_group_presented_s1",
+      "breakpoints": true
     }
   ]
 }
