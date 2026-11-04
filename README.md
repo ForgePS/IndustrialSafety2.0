@@ -1,6 +1,6 @@
 # Forge Platform
 
-Secure multi-tenant AWS rebuild of Forge Academy and Forge RMS.
+Secure multi-tenant AWS platform for Forge Industrial Safety and Forge Academy. (Forge Responder / RMS lives in its own Firebase repo.)
 
 > **Security:** Never commit real personnel data, SSNs, FEMA SIDs, production exports, or AWS credentials into this repository. Local/dev environments must use synthetic data only.
 
@@ -18,7 +18,7 @@ Legacy Firebase apps remain operational in separate repositories. They are **not
 
 ## Repository structure
 
-- `apps/` — application shells (academy-web, rms-web, creator-console, platform-api, worker-service + placeholders)
+- `apps/` — application shells (academy-web, industrial-web, creator-console, platform-api, worker-service + placeholders)
 - `packages/` — shared libraries (`@forge/*`)
 - `infrastructure/cdk/` — CDK placeholder (Sprint 1C)
 - `database/` — docker init, future migrations docs
@@ -54,7 +54,6 @@ pnpm db:migrate
 | App             | Port |
 | --------------- | ---- |
 | academy-web     | 3001 |
-| rms-web         | 3002 |
 | creator-console | 3003 |
 | platform-api    | 4000 |
 

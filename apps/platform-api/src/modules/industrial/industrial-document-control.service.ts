@@ -15,7 +15,7 @@ import { and, asc, desc, eq, ilike, isNotNull, isNull, lte, or, sql } from "driz
 import { z } from "zod";
 import { DATABASE } from "../../tokens.js";
 import { AuditService } from "../audit/audit.service.js";
-import { DocumentStorageService } from "../neris-incidents/document-storage.service.js";
+import { DocumentStorageService } from "../documents/document-storage.service.js";
 import {
   canApproveVersion,
   canObsoleteDocument,

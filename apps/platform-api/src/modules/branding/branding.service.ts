@@ -19,7 +19,7 @@ import type { ForgePrincipal } from "@forge/tenant-context";
 import { and, eq, sql } from "drizzle-orm";
 import { DATABASE } from "../../tokens.js";
 import { AuditService } from "../audit/audit.service.js";
-import { DocumentStorageService } from "../neris-incidents/document-storage.service.js";
+import { DocumentStorageService } from "../documents/document-storage.service.js";
 
 @Injectable()
 export class BrandingService {

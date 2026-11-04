@@ -92,7 +92,7 @@ import {
 import { DATABASE } from "../../tokens.js";
 import { NotificationsService } from "../notifications/notifications.service.js";
 import { AuditService } from "../audit/audit.service.js";
-import { DocumentStorageService } from "../neris-incidents/document-storage.service.js";
+import { DocumentStorageService } from "../documents/document-storage.service.js";
 import { IndustrialQrService } from "./industrial-qr.service.js";
 import {
   assertCanComplete,

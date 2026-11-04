@@ -84,7 +84,7 @@ import { randomBytes } from "node:crypto";
 import { z } from "zod";
 import { APP_ENV, DATABASE } from "../../tokens.js";
 import { isDemoTenant } from "../../common/demo-tenant.js";
-import { DocumentStorageService } from "../neris-incidents/document-storage.service.js";
+import { DocumentStorageService } from "../documents/document-storage.service.js";
 import { FeatureFlagsService } from "../feature-flags/feature-flags.service.js";
 import { NotificationsService } from "../notifications/notifications.service.js";
 import {

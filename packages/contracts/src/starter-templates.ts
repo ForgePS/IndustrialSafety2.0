@@ -7,17 +7,6 @@
 
 import { catalogModulesForSeed } from "./module-catalog.js";
 import { FIELD_EMPLOYEE_PERMISSIONS, FIELD_SUPERVISOR_PERMISSIONS } from "./field.js";
-import {
-  RMS_DEPARTMENT_ADMIN_PERMISSIONS,
-  RMS_FIRE_INVESTIGATOR_PERMISSIONS,
-  RMS_HAZMAT_OFFICER_PERMISSIONS,
-  RMS_MEMBER_INCIDENT_PERMISSIONS,
-  RMS_OFFICER_PERMISSIONS,
-  RMS_PERMISSIONS,
-  RMS_PREVENTION_OFFICER_PERMISSIONS,
-  RMS_SAFETY_OFFICER_PERMISSIONS,
-  RMS_TRAINING_OFFICER_PERMISSIONS,
-} from "./rms-neris.js";
 
 export interface StarterTemplateRole {
   /** Role template code seeded into `role_templates`. */
@@ -138,69 +127,6 @@ export const FORGE_INDUSTRIAL_TEMPLATE: StarterTemplate = {
   ],
 };
 
-export const FORGE_RMS_TEMPLATE: StarterTemplate = {
-  code: "RMS_STARTER",
-  name: "Forge RMS Starter",
-  customerType: "FIRE_DEPARTMENT",
-  productCode: "FORGE_RMS",
-  organizationTypeCode: "FIRE_DEPARTMENT",
-  modules: catalogModulesForSeed("FORGE_RMS").map((m) => ({
-    code: m.code,
-    name: m.name,
-    isCore: m.isCore,
-  })),
-  roles: [
-    {
-      code: "RMS_DEPARTMENT_ADMIN",
-      name: "Department Admin",
-      permissions: RMS_DEPARTMENT_ADMIN_PERMISSIONS,
-    },
-    {
-      code: "RMS_CHIEF_OFFICER",
-      name: "Chief Officer",
-      permissions: [
-        ...MANAGER_PERMISSIONS,
-        ...RMS_PERMISSIONS.filter((p) => !p.endsWith(".manage") || p.includes("configuration")),
-      ],
-    },
-    {
-      code: "RMS_COMPANY_OFFICER",
-      name: "Company Officer",
-      permissions: RMS_OFFICER_PERMISSIONS,
-    },
-    {
-      code: "RMS_MEMBER",
-      name: "Member",
-      permissions: RMS_MEMBER_INCIDENT_PERMISSIONS,
-    },
-    {
-      code: "RMS_FIRE_INVESTIGATOR",
-      name: "Fire Investigator",
-      permissions: RMS_FIRE_INVESTIGATOR_PERMISSIONS,
-    },
-    {
-      code: "RMS_HAZMAT_OFFICER",
-      name: "Hazmat Officer",
-      permissions: RMS_HAZMAT_OFFICER_PERMISSIONS,
-    },
-    {
-      code: "RMS_SAFETY_OFFICER",
-      name: "Safety Officer",
-      permissions: RMS_SAFETY_OFFICER_PERMISSIONS,
-    },
-    {
-      code: "RMS_PREVENTION_OFFICER",
-      name: "Prevention Officer",
-      permissions: RMS_PREVENTION_OFFICER_PERMISSIONS,
-    },
-    {
-      code: "RMS_TRAINING_OFFICER",
-      name: "Training Officer",
-      permissions: RMS_TRAINING_OFFICER_PERMISSIONS,
-    },
-  ],
-};
-
 export const FORGE_ACADEMY_TEMPLATE: StarterTemplate = {
   code: "ACADEMY_STARTER",
   name: "Forge Academy Starter",
@@ -227,7 +153,6 @@ export const FORGE_ACADEMY_TEMPLATE: StarterTemplate = {
 
 export const STARTER_TEMPLATES: readonly StarterTemplate[] = [
   FORGE_INDUSTRIAL_TEMPLATE,
-  FORGE_RMS_TEMPLATE,
   FORGE_ACADEMY_TEMPLATE,
 ];
 

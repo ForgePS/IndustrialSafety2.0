@@ -4,10 +4,9 @@
  *
  * Usage:
  *   node scripts/sync-static-site.mjs --app console
- *   node scripts/sync-static-site.mjs --app rms
  *   node scripts/sync-static-site.mjs --app industrial
  *   node scripts/sync-static-site.mjs --app field
- *   node scripts/sync-static-site.mjs --app rms --skip-build
+ *   node scripts/sync-static-site.mjs --app industrial --skip-build
  *   node scripts/sync-static-site.mjs --app industrial --full-invalidate
  *
  * Cache strategy (pairs with ForgeStaticHosting):
@@ -54,11 +53,6 @@ const APPS = {
     outDir: "apps/creator-console/out",
     stackExportPrefix: "ForgeFrontend-Console",
   },
-  rms: {
-    packageName: "@forge/rms-web",
-    outDir: "apps/rms-web/out",
-    stackExportPrefix: "ForgeFrontend-Rms",
-  },
   tenantadmin: {
     packageName: "@forge/tenant-admin",
     outDir: "apps/tenant-admin/out",
@@ -96,14 +90,14 @@ function parseArgs(argv) {
       fullInvalidate = true;
     } else if (arg === "--help" || arg === "-h") {
       console.log(
-        `Usage: node scripts/sync-static-site.mjs --app console|rms|tenantadmin|industrial|field [--environment development] [--skip-build] [--full-invalidate]`,
+        `Usage: node scripts/sync-static-site.mjs --app console|tenantadmin|industrial|field [--environment development] [--skip-build] [--full-invalidate]`,
       );
       process.exit(0);
     }
   }
 
   if (!app || !APPS[app]) {
-    console.error("Required: --app console|rms|tenantadmin|industrial|field");
+    console.error("Required: --app console|tenantadmin|industrial|field");
     process.exit(1);
   }
 
@@ -154,7 +148,6 @@ function removeFileIfExists(filePath) {
 }
 
 function resolveProvenanceBuildEnv(app, environment) {
-  if (app === "rms") return resolveRmsBuildEnv(environment);
   if (app === "industrial") return resolveIndustrialBuildEnv(environment);
   if (app === "field") return resolveFieldBuildEnv(environment);
   if (app === "tenantadmin") return resolveTenantAdminBuildEnv(environment);
@@ -322,82 +315,6 @@ function toHttpsOrigin(domain) {
     return cleaned.replace(/\/$/, "");
   }
   return `https://${cleaned.replace(/\/$/, "")}`;
-}
-
-function resolveRmsBuildEnv(environment) {
-  const buildEnv = { ...process.env };
-
-  if (!buildEnv.NEXT_PUBLIC_API_URL) {
-    const apiDomain =
-      resolveEnvExport(environment, "ForgeCompute-ApiHttpsDomain") ??
-      process.env.FORGE_API_HTTPS_DOMAIN;
-    const apiUrl = toHttpsOrigin(apiDomain);
-    if (apiUrl) {
-      buildEnv.NEXT_PUBLIC_API_URL = apiUrl;
-      console.log(`Resolved NEXT_PUBLIC_API_URL=${apiUrl}`);
-    } else {
-      console.warn(
-        "Missing NEXT_PUBLIC_API_URL — set it or export ForgeCompute-ApiHttpsDomain from the Compute stack.",
-      );
-    }
-  }
-
-  if (!buildEnv.NEXT_PUBLIC_APP_URL) {
-    const appDomain =
-      resolveEnvExport(environment, "ForgeFrontend-RmsDomain") ?? process.env.FORGE_RMS_APP_DOMAIN;
-    const appUrl = toHttpsOrigin(appDomain);
-    if (appUrl) {
-      buildEnv.NEXT_PUBLIC_APP_URL = appUrl;
-      console.log(`Resolved NEXT_PUBLIC_APP_URL=${appUrl}`);
-    } else {
-      console.warn(
-        "Missing NEXT_PUBLIC_APP_URL — set it or export ForgeFrontend-RmsDomain from the Frontend stack.",
-      );
-    }
-  }
-
-  if (!buildEnv.NEXT_PUBLIC_COGNITO_USER_POOL_ID) {
-    const poolId =
-      resolveEnvExport(environment, "ForgeIdentity-UserPoolId") ??
-      process.env.FORGE_COGNITO_USER_POOL_ID;
-    if (poolId) {
-      buildEnv.NEXT_PUBLIC_COGNITO_USER_POOL_ID = poolId;
-      console.log(`Resolved NEXT_PUBLIC_COGNITO_USER_POOL_ID=${poolId}`);
-    }
-  }
-
-  if (!buildEnv.NEXT_PUBLIC_COGNITO_CLIENT_ID) {
-    const clientId =
-      resolveEnvExport(environment, "ForgeIdentity-RmsClientId") ??
-      process.env.FORGE_RMS_COGNITO_CLIENT_ID;
-    if (clientId) {
-      buildEnv.NEXT_PUBLIC_COGNITO_CLIENT_ID = clientId;
-      console.log(`Resolved NEXT_PUBLIC_COGNITO_CLIENT_ID=${clientId}`);
-    } else {
-      console.warn(
-        "Missing NEXT_PUBLIC_COGNITO_CLIENT_ID — ForgeIdentity-RmsClientId export is not deployed yet; set FORGE_RMS_COGNITO_CLIENT_ID.",
-      );
-    }
-  }
-
-  if (!buildEnv.NEXT_PUBLIC_COGNITO_DOMAIN) {
-    const domain =
-      resolveEnvExport(environment, "ForgeIdentity-CognitoDomain") ??
-      process.env.FORGE_COGNITO_DOMAIN;
-    if (domain) {
-      buildEnv.NEXT_PUBLIC_COGNITO_DOMAIN = domain;
-      console.log(`Resolved NEXT_PUBLIC_COGNITO_DOMAIN=${domain}`);
-    } else {
-      console.warn(
-        "Missing NEXT_PUBLIC_COGNITO_DOMAIN — set FORGE_COGNITO_DOMAIN (forge-{env}-{accountLast6}.auth.{region}.amazoncognito.com).",
-      );
-    }
-  }
-
-  delete buildEnv.NEXT_PUBLIC_ALLOW_DEV_PRINCIPAL;
-
-  assertProductionFrontendConfig("rms", buildEnv, environment);
-  return buildEnv;
 }
 
 function resolveTenantAdminBuildEnv(environment) {
@@ -829,17 +746,15 @@ let outPath = path.join(repoRoot, appConfig.outDir);
 if (!skipBuild) {
   console.log(`Building ${appConfig.packageName}…`);
   const buildEnv =
-    app === "rms"
-      ? resolveRmsBuildEnv(environment)
-      : app === "industrial"
-        ? resolveIndustrialBuildEnv(environment)
-        : app === "field"
-          ? resolveFieldBuildEnv(environment)
-          : app === "tenantadmin"
-            ? resolveTenantAdminBuildEnv(environment)
-            : app === "console"
-              ? resolveConsoleBuildEnv(environment)
-              : { ...process.env };
+    app === "industrial"
+      ? resolveIndustrialBuildEnv(environment)
+      : app === "field"
+        ? resolveFieldBuildEnv(environment)
+        : app === "tenantadmin"
+          ? resolveTenantAdminBuildEnv(environment)
+          : app === "console"
+            ? resolveConsoleBuildEnv(environment)
+            : { ...process.env };
   const appRoot = path.join(repoRoot, path.dirname(appConfig.outDir));
   const preparedBuildEnv =
     app === "industrial" || app === "field"

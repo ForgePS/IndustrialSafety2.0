@@ -12,7 +12,6 @@ import {
   AiNarrativeProviderRegistry,
   StubAiNarrativeProvider,
   assembleSourceManifest,
-  assertRecordAllowsAiMutation,
   runNarrativeGenerationPipeline,
 } from "@forge/ai";
 import { emitAiNarrativeMetric, AI_NARRATIVE_METRICS } from "@forge/ai-observability";
@@ -33,8 +32,6 @@ import {
   createId,
   featureDefinitions,
   featureOverrides,
-  nerisIncidents,
-  nerisIncidentNarratives,
   platformModules,
   tenantModuleEntitlements,
   type Database,
@@ -471,24 +468,6 @@ export class AiNarrativeService {
       });
       if (!draft) throw new ForgeError("NOT_FOUND", "Draft not found");
 
-      if (request.recordType === "neris_incident") {
-        const incident = await tx.query.nerisIncidents.findFirst({
-          where: and(
-            eq(nerisIncidents.id, request.recordId),
-            eq(nerisIncidents.tenantId, tenantId),
-          ),
-        });
-        if (!incident) throw new ForgeError("NOT_FOUND", "Source incident not found");
-        try {
-          assertRecordAllowsAiMutation(incident.status);
-        } catch {
-          throw new ForgeError(
-            "FORBIDDEN",
-            "Finalized or locked incidents cannot be altered through AI",
-          );
-        }
-      }
-
       const acceptedAt = new Date();
       await tx
         .update(aiNarrativeDrafts)
@@ -525,48 +504,6 @@ export class AiNarrativeService {
           draftId: draft.id,
           body: input.feedback,
           createdByUserId: principal.userId!,
-        });
-      }
-
-      if (input.insertIntoRecord && request.recordType === "neris_incident") {
-        // Acceptance alone does not silently overwrite; insert requires explicit flag.
-        const narrative = await tx.query.nerisIncidentNarratives.findFirst({
-          where: eq(nerisIncidentNarratives.incidentId, request.recordId),
-        });
-        const body = draft.draftText;
-        const characterCount = body.length;
-        if (narrative) {
-          await tx
-            .update(nerisIncidentNarratives)
-            .set({
-              body,
-              characterCount,
-              updatedAt: new Date(),
-              updatedByUserId: principal.userId,
-            })
-            .where(eq(nerisIncidentNarratives.id, narrative.id));
-        } else {
-          await tx.insert(nerisIncidentNarratives).values({
-            id: createId(),
-            tenantId,
-            incidentId: request.recordId,
-            body,
-            characterCount,
-            createdByUserId: principal.userId,
-            updatedByUserId: principal.userId,
-          });
-        }
-        await this.writeAiAudit(tx, {
-          tenantId,
-          userId: principal.userId,
-          product: request.product,
-          module: request.module,
-          recordType: request.recordType,
-          recordId: request.recordId,
-          requestId,
-          action: "AiNarrativeInserted",
-          correlationId,
-          metadata: { draftId: draft.id, created: !narrative },
         });
       }
 
@@ -1504,28 +1441,6 @@ export class AiNarrativeService {
     principal: ForgePrincipal,
     input: CreateAiNarrativeRequest,
   ): Promise<void> {
-    if (input.recordType === "neris_incident") {
-      const incident = await tx.query.nerisIncidents.findFirst({
-        where: and(eq(nerisIncidents.id, input.recordId), eq(nerisIncidents.tenantId, tenantId)),
-      });
-      if (!incident) {
-        throw new ForgeError("NOT_FOUND", "Source incident not found or not visible");
-      }
-      if (!principal.isPlatformAdmin && !principal.permissions.has("rms.neris.incident.view")) {
-        throw new ForgeError("FORBIDDEN", "Missing permission to view source record");
-      }
-      try {
-        assertRecordAllowsAiMutation(incident.status);
-      } catch {
-        if (input.requestType === "GENERATE_FROM_RECORD") {
-          throw new ForgeError(
-            "FORBIDDEN",
-            "Locked or finalized incidents cannot use AI narrative generation",
-          );
-        }
-      }
-      return;
-    }
     throw new ForgeError(
       "VALIDATION_FAILED",
       `Unsupported record type for foundation release: ${input.recordType}`,
@@ -1547,44 +1462,7 @@ export class AiNarrativeService {
         include: fact.include,
       }));
     }
-    if (input.recordType !== "neris_incident") return [];
-    const incident = await tx.query.nerisIncidents.findFirst({
-      where: and(eq(nerisIncidents.id, input.recordId), eq(nerisIncidents.tenantId, tenantId)),
-    });
-    if (!incident) return [];
-    const narrative = await tx.query.nerisIncidentNarratives.findFirst({
-      where: eq(nerisIncidentNarratives.incidentId, incident.id),
-    });
-    return [
-      {
-        fieldId: "incident_number",
-        category: "dispatch",
-        label: "Incident number",
-        classification: "INTERNAL" as const,
-        value: incident.incidentNumber,
-      },
-      {
-        fieldId: "status",
-        category: "disposition",
-        label: "Status",
-        classification: "INTERNAL" as const,
-        value: incident.status,
-      },
-      {
-        fieldId: "alarm_at",
-        category: "datetime",
-        label: "Alarm time",
-        classification: "INTERNAL" as const,
-        value: incident.alarmAt?.toISOString?.() ?? incident.alarmAt,
-      },
-      {
-        fieldId: "existing_narrative",
-        category: "officer_notes",
-        label: "Existing narrative",
-        classification: "INTERNAL" as const,
-        value: narrative?.body ?? input.existingNarrative ?? null,
-      },
-    ];
+    return [];
   }
 
   private async assertQuotas(

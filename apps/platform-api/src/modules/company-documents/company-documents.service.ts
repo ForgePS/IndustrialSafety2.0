@@ -13,7 +13,7 @@ import { and, desc, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { DATABASE } from "../../tokens.js";
 import { AuditService } from "../audit/audit.service.js";
-import { DocumentStorageService } from "../neris-incidents/document-storage.service.js";
+import { DocumentStorageService } from "../documents/document-storage.service.js";
 import { isAllowedCompanyDocumentMime } from "./company-documents.mime.js";
 
 export {

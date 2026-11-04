@@ -12,6 +12,5 @@ tests
 .env
 .env.*
 apps/academy-web
-apps/rms-web
 apps/creator-console
 infrastructure/cdk/cdk.out

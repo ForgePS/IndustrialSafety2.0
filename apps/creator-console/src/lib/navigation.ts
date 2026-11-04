@@ -294,12 +294,6 @@ export const CREATOR_NAV_GROUPS: ForgeNavigationGroup[] = [
         route: "/studio/tenant-profile",
         permission: "platform.configuration.update",
       },
-      {
-        id: "neris",
-        label: "NERIS Schema",
-        route: "/neris/packages",
-        permission: "platform.neris.schema.read",
-      },
       { id: "ai", label: "AI Management", route: "/ai" },
       {
         id: "analytics",

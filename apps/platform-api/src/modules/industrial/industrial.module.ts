@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 import { FeatureFlagsModule } from "../feature-flags/feature-flags.module.js";
 import { EntitlementsModule } from "../entitlements/entitlements.module.js";
-import { DocumentStorageService } from "../neris-incidents/document-storage.service.js";
+import { DocumentStorageService } from "../documents/document-storage.service.js";
 import { NotificationsModule } from "../notifications/notifications.module.js";
 import { IndustrialBootstrapService } from "./industrial-bootstrap.service.js";
 import { IndustrialController } from "./industrial.controller.js";

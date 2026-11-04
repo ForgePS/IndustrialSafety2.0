@@ -14,7 +14,7 @@ import { ForgeError } from "@forge/errors";
 import type { ForgePrincipal } from "@forge/tenant-context";
 import { and, eq } from "drizzle-orm";
 import { APP_ENV, DATABASE } from "../../tokens.js";
-import { PRESIGN_EXPIRES_SECONDS } from "../neris-incidents/document-storage.service.js";
+import { PRESIGN_EXPIRES_SECONDS } from "../documents/document-storage.service.js";
 import {
   createNarrationProvider,
   type NarrationProvider,

@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { DocumentStorageService } from "../neris-incidents/document-storage.service.js";
+import { DocumentStorageService } from "../documents/document-storage.service.js";
 import { CompanyDocumentsController } from "./company-documents.controller.js";
 import { CompanyDocumentsService } from "./company-documents.service.js";
 
