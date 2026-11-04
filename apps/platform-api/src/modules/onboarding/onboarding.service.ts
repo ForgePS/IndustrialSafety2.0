@@ -38,6 +38,7 @@ import { OrganizationsService } from "../organizations/organizations.service.js"
 import { OutboxService } from "../outbox/outbox.service.js";
 import { SubscriptionsService } from "../subscriptions/subscriptions.service.js";
 import { TenantsService, type ExpectedVersion } from "../tenants/tenants.service.js";
+import { resolveModuleProducts } from "./onboarding-module-products.js";
 import {
   DEFAULT_ONBOARDING_FACILITY,
   ONBOARDING_STEPS,
@@ -474,13 +475,22 @@ export class OnboardingService {
           if (moduleCodes.length === 0) {
             throw new ForgeError("BAD_REQUEST", "At least one module must be selected");
           }
-          for (const moduleCode of moduleCodes) {
+          const selectedProducts =
+            sessionData.productCodes ?? (template ? [template.productCode] : []);
+          for (const { moduleCode, productCode } of resolveModuleProducts(
+            moduleCodes,
+            selectedProducts,
+          )) {
             const isCore =
               template?.modules.find((mod) => mod.code === moduleCode)?.isCore ?? false;
             await this.entitlements.putModule(
               tenantId,
               moduleCode,
-              { status: "ACTIVE", sourceType: isCore ? "TEMPLATE_CORE" : "TEMPLATE" },
+              {
+                status: "ACTIVE",
+                sourceType: isCore ? "TEMPLATE_CORE" : "TEMPLATE",
+                ...(productCode ? { productCode } : {}),
+              },
               principal,
             );
           }
