@@ -96,7 +96,8 @@ function createHarness(options?: {
       }),
     })),
     update: vi.fn(() => ({
-      set: vi.fn(() => ({
+      set: vi.fn((values: Record<string, unknown>) => ({
+        values,
         // Awaitable directly, or via .returning() for the session row.
         where: vi.fn(() => {
           const result = Promise.resolve(undefined);
@@ -184,6 +185,13 @@ function createHarness(options?: {
     service,
     tenants,
     audit,
+    /** Values passed to every tx.update(...).set(...) call, in order. */
+    getUpdateSets: () =>
+      tx.update.mock.results.flatMap((result) =>
+        (result.value as { set: { mock: { calls: unknown[][] } } }).set.mock.calls.map(
+          (call) => call[0] as Record<string, unknown>,
+        ),
+      ),
     getInsertedFacility: () => insertedFacility,
     setFacilities: (rows: Array<{ id: string; facilityKey: string }>) => {
       facilities.splice(0, facilities.length, ...rows);
@@ -261,5 +269,33 @@ describe("OnboardingService MK-S7", () => {
       "TRAINING",
       "LOCKOUT_TAGOUT",
     ]);
+  });
+
+  it("SELECT_MODULES stores bare codes so the invitation step can grant them", async () => {
+    const putModule = vi.fn(async () => ({}));
+    harness = createHarness({
+      pendingStepKeys: ["SELECT_MODULES", "CONFIGURE_SUBSCRIPTION", "ACTIVATE_TENANT"],
+      sessionData: { productCodes: ["FORGE_INDUSTRIAL"] },
+      entitlements: { putModule },
+    });
+
+    await harness.service.completeStep(
+      SESSION_ID,
+      "SELECT_MODULES",
+      { moduleCodes: ["FORGE_INDUSTRIAL:CORE", "TRAINING", "CORE"] },
+      principal(),
+      "*",
+      TENANT_ID,
+    );
+
+    expect((putModule.mock.calls[0] as unknown[])[2]).toMatchObject({
+      productCode: "FORGE_INDUSTRIAL",
+    });
+    const sessionUpdate = harness.getUpdateSets().find((values) => "sessionDataJson" in values) as
+      { sessionDataJson: { moduleCodes?: string[] } } | undefined;
+    expect(sessionUpdate?.sessionDataJson.moduleCodes).toEqual(["CORE", "TRAINING"]);
+    const stepUpdate = harness.getUpdateSets().find((values) => "payloadJson" in values) as
+      { payloadJson: { moduleCodes?: string[] } } | undefined;
+    expect(stepUpdate?.payloadJson.moduleCodes).toEqual(["CORE", "TRAINING"]);
   });
 });

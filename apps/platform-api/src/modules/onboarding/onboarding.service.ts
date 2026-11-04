@@ -477,10 +477,8 @@ export class OnboardingService {
           }
           const selectedProducts =
             sessionData.productCodes ?? (template ? [template.productCode] : []);
-          for (const { moduleCode, productCode } of resolveModuleProducts(
-            moduleCodes,
-            selectedProducts,
-          )) {
+          const resolvedModules = resolveModuleProducts(moduleCodes, selectedProducts);
+          for (const { moduleCode, productCode } of resolvedModules) {
             const isCore =
               template?.modules.find((mod) => mod.code === moduleCode)?.isCore ?? false;
             await this.entitlements.putModule(
@@ -494,8 +492,11 @@ export class OnboardingService {
               principal,
             );
           }
-          nextSessionData.moduleCodes = moduleCodes;
-          stepPayload = { moduleCodes };
+          // Persist bare codes: later steps (SEND_INVITATION → membership module access) match
+          // them against the tenant's own entitled modules, which never carry a product prefix.
+          const entitledModuleCodes = [...new Set(resolvedModules.map((mod) => mod.moduleCode))];
+          nextSessionData.moduleCodes = entitledModuleCodes;
+          stepPayload = { moduleCodes: entitledModuleCodes };
           break;
         }
         case "CONFIGURE_SUBSCRIPTION": {
