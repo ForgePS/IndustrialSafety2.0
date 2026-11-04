@@ -80,11 +80,14 @@ export async function applyCadNerisDispatchFields(
 
   const candidates = buildCadDispatchFieldCandidates(input.event);
   if (!candidates.length) return;
+  // Without a schema version there are no NERIS fields to fill.
+  const schemaVersionId = incident.schemaVersionId;
+  if (!schemaVersionId) return;
 
   const fields = await tx
     .select()
     .from(nerisFields)
-    .where(eq(nerisFields.schemaVersionId, incident.schemaVersionId));
+    .where(eq(nerisFields.schemaVersionId, schemaVersionId));
   const byKey = new Map(fields.map((field) => [field.fieldKey, field]));
 
   for (const candidate of candidates) {
