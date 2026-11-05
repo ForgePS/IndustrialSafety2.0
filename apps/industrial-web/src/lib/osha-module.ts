@@ -212,8 +212,17 @@ export function isOshaFormLogCase(status: OshaRecordability): boolean {
   return status === "RECORDABLE" || status === "PRIVACY_CASE";
 }
 
+/** Name for Form 300 (column B): privacy cases show "Privacy case" instead of the name. */
 export function displayEmployeeName(row: Pick<OshaCase, "employeeName" | "privacyCase">): string {
   return row.privacyCase ? "Privacy case" : row.employeeName || "—";
+}
+
+/**
+ * Name for Form 301 (field 1). The privacy rule in 1904.29(b)(6) covers the Form 300
+ * log only; the confidential 301 keeps the employee's real name.
+ */
+export function form301EmployeeName(row: Pick<OshaCase, "employeeName">): string {
+  return row.employeeName.trim();
 }
 
 export function toOshaCase(row: Record<string, unknown>): OshaCase {
@@ -229,12 +238,12 @@ export function toOshaCase(row: Record<string, unknown>): OshaCase {
   );
   const injuryDate = asDate(row.injuryDate) || asDate(row.dateOccurred) || asDate(row.recordDate);
   const yearRaw = row.calendarYear;
-  const calendarYear =
-    typeof yearRaw === "number" && Number.isFinite(yearRaw)
+  // The injury date decides the log year; calendarYear is only a fallback.
+  const calendarYear = injuryDate
+    ? Number(injuryDate.slice(0, 4))
+    : typeof yearRaw === "number" && Number.isFinite(yearRaw)
       ? Math.trunc(yearRaw)
-      : injuryDate
-        ? Number(injuryDate.slice(0, 4))
-        : null;
+      : null;
 
   return {
     id: asText(row.id),
@@ -353,12 +362,9 @@ export function filterOshaCases(
   const establishment = asText(opts.establishment).toLowerCase();
   const q = asText(opts.q).toLowerCase();
   return cases.filter((row) => {
-    if (opts.year != null && row.calendarYear != null && row.calendarYear !== opts.year) {
-      return false;
-    }
-    if (opts.year != null && row.calendarYear == null && row.injuryDate) {
-      if (Number(row.injuryDate.slice(0, 4)) !== opts.year) return false;
-    }
+    // Cases with no date at all stay visible in every year so they can be fixed.
+    const logYear = oshaCaseLogYear(row);
+    if (opts.year != null && logYear != null && logYear !== opts.year) return false;
     if (establishment && establishment !== "all") {
       if (row.establishment.toLowerCase() !== establishment) return false;
     }
@@ -371,13 +377,114 @@ export function filterOshaCases(
   });
 }
 
+/** OSHA 1904.7(b)(3)(vii): employers may stop counting days away + restricted at 180. */
+export const OSHA_MAX_COUNTED_DAYS = 180;
+
+/** Cap a case's days away and job-transfer days so their combined count is at most 180. */
+export function cappedOshaDays(
+  daysAway: number | null,
+  restrictedDays: number | null,
+): { daysAway: number; restrictedDays: number } {
+  const away = Math.min(Math.max(daysAway ?? 0, 0), OSHA_MAX_COUNTED_DAYS);
+  const restricted = Math.min(Math.max(restrictedDays ?? 0, 0), OSHA_MAX_COUNTED_DAYS - away);
+  return { daysAway: away, restrictedDays: restricted };
+}
+
+/** The log year for a case: the injury year wins, the stored calendar year is the fallback. */
+export function oshaCaseLogYear(c: {
+  calendarYear: number | null;
+  injuryDate?: string | null;
+}): number | null {
+  const fromDate =
+    c.injuryDate && /^\d{4}/.test(c.injuryDate) ? Number(c.injuryDate.slice(0, 4)) : null;
+  return fromDate ?? c.calendarYear ?? null;
+}
+
+function caseNumberSortKey(caseNumber: string): number {
+  const match = /(\d+)\s*$/.exec(caseNumber);
+  return match ? Number(match[1]) : Number.POSITIVE_INFINITY;
+}
+
+/** Form 300 log rows for one year, in case-number order (then injury date). */
 export function logCasesForForm300(cases: OshaCase[], year: number): OshaCase[] {
-  return cases.filter((c) => {
-    if (!isOshaFormLogCase(c.recordabilityStatus)) return false;
-    if (c.calendarYear === year) return true;
-    if (c.injuryDate && c.injuryDate.startsWith(String(year))) return true;
-    return false;
-  });
+  return cases
+    .filter((c) => isOshaFormLogCase(c.recordabilityStatus) && oshaCaseLogYear(c) === year)
+    .sort(
+      (a, b) =>
+        caseNumberSortKey(a.caseNumber) - caseNumberSortKey(b.caseNumber) ||
+        a.caseNumber.localeCompare(b.caseNumber) ||
+        (a.injuryDate ?? "").localeCompare(b.injuryDate ?? ""),
+    );
+}
+
+export type OshaCaseIssue = { caseId: string; label: string; issues: string[] };
+
+/**
+ * What is missing or inconsistent on a Form 300 log case. A case with problems here
+ * prints wrong or is left out of the Form 300A totals, so fix these before certifying.
+ */
+export function oshaCaseIssues(c: OshaCase): string[] {
+  const issues: string[] = [];
+  if (!c.caseNumber.trim()) issues.push("No case number (column A).");
+  if (!c.privacyCase && !c.employeeName.trim()) issues.push("No employee name (column B).");
+  if (!c.injuryDate) issues.push("No date of injury or onset of illness (column D).");
+  if (!c.establishment.trim()) issues.push("No establishment.");
+  if (!c.description.trim()) issues.push("No description of the injury or illness (column F).");
+  if (!c.caseOutcome) {
+    issues.push("No outcome checked (columns G–J), so it is missing from the 300A case counts.");
+  }
+  if (!c.illnessCategory) {
+    issues.push(
+      "No injury or illness type (column M), so it is missing from the 300A type totals.",
+    );
+  }
+  const away = c.daysAway ?? 0;
+  const restricted = c.restrictedDays ?? 0;
+  if (away < 0 || restricted < 0) issues.push("Day counts cannot be negative.");
+  if (c.caseOutcome === "DAYS_AWAY" && away <= 0) {
+    issues.push("Outcome is days away from work but column K has no days.");
+  }
+  if (c.caseOutcome === "JOB_TRANSFER_RESTRICTION" && restricted <= 0) {
+    issues.push("Outcome is job transfer or restriction but column L has no days.");
+  }
+  if (c.caseOutcome === "JOB_TRANSFER_RESTRICTION" && away > 0) {
+    issues.push("Case has days away, so the most serious outcome is days away (H), not I.");
+  }
+  if (c.caseOutcome === "OTHER_RECORDABLE" && (away > 0 || restricted > 0)) {
+    issues.push("Case has days counted, so the outcome should be H or I, not other recordable.");
+  }
+  if (c.caseOutcome === "DEATH" && !c.dateOfDeath) {
+    issues.push("Outcome is death but no date of death is entered (Form 301 field 18).");
+  }
+  if (away + restricted > OSHA_MAX_COUNTED_DAYS) {
+    issues.push(`Days are capped at ${OSHA_MAX_COUNTED_DAYS} combined on the forms.`);
+  }
+  return issues;
+}
+
+/** Problems on every log case for the year, plus duplicate case numbers. */
+export function form300LogIssues(logCases: OshaCase[]): OshaCaseIssue[] {
+  const seen = new Map<string, number>();
+  for (const c of logCases) {
+    const key = c.caseNumber.trim().toLowerCase();
+    if (key) seen.set(key, (seen.get(key) ?? 0) + 1);
+  }
+  const out: OshaCaseIssue[] = [];
+  for (const c of logCases) {
+    const issues = oshaCaseIssues(c);
+    const key = c.caseNumber.trim().toLowerCase();
+    if (key && (seen.get(key) ?? 0) > 1) {
+      issues.unshift(`Case number ${c.caseNumber} is used more than once on this log.`);
+    }
+    if (issues.length > 0) {
+      out.push({
+        caseId: c.id,
+        label: `${c.caseNumber ? `Case ${c.caseNumber}` : "Unnumbered case"} — ${displayEmployeeName(c)}`,
+        issues,
+      });
+    }
+  }
+  return out;
 }
 
 export function summarizeOshaCases(cases: OshaCase[]): {
@@ -522,8 +629,8 @@ export function buildForm300Csv(cases: OshaCase[], year: number): string {
       c.caseOutcome === "DAYS_AWAY" ? "X" : "",
       c.caseOutcome === "JOB_TRANSFER_RESTRICTION" ? "X" : "",
       c.caseOutcome === "OTHER_RECORDABLE" ? "X" : "",
-      c.daysAway ?? "",
-      c.restrictedDays ?? "",
+      c.daysAway == null ? "" : cappedOshaDays(c.daysAway, c.restrictedDays).daysAway,
+      c.restrictedDays == null ? "" : cappedOshaDays(c.daysAway, c.restrictedDays).restrictedDays,
       c.illnessCategory === "1" ? "X" : "",
       c.illnessCategory === "2" ? "X" : "",
       c.illnessCategory === "3" ? "X" : "",
@@ -582,9 +689,7 @@ export function form300ATotalsFromPageTotals(cases: OshaCase[], year: number): O
 /** @deprecated Prefer form300ATotals — kept for transitional call sites. */
 export function form300ASummary(cases: OshaCase[], year: number) {
   const totals = form300ATotals(cases, year);
-  const inYear = cases.filter(
-    (c) => c.calendarYear === year || (c.injuryDate && c.injuryDate.startsWith(String(year))),
-  );
+  const inYear = cases.filter((c) => oshaCaseLogYear(c) === year);
   return {
     year,
     totalCases: inYear.length,
@@ -602,8 +707,14 @@ export function form300PageTotals(cases: OshaCase[]) {
     daysAwayCases: cases.filter((c) => c.caseOutcome === "DAYS_AWAY").length,
     jobTransferCases: cases.filter((c) => c.caseOutcome === "JOB_TRANSFER_RESTRICTION").length,
     otherRecordableCases: cases.filter((c) => c.caseOutcome === "OTHER_RECORDABLE").length,
-    daysAway: cases.reduce((sum, c) => sum + (c.daysAway ?? 0), 0),
-    restrictedDays: cases.reduce((sum, c) => sum + (c.restrictedDays ?? 0), 0),
+    daysAway: cases.reduce(
+      (sum, c) => sum + cappedOshaDays(c.daysAway, c.restrictedDays).daysAway,
+      0,
+    ),
+    restrictedDays: cases.reduce(
+      (sum, c) => sum + cappedOshaDays(c.daysAway, c.restrictedDays).restrictedDays,
+      0,
+    ),
     m1: cases.filter((c) => c.illnessCategory === "1").length,
     m2: cases.filter((c) => c.illnessCategory === "2").length,
     m3: cases.filter((c) => c.illnessCategory === "3").length,

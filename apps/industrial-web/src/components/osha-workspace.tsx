@@ -17,8 +17,10 @@ import {
   emptyOshaForm300AMeta,
   filterOshaCases,
   form300ATotals,
+  form300LogIssues,
   incidentHref,
   INCIDENTS_API,
+  isOshaFormLogCase,
   logCasesForForm300,
   OSHA_API,
   OSHA_FORM_300A_API,
@@ -220,6 +222,30 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
   const summary = useMemo(() => summarizeOshaCases(visible), [visible]);
   const logCases = useMemo(() => logCasesForForm300(visible, year), [visible, year]);
   const totals300A = useMemo(() => form300ATotals(visible, year), [visible, year]);
+  const logIssues = useMemo(() => form300LogIssues(logCases), [logCases]);
+  // OSHA 1904.30: each establishment keeps its own Form 300 and 300A.
+  const perSite = establishment !== "all";
+  const perSiteHint =
+    "Select an establishment. OSHA requires a separate log and summary for each site.";
+
+  useEffect(() => {
+    if (establishment === "all" && establishments.length === 1) {
+      setEstablishment(establishments[0]!);
+    }
+  }, [establishment, establishments]);
+
+  /** Gate Form 300 / 300A output: one establishment, and a confirm when cases have problems. */
+  function confirmLogReady(formName: string): boolean {
+    if (!perSite) {
+      setError(perSiteHint);
+      return false;
+    }
+    if (logIssues.length === 0) return true;
+    return window.confirm(
+      `${logIssues.length} case(s) on the ${year} log have missing or inconsistent fields ` +
+        `(listed under "Fix before printing"). ${formName} may be incomplete. Continue anyway?`,
+    );
+  }
   const selectedCase = useMemo(
     () => (selectedId ? (cases.find((c) => c.id === selectedId) ?? null) : null),
     [cases, selectedId],
@@ -340,6 +366,7 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
   }
 
   function exportForm300() {
+    if (!confirmLogReady("The Form 300 export")) return;
     const csv = buildForm300Csv(visible, year);
     downloadText(`osha-form-300-${year}.csv`, csv);
   }
@@ -378,6 +405,10 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
       setError("OSHA case not found for Form 301.");
       return;
     }
+    if (!isOshaFormLogCase(caseRow.recordabilityStatus)) {
+      setError("Form 301 is only for recordable or privacy cases. Mark the case recordable first.");
+      return;
+    }
     setError(null);
     setPrinting301(true);
     try {
@@ -394,6 +425,8 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
   }
 
   function runPrint(target: Exclude<PrintTarget, null>, caseId?: string) {
+    if (target === "300" && !confirmLogReady("Form 300")) return;
+    if (target === "300A" && !confirmLogReady("Form 300A")) return;
     if (target === "300") {
       void printForm300Pdf();
       return;
@@ -509,6 +542,8 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
                 className="btn btn-outline-secondary"
                 data-walkthrough="osha-300-log"
                 onClick={exportForm300}
+                disabled={!perSite}
+                title={perSite ? undefined : perSiteHint}
               >
                 Export Form 300 (CSV)
               </button>
@@ -516,7 +551,8 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
                 type="button"
                 className="btn btn-outline-secondary"
                 onClick={() => runPrint("300")}
-                disabled={printing300}
+                disabled={printing300 || !perSite}
+                title={perSite ? undefined : perSiteHint}
               >
                 {printing300 ? "Preparing Form 300…" : "Print Form 300"}
               </button>
@@ -525,6 +561,8 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
                 className="btn btn-outline-secondary"
                 data-walkthrough="osha-300a"
                 onClick={() => runPrint("300A")}
+                disabled={!perSite}
+                title={perSite ? undefined : perSiteHint}
               >
                 Print Form 300A
               </button>
@@ -548,6 +586,32 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
             {summary.pending > 0 ? ` ${summary.pending} pending review.` : ""} {logCases.length} on
             Form 300 log.
           </p>
+          {!perSite ? <p className="small text-muted mb-0 mt-2">{perSiteHint}</p> : null}
+          {logIssues.length > 0 ? (
+            <div
+              className="alert alert-warning mt-3 mb-0"
+              role="status"
+              data-testid="osha-log-issues"
+            >
+              <strong>Fix before printing:</strong> {logIssues.length} case(s) on the {year} log
+              have missing or inconsistent fields. Forms 300 and 300A may be wrong until they are
+              fixed.
+              <ul className="mb-0 mt-2">
+                {logIssues.map((item) => (
+                  <li key={item.caseId}>
+                    <button
+                      type="button"
+                      className="btn btn-link btn-sm p-0 align-baseline"
+                      onClick={() => setSelectedId(item.caseId)}
+                    >
+                      {item.label}
+                    </button>
+                    : {item.issues.join(" ")}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -689,7 +753,12 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
                         <button
                           type="button"
                           className="btn btn-sm btn-outline-secondary"
-                          disabled={printing301}
+                          disabled={printing301 || !isOshaFormLogCase(row.recordabilityStatus)}
+                          title={
+                            isOshaFormLogCase(row.recordabilityStatus)
+                              ? undefined
+                              : "Form 301 is only for recordable or privacy cases"
+                          }
                           onClick={() => runPrint("301", row.id)}
                         >
                           {printing301 ? "Preparing…" : "Print 301"}

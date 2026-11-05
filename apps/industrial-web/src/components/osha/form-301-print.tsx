@@ -1,6 +1,6 @@
 "use client";
 
-import { autofillForm301FromForm300, displayEmployeeName, type OshaCase } from "@/lib/osha-module";
+import { autofillForm301FromForm300, form301EmployeeName, type OshaCase } from "@/lib/osha-module";
 import {
   DOL_HEADER,
   FORM_301,
@@ -71,7 +71,7 @@ export function Form301Print({ caseRow }: Props) {
           <p>
             <strong>{FORM_301.fields.fullName}</strong>
             <br />
-            {displayEmployeeName(filled)}
+            {form301EmployeeName(filled) || "—"}
           </p>
           <p>
             <strong>{FORM_301.fields.street}</strong>

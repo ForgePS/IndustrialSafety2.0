@@ -6,6 +6,7 @@
 import { openOshaPdfForPrint } from "@/lib/osha-pdf-print";
 import { PDFDocument, type PDFForm, type PDFRadioGroup } from "pdf-lib";
 import {
+  cappedOshaDays,
   chunkForm300Pages,
   displayEmployeeName,
   form300PageTotals,
@@ -79,7 +80,8 @@ function fillRow(form: PDFForm, row: number, caseRow: OshaCase) {
   const md = formatOshaMonthDay(caseRow.injuryDate);
   const [month = "", day = ""] = md.includes("/") ? md.split("/") : ["", ""];
 
-  setText(form, `Case No. ${row}`, caseRow.caseNumber || String(row));
+  // Leave column A blank when unnumbered; a row position is not a case number.
+  setText(form, `Case No. ${row}`, caseRow.caseNumber);
   setText(
     form,
     `Employee's Name ${row}`,
@@ -90,15 +92,16 @@ function fillRow(form: PDFForm, row: number, caseRow: OshaCase) {
   setText(form, `Date of injury or illness day ${row}`, day);
   setText(form, `Where the Event Occurred ${row}`, caseRow.eventLocation);
   setText(form, `Injury or Illness Description ${row}`, caseRow.description);
+  const days = cappedOshaDays(caseRow.daysAway, caseRow.restrictedDays);
   setText(
     form,
     `Number of days injured or ill away from work ${row}`,
-    caseRow.daysAway != null ? String(caseRow.daysAway) : "",
+    caseRow.daysAway != null ? String(days.daysAway) : "",
   );
   setText(
     form,
     `On job transfer or restriction ${row}`,
-    caseRow.restrictedDays != null ? String(caseRow.restrictedDays) : "",
+    caseRow.restrictedDays != null ? String(days.restrictedDays) : "",
   );
 
   if (caseRow.caseOutcome) {

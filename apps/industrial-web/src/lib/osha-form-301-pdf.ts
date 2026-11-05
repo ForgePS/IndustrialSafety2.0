@@ -7,7 +7,7 @@
 import { PDFDocument, type PDFForm, type PDFRadioGroup } from "pdf-lib";
 import {
   autofillForm301FromForm300,
-  displayEmployeeName,
+  form301EmployeeName,
   formatOshaDateMdY,
   type OshaCase,
 } from "@/lib/osha-module";
@@ -35,7 +35,7 @@ function selectRadio(form: PDFForm, name: string, option: string | null) {
 
 function fillForm301(form: PDFForm, caseRow: OshaCase) {
   const filled = autofillForm301FromForm300(caseRow);
-  const employee = displayEmployeeName(filled) === "—" ? "" : displayEmployeeName(filled);
+  const employee = form301EmployeeName(filled);
 
   setText(form, "301 Completed by", filled.completedBy);
   setText(form, "301 Title", filled.completedByTitle);

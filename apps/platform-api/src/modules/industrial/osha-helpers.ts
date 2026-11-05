@@ -760,6 +760,55 @@ export function writeOshaForm300AMetaToSitePayload(
   return { ...payload, oshaForm300A: byYear };
 }
 
+/** OSHA 1904.7(b)(3)(vii): employers may stop counting days away + restricted at 180. */
+export const OSHA_MAX_COUNTED_DAYS = 180;
+
+/** Cap a case's days away and job-transfer days so their combined count is at most 180. */
+export function cappedOshaDays(
+  daysAway: number | null,
+  restrictedDays: number | null,
+): { daysAway: number; restrictedDays: number } {
+  const away = Math.min(Math.max(daysAway ?? 0, 0), OSHA_MAX_COUNTED_DAYS);
+  const restricted = Math.min(Math.max(restrictedDays ?? 0, 0), OSHA_MAX_COUNTED_DAYS - away);
+  return { daysAway: away, restrictedDays: restricted };
+}
+
+/** The log year for a case: the injury year wins, the stored calendar year is the fallback. */
+export function oshaCaseLogYear(c: {
+  calendarYear: number | null;
+  injuryDate?: string | null;
+}): number | null {
+  const fromDate =
+    c.injuryDate && /^\d{4}/.test(c.injuryDate) ? Number(c.injuryDate.slice(0, 4)) : null;
+  return fromDate ?? c.calendarYear ?? null;
+}
+
+/** Trailing number in a case number ("7", "2026-007", "A-12"), or null. */
+function caseNumberSequence(caseNumber: unknown): number | null {
+  const match = /(\d+)\s*$/.exec(asText(caseNumber));
+  return match ? Number(match[1]) : null;
+}
+
+/**
+ * Next Form 300 case number for one establishment's log in one year.
+ * Pass archived cases too so a number is never reused.
+ */
+export function nextOshaCaseNumber(
+  existing: Array<{ siteId: string | null; year: number | null; caseNumber: unknown }>,
+  siteId: string | null,
+  year: number | null,
+): string {
+  let max = 0;
+  for (const row of existing) {
+    if ((row.siteId ?? null) !== (siteId ?? null) || (row.year ?? null) !== (year ?? null)) {
+      continue;
+    }
+    const seq = caseNumberSequence(row.caseNumber);
+    if (seq != null && seq > max) max = seq;
+  }
+  return String(max + 1);
+}
+
 export function form300ATotalsFromCases(
   cases: Array<{
     recordabilityStatus: OshaRecordability;
@@ -772,12 +821,9 @@ export function form300ATotalsFromCases(
   }>,
   year: number,
 ): OshaForm300ATotals {
-  const inYear = cases.filter((c) => {
-    if (!isOshaFormLogCase(c.recordabilityStatus)) return false;
-    if (c.calendarYear === year) return true;
-    if (c.injuryDate && c.injuryDate.startsWith(String(year))) return true;
-    return false;
-  });
+  const inYear = cases.filter(
+    (c) => isOshaFormLogCase(c.recordabilityStatus) && oshaCaseLogYear(c) === year,
+  );
 
   const totals: OshaForm300ATotals = {
     year,
@@ -801,8 +847,9 @@ export function form300ATotalsFromCases(
     else if (row.caseOutcome === "JOB_TRANSFER_RESTRICTION") totals.jobTransferCases += 1;
     else if (row.caseOutcome === "OTHER_RECORDABLE") totals.otherRecordableCases += 1;
 
-    totals.daysAway += row.daysAway ?? 0;
-    totals.restrictedDays += row.restrictedDays ?? 0;
+    const days = cappedOshaDays(row.daysAway, row.restrictedDays);
+    totals.daysAway += days.daysAway;
+    totals.restrictedDays += days.restrictedDays;
 
     if (row.illnessCategory === "1") totals.injuries += 1;
     else if (row.illnessCategory === "2") totals.skinDisorders += 1;
@@ -900,10 +947,11 @@ export function hydrateOshaFromSource(input: {
     employeeName ||
     "OSHA case";
 
+  // The injury date decides the log year; a stored calendarYear can be stale after a date edit.
   const calendarYear =
+    (injuryDate ? Number(injuryDate.slice(0, 4)) : null) ||
     asYear(payload.calendarYear) ||
-    asYear(payload.year) ||
-    (injuryDate ? Number(injuryDate.slice(0, 4)) : null);
+    asYear(payload.year);
 
   const description =
     asText(payload.description) ||
