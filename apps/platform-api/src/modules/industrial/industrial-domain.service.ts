@@ -241,6 +241,7 @@ import {
   nextOshaCaseNumber,
   normalizeOshaRecordability,
   oshaCaseLogYear,
+  oshaLogEstablishmentKey,
   oshaFlagsFromRecordability,
   parseOshaForm300AMeta,
   readOshaForm300AMetaFromSitePayload,
@@ -16984,7 +16985,8 @@ export class IndustrialDomainService {
   }
 
   async listOsha(principal: ForgePrincipal, query: ListQuery) {
-    const { page, pageSize, offset } = this.page(query);
+    // Forms 300/300A load every case, so allow one large page.
+    const { page, pageSize, offset } = this.page(query, 5000);
     const q = (query.q ?? "").trim().toLowerCase();
     const yearRaw = (query.year ?? query.calendarYear ?? "").trim();
     const year = yearRaw ? Number(yearRaw) : null;
@@ -17251,40 +17253,40 @@ export class IndustrialDomainService {
         .limit(1);
       if (!incident) throw new ForgeError("NOT_FOUND", "Injury incident not found");
 
-      const existing = await tx
-        .select({
-          case: industrialOshaCases,
-          personnelName: industrialPersonnel.displayName,
-          siteName: industrialSites.name,
-        })
-        .from(industrialOshaCases)
-        .leftJoin(industrialPersonnel, eq(industrialPersonnel.id, industrialOshaCases.personnelId))
-        .leftJoin(industrialSites, eq(industrialSites.id, industrialOshaCases.siteId))
-        .where(
-          and(
-            eq(industrialOshaCases.tenantId, principal.tenantId),
-            isNull(industrialOshaCases.archivedAt),
-          ),
+      // One scan serves both the idempotency check and case numbering.
+      await this.lockOshaCaseNumbering(tx, principal.tenantId);
+      const numberRows = await this.oshaCaseNumberRows(tx, principal.tenantId);
+      const reopen = numberRows.find((row) => !row.archived && row.incidentId === incidentId);
+      if (reopen) {
+        // Idempotent: reopen the existing OSHA case for this incident
+        // (Incidents can enter OSHA without a workers' comp claim).
+        const [joined] = await tx
+          .select({
+            case: industrialOshaCases,
+            personnelName: industrialPersonnel.displayName,
+            siteName: industrialSites.name,
+          })
+          .from(industrialOshaCases)
+          .leftJoin(
+            industrialPersonnel,
+            eq(industrialPersonnel.id, industrialOshaCases.personnelId),
+          )
+          .leftJoin(industrialSites, eq(industrialSites.id, industrialOshaCases.siteId))
+          .where(eq(industrialOshaCases.id, reopen.id))
+          .limit(1);
+        const incidentPayload = this.unwrapSourcePayload(incident.sourcePayload);
+        const personnelIdRaw = String(incidentPayload.personnelId ?? "").trim();
+        const personnel = await this.loadPersonnelRecordForOsha(
+          tx,
+          principal.tenantId,
+          personnelIdRaw,
         );
-      for (const joined of existing) {
-        const payload = this.unwrapSourcePayload(joined.case.sourcePayload);
-        if (String(payload.incidentId ?? "").trim() === incidentId) {
-          // Idempotent: reopen the existing OSHA case for this incident
-          // (Incidents can enter OSHA without a workers' comp claim).
-          const incidentPayload = this.unwrapSourcePayload(incident.sourcePayload);
-          const personnelIdRaw = String(incidentPayload.personnelId ?? "").trim();
-          const personnel = await this.loadPersonnelRecordForOsha(
-            tx,
-            principal.tenantId,
-            personnelIdRaw,
-          );
-          const fields = this.incidentFieldsForOsha(incident, personnel);
-          return this.mapOshaCase(joined.case, {
-            incident: fields,
-            personnelName: joined.personnelName,
-            siteName: joined.siteName,
-          });
-        }
+        const fields = this.incidentFieldsForOsha(incident, personnel);
+        return this.mapOshaCase(joined!.case, {
+          incident: fields,
+          personnelName: joined!.personnelName,
+          siteName: joined!.siteName,
+        });
       }
 
       const incidentPayload = this.unwrapSourcePayload(incident.sourcePayload);
@@ -17312,18 +17314,18 @@ export class IndustrialDomainService {
         fields.dateOccurred?.slice(0, 10) ||
         null;
       const caseYear = injuryDate ? Number(injuryDate.slice(0, 4)) : null;
-      const numberRows = await this.oshaCaseNumberRows(tx, principal.tenantId);
+      // Store the establishment name the log will group by, so numbering and the
+      // printed Form 300 always agree on which log the case is on.
+      const establishment =
+        String(mergedSeed.establishment ?? "").trim() ||
+        String(fields.establishment ?? "").trim() ||
+        (await this.oshaSiteName(tx, principal.tenantId, incident.siteId));
+      const logKey = oshaLogEstablishmentKey(establishment);
       const caseNumber =
         typeof body.caseNumber === "string" && body.caseNumber.trim()
           ? body.caseNumber.trim()
-          : nextOshaCaseNumber(numberRows, incident.siteId ?? null, caseYear);
-      this.assertOshaCaseNumberFree(
-        numberRows,
-        null,
-        incident.siteId ?? null,
-        caseYear,
-        caseNumber,
-      );
+          : nextOshaCaseNumber(numberRows, logKey, caseYear);
+      this.assertOshaCaseNumberFree(numberRows, null, logKey, caseYear, caseNumber);
       const personnelId =
         typeof seed.personnelId === "string" && UUID_PATTERN.test(seed.personnelId)
           ? seed.personnelId
@@ -17342,6 +17344,7 @@ export class IndustrialDomainService {
           sourcePayload: {
             ...mergedSeed,
             injuryDate,
+            establishment,
             incidentId,
             title,
             caseNumber,
@@ -17412,7 +17415,6 @@ export class IndustrialDomainService {
           mergeOshaSeedPreferExisting(existingPayload, seed),
           {},
         );
-        // Keep case number from Form 300 log when present.
         // Field 10 shows the Form 300 case number; it stays blank until one is assigned.
         const existingCaseNo = String(existingPayload.caseNumber ?? "").trim();
         mergedPayload.caseNumber = existingCaseNo;
@@ -17434,10 +17436,15 @@ export class IndustrialDomainService {
         };
       }
 
+      // Preview the number createOsha would assign (same log key and year rules).
       const seedDate = typeof seed.injuryDate === "string" ? seed.injuryDate : "";
+      const seedEstablishment =
+        String(seed.establishment ?? "").trim() ||
+        String(fields.establishment ?? "").trim() ||
+        (await this.oshaSiteName(tx, principal.tenantId, incident.siteId));
       const caseNumber = nextOshaCaseNumber(
         await this.oshaCaseNumberRows(tx, principal.tenantId),
-        incident.siteId ?? null,
+        oshaLogEstablishmentKey(seedEstablishment),
         seedDate ? Number(seedDate.slice(0, 4)) : null,
       );
       const syntheticPayload = mergeOshaCasePayloadFields(
@@ -17521,32 +17528,23 @@ export class IndustrialDomainService {
         reviewedByUserId: principal.userId,
         reviewedAt: new Date().toISOString(),
       };
-      // Only check when the number or year changes, so old duplicates don't block other edits.
-      const nextCaseNumber = String(nextPayload.caseNumber ?? "").trim();
-      const priorYear = oshaCaseLogYear({
-        injuryDate: typeof payload.injuryDate === "string" ? payload.injuryDate : null,
-        calendarYear: typeof payload.calendarYear === "number" ? payload.calendarYear : null,
-      });
-      const numberChanged =
-        nextCaseNumber !== String(payload.caseNumber ?? "").trim() ||
-        priorYear !==
-          oshaCaseLogYear({
-            injuryDate,
-            calendarYear:
-              typeof nextPayload.calendarYear === "number" ? nextPayload.calendarYear : null,
-          });
-      if (nextCaseNumber && numberChanged) {
-        const year = oshaCaseLogYear({
-          injuryDate,
-          calendarYear:
-            typeof nextPayload.calendarYear === "number" ? nextPayload.calendarYear : null,
-        });
+      // Only check when the number, year or log changes, so old duplicates don't block other edits.
+      const siteName = await this.oshaSiteName(tx, principal.tenantId, existing.siteId);
+      const prior = this.oshaLogPlacement(payload, siteName);
+      const next = this.oshaLogPlacement(nextPayload, siteName);
+      if (
+        next.caseNumber &&
+        (next.caseNumber !== prior.caseNumber ||
+          next.year !== prior.year ||
+          next.logKey !== prior.logKey)
+      ) {
+        await this.lockOshaCaseNumbering(tx, principal.tenantId);
         this.assertOshaCaseNumberFree(
           await this.oshaCaseNumberRows(tx, principal.tenantId),
           existing.id,
-          existing.siteId ?? null,
-          year,
-          nextCaseNumber,
+          next.logKey,
+          next.year,
+          next.caseNumber,
         );
       }
 
@@ -17656,9 +17654,9 @@ export class IndustrialDomainService {
 
   /** Reject a case number already used on the same establishment's log for the same year. */
   private assertOshaCaseNumberFree(
-    rows: Array<{ id: string; siteId: string | null; year: number | null; caseNumber: string }>,
+    rows: Array<{ id: string; logKey: string; year: number | null; caseNumber: string }>,
     selfId: string | null,
-    siteId: string | null,
+    logKey: string,
     year: number | null,
     caseNumber: string,
   ) {
@@ -17667,7 +17665,7 @@ export class IndustrialDomainService {
     const clash = rows.find(
       (row) =>
         row.id !== selfId &&
-        row.siteId === siteId &&
+        row.logKey === logKey &&
         row.year === year &&
         row.caseNumber.toLowerCase() === wanted,
     );
@@ -17680,6 +17678,61 @@ export class IndustrialDomainService {
     }
   }
 
+  /**
+   * Serialize case-number allocation per tenant for the rest of the transaction, so two
+   * cases created at the same moment cannot both take the next number.
+   */
+  private async lockOshaCaseNumbering(
+    tx: Parameters<Parameters<typeof withTenantTransaction>[2]>[0],
+    tenantId: string,
+  ) {
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(hashtext(${`osha-case-number:${tenantId}`}))`,
+    );
+  }
+
+  private async oshaSiteName(
+    tx: Parameters<Parameters<typeof withTenantTransaction>[2]>[0],
+    tenantId: string,
+    siteId: string | null,
+  ): Promise<string> {
+    if (!siteId) return "";
+    const [site] = await tx
+      .select({ name: industrialSites.name })
+      .from(industrialSites)
+      .where(and(eq(industrialSites.id, siteId), eq(industrialSites.tenantId, tenantId)))
+      .limit(1);
+    return site?.name?.trim() ?? "";
+  }
+
+  /**
+   * Which Form 300 log a stored case is on: the establishment name the web groups by
+   * (same precedence as hydrateOshaFromSource), its log year, and its case number.
+   */
+  private oshaLogPlacement(
+    payload: Record<string, unknown>,
+    siteName: string | null,
+    recordDate?: string | null,
+  ) {
+    const text = (value: unknown) => (typeof value === "string" ? value.trim() : "");
+    const establishment =
+      text(payload.establishment) ||
+      text(payload.establishmentName) ||
+      text(payload.site) ||
+      text(payload.siteName) ||
+      (siteName ?? "").trim();
+    const injuryDate = (text(payload.injuryDate) || text(recordDate)).slice(0, 10);
+    const calendarYear = Number(payload.calendarYear);
+    return {
+      logKey: oshaLogEstablishmentKey(establishment),
+      year: oshaCaseLogYear({
+        injuryDate: injuryDate || null,
+        calendarYear: Number.isFinite(calendarYear) && calendarYear > 0 ? calendarYear : null,
+      }),
+      caseNumber: text(payload.caseNumber) || String(payload.caseNumber ?? "").trim(),
+    };
+  }
+
   /** Case-number inputs for every OSHA case in the tenant, archived ones included. */
   private async oshaCaseNumberRows(
     tx: Parameters<Parameters<typeof withTenantTransaction>[2]>[0],
@@ -17688,26 +17741,21 @@ export class IndustrialDomainService {
     const rows = await tx
       .select({
         id: industrialOshaCases.id,
-        siteId: industrialOshaCases.siteId,
         recordDate: industrialOshaCases.recordDate,
         sourcePayload: industrialOshaCases.sourcePayload,
+        archivedAt: industrialOshaCases.archivedAt,
+        siteName: industrialSites.name,
       })
       .from(industrialOshaCases)
+      .leftJoin(industrialSites, eq(industrialSites.id, industrialOshaCases.siteId))
       .where(eq(industrialOshaCases.tenantId, tenantId));
     return rows.map((row) => {
       const payload = this.unwrapSourcePayload(row.sourcePayload);
-      const injuryDate =
-        String(payload.injuryDate ?? "").slice(0, 10) ||
-        (row.recordDate ? String(row.recordDate).slice(0, 10) : "");
-      const calendarYear = Number(payload.calendarYear);
       return {
         id: row.id,
-        siteId: row.siteId ?? null,
-        year: oshaCaseLogYear({
-          injuryDate: injuryDate || null,
-          calendarYear: Number.isFinite(calendarYear) && calendarYear > 0 ? calendarYear : null,
-        }),
-        caseNumber: String(payload.caseNumber ?? "").trim(),
+        archived: row.archivedAt != null,
+        incidentId: String(payload.incidentId ?? "").trim(),
+        ...this.oshaLogPlacement(payload, row.siteName, row.recordDate),
       };
     });
   }

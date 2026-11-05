@@ -2,6 +2,20 @@
  * OSHA Recordkeeping module helpers for Forms 300 / 300A / 301.
  */
 
+import {
+  cappedOshaDays,
+  OSHA_MAX_COUNTED_DAYS,
+  oshaCaseLogYear,
+  oshaLogEstablishmentKey,
+} from "@forge/contracts";
+
+export {
+  cappedOshaDays,
+  OSHA_MAX_COUNTED_DAYS,
+  oshaCaseLogYear,
+  oshaLogEstablishmentKey,
+} from "@forge/contracts";
+
 export const OSHA_API = "/api/v1/industrial/osha";
 export const OSHA_FORM_300A_API = "/api/v1/industrial/osha-form-300a";
 export const INCIDENTS_API = "/api/v1/industrial/incidents";
@@ -359,14 +373,14 @@ export function filterOshaCases(
   cases: OshaCase[],
   opts: { year?: number | null; establishment?: string; q?: string },
 ): OshaCase[] {
-  const establishment = asText(opts.establishment).toLowerCase();
+  const establishment = oshaLogEstablishmentKey(opts.establishment);
   const q = asText(opts.q).toLowerCase();
   return cases.filter((row) => {
     // Cases with no date at all stay visible in every year so they can be fixed.
     const logYear = oshaCaseLogYear(row);
     if (opts.year != null && logYear != null && logYear !== opts.year) return false;
     if (establishment && establishment !== "all") {
-      if (row.establishment.toLowerCase() !== establishment) return false;
+      if (oshaLogEstablishmentKey(row.establishment) !== establishment) return false;
     }
     if (q) {
       const hay =
@@ -375,29 +389,6 @@ export function filterOshaCases(
     }
     return true;
   });
-}
-
-/** OSHA 1904.7(b)(3)(vii): employers may stop counting days away + restricted at 180. */
-export const OSHA_MAX_COUNTED_DAYS = 180;
-
-/** Cap a case's days away and job-transfer days so their combined count is at most 180. */
-export function cappedOshaDays(
-  daysAway: number | null,
-  restrictedDays: number | null,
-): { daysAway: number; restrictedDays: number } {
-  const away = Math.min(Math.max(daysAway ?? 0, 0), OSHA_MAX_COUNTED_DAYS);
-  const restricted = Math.min(Math.max(restrictedDays ?? 0, 0), OSHA_MAX_COUNTED_DAYS - away);
-  return { daysAway: away, restrictedDays: restricted };
-}
-
-/** The log year for a case: the injury year wins, the stored calendar year is the fallback. */
-export function oshaCaseLogYear(c: {
-  calendarYear: number | null;
-  injuryDate?: string | null;
-}): number | null {
-  const fromDate =
-    c.injuryDate && /^\d{4}/.test(c.injuryDate) ? Number(c.injuryDate.slice(0, 4)) : null;
-  return fromDate ?? c.calendarYear ?? null;
 }
 
 function caseNumberSortKey(caseNumber: string): number {
@@ -463,6 +454,39 @@ export function oshaCaseIssues(c: OshaCase): string[] {
 }
 
 /** Problems on every log case for the year, plus duplicate case numbers. */
+/**
+ * Recordable cases that cannot land on any establishment’s Form 300 for `year`:
+ * no injury date (no log year at all) or no establishment. Per-site filtering hides
+ * these, so they are listed separately or they would drop off every printed log.
+ */
+export function form300UnplacedIssues(cases: OshaCase[], year: number): OshaCaseIssue[] {
+  return cases
+    .filter((c) => {
+      if (!isOshaFormLogCase(c.recordabilityStatus)) return false;
+      const logYear = oshaCaseLogYear(c);
+      return logYear == null || (logYear === year && !oshaLogEstablishmentKey(c.establishment));
+    })
+    .map((c) => ({
+      caseId: c.id,
+      label: `${c.caseNumber ? `Case ${c.caseNumber}` : "Unnumbered case"} — ${displayEmployeeName(c)}`,
+      issues: ["Not on any Form 300 log until fixed.", ...oshaCaseIssues(c)],
+    }));
+}
+
+/** Everything to fix before printing one establishment’s log: its cases plus unplaced ones. */
+export function form300PrintIssues(
+  logCases: OshaCase[],
+  allCases: OshaCase[],
+  year: number,
+): OshaCaseIssue[] {
+  const out = form300LogIssues(logCases);
+  const seen = new Set(out.map((item) => item.caseId));
+  for (const item of form300UnplacedIssues(allCases, year)) {
+    if (!seen.has(item.caseId)) out.push(item);
+  }
+  return out;
+}
+
 export function form300LogIssues(logCases: OshaCase[]): OshaCaseIssue[] {
   const seen = new Map<string, number>();
   for (const c of logCases) {

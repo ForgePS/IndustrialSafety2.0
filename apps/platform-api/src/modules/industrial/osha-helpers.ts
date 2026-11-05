@@ -3,6 +3,16 @@
  * Form 300 / 300A / 301 fields for list/detail APIs.
  */
 
+import { cappedOshaDays, oshaCaseLogYear } from "@forge/contracts";
+
+export {
+  cappedOshaDays,
+  nextOshaCaseNumber,
+  OSHA_MAX_COUNTED_DAYS,
+  oshaCaseLogYear,
+  oshaLogEstablishmentKey,
+} from "@forge/contracts";
+
 export const OSHA_RECORDABILITY = [
   "PENDING",
   "RECORDABLE",
@@ -758,55 +768,6 @@ export function writeOshaForm300AMetaToSitePayload(
     certificationDate: meta.certificationDate,
   };
   return { ...payload, oshaForm300A: byYear };
-}
-
-/** OSHA 1904.7(b)(3)(vii): employers may stop counting days away + restricted at 180. */
-export const OSHA_MAX_COUNTED_DAYS = 180;
-
-/** Cap a case's days away and job-transfer days so their combined count is at most 180. */
-export function cappedOshaDays(
-  daysAway: number | null,
-  restrictedDays: number | null,
-): { daysAway: number; restrictedDays: number } {
-  const away = Math.min(Math.max(daysAway ?? 0, 0), OSHA_MAX_COUNTED_DAYS);
-  const restricted = Math.min(Math.max(restrictedDays ?? 0, 0), OSHA_MAX_COUNTED_DAYS - away);
-  return { daysAway: away, restrictedDays: restricted };
-}
-
-/** The log year for a case: the injury year wins, the stored calendar year is the fallback. */
-export function oshaCaseLogYear(c: {
-  calendarYear: number | null;
-  injuryDate?: string | null;
-}): number | null {
-  const fromDate =
-    c.injuryDate && /^\d{4}/.test(c.injuryDate) ? Number(c.injuryDate.slice(0, 4)) : null;
-  return fromDate ?? c.calendarYear ?? null;
-}
-
-/** Trailing number in a case number ("7", "2026-007", "A-12"), or null. */
-function caseNumberSequence(caseNumber: unknown): number | null {
-  const match = /(\d+)\s*$/.exec(asText(caseNumber));
-  return match ? Number(match[1]) : null;
-}
-
-/**
- * Next Form 300 case number for one establishment's log in one year.
- * Pass archived cases too so a number is never reused.
- */
-export function nextOshaCaseNumber(
-  existing: Array<{ siteId: string | null; year: number | null; caseNumber: unknown }>,
-  siteId: string | null,
-  year: number | null,
-): string {
-  let max = 0;
-  for (const row of existing) {
-    if ((row.siteId ?? null) !== (siteId ?? null) || (row.year ?? null) !== (year ?? null)) {
-      continue;
-    }
-    const seq = caseNumberSequence(row.caseNumber);
-    if (seq != null && seq > max) max = seq;
-  }
-  return String(max + 1);
 }
 
 export function form300ATotalsFromCases(

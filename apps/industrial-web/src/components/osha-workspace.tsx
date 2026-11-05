@@ -17,10 +17,11 @@ import {
   emptyOshaForm300AMeta,
   filterOshaCases,
   form300ATotals,
-  form300LogIssues,
+  form300PrintIssues,
   incidentHref,
   INCIDENTS_API,
   isOshaFormLogCase,
+  oshaLogEstablishmentKey,
   logCasesForForm300,
   OSHA_API,
   OSHA_FORM_300A_API,
@@ -59,6 +60,9 @@ type InjuryIncident = {
   dateOccurred: string;
   hasOshaCase: boolean;
 };
+
+/** Matches the API maximum for /industrial/osha, so most tenants load in one request. */
+const OSHA_LIST_PAGE_SIZE = 5000;
 
 type PrintTarget = "300" | "300A" | "301" | null;
 
@@ -121,16 +125,21 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
     setLoading(true);
     setError(null);
     try {
+      // Forms 300/300A need every case, so page until the server total is reached.
       const items: Array<Record<string, unknown>> = [];
-      let page = 1;
-      while (page <= 50) {
+      for (let page = 1; ; page += 1) {
         const res = await apiGet<ListResponse>(OSHA_API, {
-          query: { page: String(page), pageSize: "100" },
+          query: { page: String(page), pageSize: String(OSHA_LIST_PAGE_SIZE) },
         });
         const batch = res.items ?? [];
         items.push(...batch);
-        if (batch.length < 100) break;
-        page += 1;
+        const total = typeof res.total === "number" ? res.total : null;
+        if (
+          batch.length === 0 ||
+          (total != null ? items.length >= total : batch.length < OSHA_LIST_PAGE_SIZE)
+        ) {
+          break;
+        }
       }
       setCases(items.map(toOshaCase));
     } catch (e) {
@@ -203,10 +212,17 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
   const siteIdFor = useCallback(
     (name: string) =>
       sites.find((site) => site.name.toLowerCase() === name.toLowerCase())?.id ??
-      cases.find((c) => c.establishment === name && c.siteId)?.siteId ??
+      cases.find(
+        (c) =>
+          oshaLogEstablishmentKey(c.establishment) === oshaLogEstablishmentKey(name) && c.siteId,
+      )?.siteId ??
       undefined,
     [sites, cases],
   );
+
+  // A string, not the siteIdFor function, so reloading cases does not refetch the 300A
+  // meta and overwrite unsaved edits in the Form 300A editor.
+  const selectedSiteId = establishment === "all" ? undefined : siteIdFor(establishment);
 
   const loadForm300AMeta = useCallback(async () => {
     if (!awsReady || establishment === "all") {
@@ -214,7 +230,7 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
       return;
     }
     try {
-      const siteId = siteIdFor(establishment);
+      const siteId = selectedSiteId;
       const res = await apiGet<Record<string, unknown>>(OSHA_FORM_300A_API, {
         query: {
           year: String(year),
@@ -226,7 +242,7 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
     } catch {
       setForm300AMeta(emptyOshaForm300AMeta(year, establishment));
     }
-  }, [awsReady, year, establishment, siteIdFor]);
+  }, [awsReady, year, establishment, selectedSiteId]);
 
   useEffect(() => {
     if (!awsReady) {
@@ -256,7 +272,10 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
   const summary = useMemo(() => summarizeOshaCases(visible), [visible]);
   const logCases = useMemo(() => logCasesForForm300(visible, year), [visible, year]);
   const totals300A = useMemo(() => form300ATotals(visible, year), [visible, year]);
-  const logIssues = useMemo(() => form300LogIssues(logCases), [logCases]);
+  const logIssues = useMemo(
+    () => form300PrintIssues(logCases, cases, year),
+    [logCases, cases, year],
+  );
   // OSHA 1904.30: each establishment keeps its own Form 300 and 300A.
   const perSite = establishment !== "all";
   const perSiteHint =

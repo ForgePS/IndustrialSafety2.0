@@ -5,6 +5,7 @@ import {
   filterOshaCases,
   form300ATotals,
   form300LogIssues,
+  form300PrintIssues,
   form301EmployeeName,
   logCasesForForm300,
   oshaCaseIssues,
@@ -119,5 +120,32 @@ describe("Form 301 privacy", () => {
     const privacy = logCase({ recordabilityStatus: "PRIVACY_CASE", employeeName: "Pat Lee" });
     expect(privacy.privacyCase).toBe(true);
     expect(form301EmployeeName(privacy)).toBe("Pat Lee");
+  });
+});
+
+describe("Cases that cannot land on any log", () => {
+  it("lists undated and unsited recordable cases next to the selected log", () => {
+    const placed = logCase({ id: "ok" });
+    const undated = logCase({ id: "nodate", injuryDate: null, calendarYear: null });
+    const unsited = logCase({ id: "nosite", establishment: "" });
+    const pendingUndated = logCase({
+      id: "pending",
+      injuryDate: null,
+      recordabilityStatus: "PENDING",
+    });
+    const all = [placed, undated, unsited, pendingUndated];
+    const siteLog = logCasesForForm300(
+      filterOshaCases(all, { year: 2026, establishment: "Crowley" }),
+      2026,
+    );
+    expect(siteLog.map((c) => c.id)).toEqual(["ok"]);
+    const issues = form300PrintIssues(siteLog, all, 2026);
+    expect(issues.map((i) => i.caseId)).toEqual(["nodate", "nosite"]);
+    expect(issues[0]!.issues[0]).toBe("Not on any Form 300 log until fixed.");
+  });
+
+  it("matches establishments regardless of case and spacing", () => {
+    const row = logCase({ establishment: "Crowley  Plant" });
+    expect(filterOshaCases([row], { year: 2026, establishment: "crowley plant" })).toHaveLength(1);
   });
 });

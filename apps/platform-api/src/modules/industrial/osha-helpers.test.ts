@@ -249,15 +249,15 @@ describe("osha-helpers", () => {
 describe("OSHA audit fixes", () => {
   it("numbers cases per establishment and year, never reusing a number", () => {
     const rows = [
-      { siteId: "s1", year: 2026, caseNumber: "1" },
-      { siteId: "s1", year: 2026, caseNumber: "2026-004" },
-      { siteId: "s2", year: 2026, caseNumber: "9" },
-      { siteId: "s1", year: 2025, caseNumber: "12" },
+      { logKey: "site 1", year: 2026, caseNumber: "1" },
+      { logKey: "site 1", year: 2026, caseNumber: "2026-004" },
+      { logKey: "site 2", year: 2026, caseNumber: "9" },
+      { logKey: "site 1", year: 2025, caseNumber: "12" },
     ];
-    expect(nextOshaCaseNumber(rows, "s1", 2026)).toBe("5");
-    expect(nextOshaCaseNumber(rows, "s2", 2026)).toBe("10");
-    expect(nextOshaCaseNumber(rows, "s1", 2027)).toBe("1");
-    expect(nextOshaCaseNumber(rows, null, null)).toBe("1");
+    expect(nextOshaCaseNumber(rows, "site 1", 2026)).toBe("5");
+    expect(nextOshaCaseNumber(rows, "site 2", 2026)).toBe("10");
+    expect(nextOshaCaseNumber(rows, "site 1", 2027)).toBe("1");
+    expect(nextOshaCaseNumber(rows, "", null)).toBe("1");
   });
 
   it("uses the injury year over a stale calendarYear", () => {
