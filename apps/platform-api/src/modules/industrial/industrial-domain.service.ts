@@ -241,7 +241,11 @@ import {
   normalizeOshaRecordability,
   oshaFlagsFromRecordability,
   parseOshaForm300AMeta,
+  divisionFromPayload,
+  OSHA_FORM300A_DIVISIONS_KEY,
+  readOshaForm300AMetaForDivision,
   readOshaForm300AMetaFromSitePayload,
+  writeOshaForm300AMetaForDivision,
   seedForm301FieldsFromIncident,
   writeOshaForm300AMetaToSitePayload,
   type OshaRecordability,
@@ -16834,6 +16838,12 @@ export class IndustrialDomainService {
       employeeName: typeof seeded.employeeName === "string" ? seeded.employeeName : null,
       dateOccurred: typeof seeded.injuryDate === "string" ? seeded.injuryDate : null,
       establishment: typeof seeded.establishment === "string" ? seeded.establishment : null,
+      division: divisionFromPayload(payload) || null,
+      /** Used by callers to look up the incident department's division. */
+      departmentId: typeof payload.departmentId === "string" ? payload.departmentId : null,
+      personnelDivision: personnel
+        ? String(personnel.divisionName ?? "").trim() || divisionFromPayload(personnel) || null
+        : null,
       sitePath: typeof payload.site === "string" ? payload.site : null,
       oshaRecordable: payload.oshaRecordable ?? payload.recordable,
       reportedBy: typeof payload.reportedBy === "string" ? payload.reportedBy : null,
@@ -16899,7 +16909,33 @@ export class IndustrialDomainService {
       state,
       zip,
       gender,
+      divisionName:
+        row.divisionName ?? String(payload.divisionName ?? payload.division ?? "").trim(),
     };
+  }
+
+  /** Department id → division name, for resolving a case's or incident's division. */
+  private async loadDepartmentDivisions(
+    tx: DatabaseTransaction,
+    tenantId: string,
+    departmentIds: Iterable<string | null | undefined>,
+  ): Promise<Map<string, string>> {
+    const ids = [
+      ...new Set([...departmentIds].filter((id): id is string => !!id && UUID_PATTERN.test(id))),
+    ];
+    const out = new Map<string, string>();
+    if (ids.length === 0) return out;
+    const rows = await tx
+      .select({ id: industrialDepartments.id, divisionName: industrialDepartments.divisionName })
+      .from(industrialDepartments)
+      .where(
+        and(eq(industrialDepartments.tenantId, tenantId), inArray(industrialDepartments.id, ids)),
+      );
+    for (const r of rows) {
+      const name = r.divisionName?.trim();
+      if (name) out.set(r.id, name);
+    }
+    return out;
   }
 
   private mapOshaCase(
@@ -16908,6 +16944,8 @@ export class IndustrialDomainService {
       incident?: ReturnType<IndustrialDomainService["incidentFieldsForOsha"]> | null;
       personnelName?: string | null;
       siteName?: string | null;
+      departmentDivision?: string | null;
+      personnelDivision?: string | null;
     } = {},
   ) {
     const hydrated = hydrateOshaFromSource({
@@ -16919,6 +16957,8 @@ export class IndustrialDomainService {
       incident: extras.incident ?? null,
       personnelName: extras.personnelName ?? null,
       siteName: extras.siteName ?? null,
+      departmentDivision: extras.departmentDivision ?? null,
+      personnelDivision: extras.personnelDivision ?? extras.incident?.personnelDivision ?? null,
     });
     return {
       id: row.id,
@@ -16938,6 +16978,7 @@ export class IndustrialDomainService {
       privacyCase: hydrated.privacyCase,
       reviewer: hydrated.reviewer || "Pending",
       establishment: hydrated.establishment,
+      division: hydrated.division,
       calendarYear: hydrated.calendarYear,
       daysAway: hydrated.daysAway,
       restrictedDays: hydrated.restrictedDays,
@@ -16992,6 +17033,7 @@ export class IndustrialDomainService {
         .select({
           case: industrialOshaCases,
           personnelName: industrialPersonnel.displayName,
+          personnelDivision: industrialPersonnel.divisionName,
           siteName: industrialSites.name,
         })
         .from(industrialOshaCases)
@@ -17074,7 +17116,12 @@ export class IndustrialDomainService {
         }
       }
 
-      let mapped = rows.map(({ case: row, personnelName, siteName }) => {
+      const departmentDivisions = await this.loadDepartmentDivisions(tx, principal.tenantId, [
+        ...rows.map(({ case: row }) => row.departmentId),
+        ...[...incidentsById.values()].map((fields) => fields.departmentId),
+      ]);
+
+      let mapped = rows.map(({ case: row, personnelName, personnelDivision, siteName }) => {
         const payload = this.unwrapSourcePayload(row.sourcePayload);
         const rawIncidentId = String(payload.incidentId ?? payload.incident_id ?? "").trim();
         const awsIncidentId = String(payload.awsIncidentId ?? "").trim();
@@ -17083,23 +17130,33 @@ export class IndustrialDomainService {
           (UUID_PATTERN.test(rawIncidentId) ? incidentsById.get(rawIncidentId) : null) ||
           (rawIncidentId ? incidentsBySourceId.get(rawIncidentId) : null) ||
           null;
+        const incidentDeptDivision = incident?.departmentId
+          ? departmentDivisions.get(incident.departmentId)
+          : undefined;
         return this.mapOshaCase(row, {
-          incident,
+          incident: incident
+            ? { ...incident, division: incident.division || incidentDeptDivision || null }
+            : null,
           personnelName,
           siteName,
+          departmentDivision: row.departmentId
+            ? (departmentDivisions.get(row.departmentId) ?? null)
+            : null,
+          personnelDivision: personnelDivision?.trim() || null,
         });
       });
 
       if (year != null && Number.isFinite(year)) {
         mapped = mapped.filter((item) => item.calendarYear === year);
       }
+      // OSHA establishments are divisions; the query param keeps its old name.
       if (establishment && establishment !== "all") {
-        mapped = mapped.filter((item) => item.establishment.toLowerCase() === establishment);
+        mapped = mapped.filter((item) => item.division.toLowerCase() === establishment);
       }
       if (q) {
         mapped = mapped.filter((item) => {
           const hay =
-            `${item.title} ${item.employeeName} ${item.establishment} ${item.recordabilityStatus}`.toLowerCase();
+            `${item.title} ${item.employeeName} ${item.division} ${item.establishment} ${item.recordabilityStatus}`.toLowerCase();
           return hay.includes(q);
         });
       }
@@ -17568,11 +17625,30 @@ export class IndustrialDomainService {
       throw new ForgeError("VALIDATION_FAILED", "A valid calendar year is required.");
     }
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
+      const division = (query.establishment ?? "").trim();
+      // Establishments are divisions: without a siteId, details live per division.
+      if (!(query.siteId ?? "").trim()) {
+        if (!division || division.toLowerCase() === "all") {
+          return emptyOshaForm300AMeta(year, "");
+        }
+        const setting = await this.findOshaDivisionMetaSetting(tx, principal.tenantId);
+        return readOshaForm300AMetaForDivision(setting?.valueJson, division, year);
+      }
       const site = await this.resolveOshaForm300ASite(tx, principal.tenantId, query);
       if (!site) {
-        return emptyOshaForm300AMeta(year, (query.establishment ?? "").trim());
+        return emptyOshaForm300AMeta(year, division);
       }
       return readOshaForm300AMetaFromSitePayload(site.sourcePayload, year, site.name);
+    });
+  }
+
+  private findOshaDivisionMetaSetting(tx: DatabaseTransaction, tenantId: string) {
+    return tx.query.tenantSettings.findFirst({
+      where: and(
+        eq(tenantSettings.tenantId, tenantId),
+        eq(tenantSettings.namespace, "industrial"),
+        eq(tenantSettings.settingKey, OSHA_FORM300A_DIVISIONS_KEY),
+      ),
     });
   }
 
@@ -17590,6 +17666,44 @@ export class IndustrialDomainService {
       );
     }
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
+      if (!siteId) {
+        if (establishment.toLowerCase() === "all") {
+          throw new ForgeError("VALIDATION_FAILED", "Select a specific division for Form 300A.");
+        }
+        const meta = parseOshaForm300AMeta(body, year, establishment);
+        const existing = await this.findOshaDivisionMetaSetting(tx, principal.tenantId);
+        const valueJson = writeOshaForm300AMetaForDivision(
+          existing?.valueJson,
+          establishment,
+          meta,
+        );
+        const now = new Date();
+        if (existing) {
+          await tx
+            .update(tenantSettings)
+            .set({
+              valueJson,
+              recordVersion: sql`${tenantSettings.recordVersion} + 1`,
+              updatedAt: now,
+              updatedByUserId: principal.userId,
+            })
+            .where(eq(tenantSettings.id, existing.id));
+        } else {
+          await tx.insert(tenantSettings).values({
+            id: createId(),
+            tenantId: principal.tenantId,
+            namespace: "industrial",
+            settingKey: OSHA_FORM300A_DIVISIONS_KEY,
+            valueJson,
+            schemaVersion: 1,
+            isSensitive: false,
+            createdAt: now,
+            updatedAt: now,
+            updatedByUserId: principal.userId,
+          });
+        }
+        return meta;
+      }
       const site = await this.resolveOshaForm300ASite(tx, principal.tenantId, {
         siteId,
         establishment,

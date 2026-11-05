@@ -22,6 +22,7 @@ const sample = toOshaCase({
   injuryDate: "2026-07-08",
   recordabilityStatus: "RECORDABLE",
   establishment: "Crowley",
+  division: "Rice Milling",
   reviewer: "Pending",
   caseNumber: "1",
   jobTitle: "Welder",
@@ -47,12 +48,31 @@ describe("osha-module", () => {
     expect(sample.calendarYear).toBe(2026);
     expect(summarizeOshaCases([sample, pending]).recordable).toBe(1);
     expect(summarizeOshaCases([sample, pending]).pending).toBe(1);
-    expect(uniqueEstablishments([sample])).toEqual(["Crowley"]);
+    expect(sample.division).toBe("Rice Milling");
+    expect(uniqueEstablishments([sample])).toEqual(["Rice Milling"]);
   });
 
-  it("filters by year and establishment", () => {
+  it("filters by year and establishment (division)", () => {
     expect(filterOshaCases([sample], { year: 2025 })).toHaveLength(0);
-    expect(filterOshaCases([sample], { year: 2026, establishment: "Crowley" })).toHaveLength(1);
+    expect(filterOshaCases([sample], { year: 2026, establishment: "rice milling" })).toHaveLength(
+      1,
+    );
+    // The old site-based value no longer selects the case.
+    expect(filterOshaCases([sample], { year: 2026, establishment: "Crowley" })).toHaveLength(0);
+  });
+
+  it("lists establishments from the division catalog plus divisions found on cases", () => {
+    const other = toOshaCase({
+      id: "9",
+      title: "x",
+      division: "Seed Plant",
+      injuryDate: "2026-01-01",
+    });
+    expect(uniqueEstablishments([sample, other, pending], ["Logistics", "rice milling"])).toEqual([
+      "Logistics",
+      "rice milling",
+      "Seed Plant",
+    ]);
   });
 
   it("builds Form 300 CSV with A-M columns and masks privacy names", () => {

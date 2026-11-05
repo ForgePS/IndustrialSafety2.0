@@ -46,6 +46,7 @@ export const OSHA_CASE_PAYLOAD_KEYS = [
   "restrictedDays",
   "illnessCategory",
   "establishment",
+  "division",
   "calendarYear",
   "reviewer",
   // Form 301
@@ -127,6 +128,8 @@ export type OshaCaseHydrated = {
   privacyCase: boolean;
   reviewer: string;
   establishment: string;
+  /** OSHA establishment for logs and filters: the case's division. */
+  division: string;
   calendarYear: number | null;
   daysAway: number | null;
   restrictedDays: number | null;
@@ -815,6 +818,46 @@ export function form300ATotalsFromCases(
   return totals;
 }
 
+/** Division named on a case, incident or employee payload ("" when none). */
+export function divisionFromPayload(payload: Record<string, unknown> | null | undefined): string {
+  if (!payload) return "";
+  return (
+    asText(payload.division) ||
+    asText(payload.divisionName) ||
+    asText(payload.Division) ||
+    asText(payload.DivisionName)
+  );
+}
+
+/** tenant_settings key (namespace "industrial") holding Form 300A details per division. */
+export const OSHA_FORM300A_DIVISIONS_KEY = "osha.form300A.divisions";
+
+const divisionKey = (name: string) => name.trim().toLowerCase();
+
+/** Form 300A details per division, stored in tenant settings as { [division]: { [year]: meta } }. */
+export function readOshaForm300AMetaForDivision(
+  valueJson: unknown,
+  division: string,
+  year: number,
+): OshaForm300AMeta {
+  const all = asRecord(valueJson) ?? {};
+  const byYear = asRecord(all[divisionKey(division)]) ?? {};
+  return parseOshaForm300AMeta(byYear[String(year)], year, division);
+}
+
+export function writeOshaForm300AMetaForDivision(
+  valueJson: unknown,
+  division: string,
+  meta: OshaForm300AMeta,
+): Record<string, unknown> {
+  const all = { ...(asRecord(valueJson) ?? {}) };
+  const key = divisionKey(division);
+  // Reuse the site-payload writer so both stores keep the same field set.
+  const written = asRecord(writeOshaForm300AMetaToSitePayload({}, meta).oshaForm300A) ?? {};
+  all[key] = { ...(asRecord(all[key]) ?? {}), [String(meta.year)]: written[String(meta.year)] };
+  return all;
+}
+
 export function hydrateOshaFromSource(input: {
   title?: string | null;
   status?: string | null;
@@ -828,6 +871,8 @@ export function hydrateOshaFromSource(input: {
     employeeName?: string | null;
     dateOccurred?: string | null;
     establishment?: string | null;
+    /** Division on the incident (payload, or the incident department's division). */
+    division?: string | null;
     sitePath?: string | null;
     oshaRecordable?: unknown;
     reportedBy?: string | null;
@@ -838,6 +883,10 @@ export function hydrateOshaFromSource(input: {
   } | null;
   personnelName?: string | null;
   siteName?: string | null;
+  /** Division of the department linked on the case row. */
+  departmentDivision?: string | null;
+  /** Division on the injured employee's personnel record. */
+  personnelDivision?: string | null;
 }): OshaCaseHydrated {
   const payload = unwrapOshaSourcePayload(input.sourcePayload);
   const employee = asRecord(payload.employee) ?? {};
@@ -930,6 +979,14 @@ export function hydrateOshaFromSource(input: {
       asText(payload.reportedBy) ||
       "",
     establishment,
+    division:
+      divisionFromPayload(payload) ||
+      asText(input.departmentDivision) ||
+      divisionFromPayload(incident) ||
+      asText(linked.division) ||
+      divisionFromPayload(employee) ||
+      asText(input.personnelDivision) ||
+      "",
     calendarYear,
     daysAway: asInt(payload.daysAway) ?? asInt(linked.daysAway),
     restrictedDays:
