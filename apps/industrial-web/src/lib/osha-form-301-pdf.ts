@@ -119,6 +119,7 @@ export async function buildForm301PdfForCases(
       privacyCase: false,
       reviewer: "",
       establishment: "",
+      division: "",
       calendarYear: null,
       daysAway: null,
       restrictedDays: null,

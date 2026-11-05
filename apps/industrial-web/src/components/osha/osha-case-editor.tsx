@@ -31,6 +31,8 @@ type Props = {
   onSave: (body: OshaCaseEditorSave) => Promise<void>;
   onClose: () => void;
   onPrint301: () => void;
+  /** Division choices for the case's establishment. */
+  divisionOptions?: string[];
 };
 
 function Field({
@@ -60,6 +62,7 @@ export function OshaCaseEditor({
   onSave,
   onClose,
   onPrint301,
+  divisionOptions = [],
 }: Props) {
   const [tab, setTab] = useState<"300" | "301" | "recordability">("300");
   const [draft, setDraft] = useState<OshaCase>(caseRow);
@@ -94,7 +97,7 @@ export function OshaCaseEditor({
       daysAway: draft.daysAway,
       restrictedDays: draft.restrictedDays,
       illnessCategory: draft.illnessCategory,
-      establishment: draft.establishment,
+      division: draft.division,
       recordabilityStatus: draft.recordabilityStatus,
       completedBy: draft.completedBy,
       completedByTitle: draft.completedByTitle,
@@ -766,14 +769,28 @@ export function OshaCaseEditor({
                   </label>
                 ))}
               </div>
-              <Field id="osha-establishment" label="Establishment">
-                <input
+              <Field id="osha-establishment" label="Establishment (division)">
+                <select
                   id="osha-establishment"
-                  className="form-control"
-                  value={draft.establishment}
+                  className="form-select"
+                  value={draft.division}
                   disabled={!canManage}
-                  onChange={(ev) => set("establishment", ev.target.value)}
-                />
+                  onChange={(ev) => set("division", ev.target.value)}
+                >
+                  <option value="">— Select division —</option>
+                  {/* Keep the case's current division selectable even if it's not in the list. */}
+                  {[
+                    ...(draft.division &&
+                    !divisionOptions.some((d) => d.toLowerCase() === draft.division.toLowerCase())
+                      ? [draft.division]
+                      : []),
+                    ...divisionOptions,
+                  ].map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
               </Field>
             </div>
           ) : null}
