@@ -9,7 +9,7 @@ import {
   fetchForm301Template,
   openForm301PdfForPrint,
 } from "@/lib/osha-form-301-pdf";
-import { OSHA_API, toOshaCase, uniqueEstablishments, type OshaCase } from "@/lib/osha-module";
+import { OSHA_API, establishmentOptions, toOshaCase, type OshaCase } from "@/lib/osha-module";
 import { useDivisionCatalog } from "@/hooks/use-division-catalog";
 
 type Props = {
@@ -151,7 +151,7 @@ export function OshaInlinePanel({
           onSave={onSave}
           onClose={onClose ?? (() => undefined)}
           onPrint301={() => void onPrint301()}
-          divisionOptions={uniqueEstablishments([caseRow], divisionCatalog)}
+          divisionOptions={establishmentOptions(divisionCatalog)}
         />
       ) : null}
     </div>

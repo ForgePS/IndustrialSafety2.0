@@ -12,7 +12,7 @@ import {
   logCasesForForm300,
   summarizeOshaCases,
   toOshaCase,
-  uniqueEstablishments,
+  establishmentOptions,
 } from "./osha-module";
 
 const sample = toOshaCase({
@@ -49,7 +49,6 @@ describe("osha-module", () => {
     expect(summarizeOshaCases([sample, pending]).recordable).toBe(1);
     expect(summarizeOshaCases([sample, pending]).pending).toBe(1);
     expect(sample.division).toBe("Rice Milling");
-    expect(uniqueEstablishments([sample])).toEqual(["Rice Milling"]);
   });
 
   it("filters by year and establishment (division)", () => {
@@ -61,18 +60,13 @@ describe("osha-module", () => {
     expect(filterOshaCases([sample], { year: 2026, establishment: "Crowley" })).toHaveLength(0);
   });
 
-  it("lists establishments from the division catalog plus divisions found on cases", () => {
-    const other = toOshaCase({
-      id: "9",
-      title: "x",
-      division: "Seed Plant",
-      injuryDate: "2026-01-01",
-    });
-    expect(uniqueEstablishments([sample, other, pending], ["Logistics", "rice milling"])).toEqual([
+  it("lists only catalog divisions as establishments", () => {
+    // Divisions found only on cases (e.g. "Rice Milling" on sample) are not offered.
+    expect(establishmentOptions(["Seed Plant", " Logistics ", "logistics", ""])).toEqual([
       "Logistics",
-      "rice milling",
       "Seed Plant",
     ]);
+    expect(establishmentOptions([])).toEqual([]);
   });
 
   it("builds Form 300 CSV with A-M columns and masks privacy names", () => {
