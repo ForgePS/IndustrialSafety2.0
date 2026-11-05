@@ -21,7 +21,6 @@ import {
   incidentHref,
   INCIDENTS_API,
   isOshaFormLogCase,
-  oshaLogEstablishmentKey,
   logCasesForForm300,
   OSHA_API,
   OSHA_FORM_300A_API,
@@ -35,6 +34,7 @@ import {
   type OshaForm300AMeta,
   type OshaRecordability,
 } from "@/lib/osha-module";
+import { loadOrgCatalog } from "@/lib/industrial-dropdown-catalogs";
 import {
   buildForm300Pdf,
   fetchForm300Template,
@@ -103,8 +103,6 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
   const [injuries, setInjuries] = useState<InjuryIncident[]>([]);
   const [year, setYear] = useState(() => new Date().getFullYear());
   const [establishment, setEstablishment] = useState("all");
-  // Sites are listed even with no OSHA cases, so a zero-case 300A can still be printed.
-  const [sites, setSites] = useState<Array<{ id: string; name: string }>>([]);
   const [incidentId, setIncidentId] = useState("");
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -191,58 +189,37 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
     }
   }, [awsReady, canManage]);
 
-  const loadSites = useCallback(async () => {
-    if (!awsReady) return;
-    try {
-      const res = await apiGet<ListResponse>("/api/v1/industrial/sites", {
-        query: { page: "1", pageSize: "500" },
-      });
-      setSites(
-        (res.items ?? [])
-          .map((row) => ({ id: String(row.id ?? ""), name: String(row.name ?? "").trim() }))
-          .filter((site) => site.id && site.name),
-      );
-    } catch {
-      // Without site access the selector falls back to establishments named on cases.
-      setSites([]);
-    }
-  }, [awsReady]);
-
-  /** Site id for an establishment name: the site record first, then any case at that site. */
-  const siteIdFor = useCallback(
-    (name: string) =>
-      sites.find((site) => site.name.toLowerCase() === name.toLowerCase())?.id ??
-      cases.find(
-        (c) =>
-          oshaLogEstablishmentKey(c.establishment) === oshaLogEstablishmentKey(name) && c.siteId,
-      )?.siteId ??
-      undefined,
-    [sites, cases],
-  );
-
-  // A string, not the siteIdFor function, so reloading cases does not refetch the 300A
-  // meta and overwrite unsaved edits in the Form 300A editor.
-  const selectedSiteId = establishment === "all" ? undefined : siteIdFor(establishment);
-
   const loadForm300AMeta = useCallback(async () => {
     if (!awsReady || establishment === "all") {
       setForm300AMeta(emptyOshaForm300AMeta(year));
       return;
     }
     try {
-      const siteId = selectedSiteId;
+      // Establishment = division; the server stores 300A details per division.
       const res = await apiGet<Record<string, unknown>>(OSHA_FORM_300A_API, {
-        query: {
-          year: String(year),
-          establishment,
-          ...(siteId ? { siteId } : {}),
-        },
+        query: { year: String(year), establishment },
       });
       setForm300AMeta(toOshaForm300AMeta(res, year));
     } catch {
       setForm300AMeta(emptyOshaForm300AMeta(year, establishment));
     }
-  }, [awsReady, year, establishment, selectedSiteId]);
+  }, [awsReady, year, establishment]);
+
+  const [divisionCatalog, setDivisionCatalog] = useState<string[]>([]);
+  useEffect(() => {
+    if (!awsReady) return;
+    let cancelled = false;
+    void loadOrgCatalog(me?.tenantId ?? "", "divisions")
+      .then((rows) => {
+        if (!cancelled) setDivisionCatalog(rows.map((r) => r.label));
+      })
+      .catch(() => {
+        if (!cancelled) setDivisionCatalog([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [awsReady, me?.tenantId]);
 
   useEffect(() => {
     if (!awsReady) {
@@ -251,20 +228,16 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
     }
     void loadCases();
     void loadInjuries();
-    void loadSites();
-  }, [awsReady, loadCases, loadInjuries, loadSites]);
+  }, [awsReady, loadCases, loadInjuries]);
 
   useEffect(() => {
     void loadForm300AMeta();
   }, [loadForm300AMeta]);
 
-  const establishments = useMemo(() => {
-    const byKey = new Map<string, string>();
-    for (const name of [...sites.map((site) => site.name), ...uniqueEstablishments(cases)]) {
-      if (!byKey.has(name.toLowerCase())) byKey.set(name.toLowerCase(), name);
-    }
-    return [...byKey.values()].sort((a, b) => a.localeCompare(b));
-  }, [sites, cases]);
+  const establishments = useMemo(
+    () => uniqueEstablishments(cases, divisionCatalog),
+    [cases, divisionCatalog],
+  );
   const visible = useMemo(
     () => filterOshaCases(cases, { year, establishment }),
     [cases, year, establishment],
@@ -402,12 +375,10 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
     setSavingMeta(true);
     setError(null);
     try {
-      const siteId = siteIdFor(establishment);
       const saved = await apiSend<Record<string, unknown>>(OSHA_FORM_300A_API, "PUT", {
         ...form300AMeta,
         year,
         establishment,
-        ...(siteId ? { siteId } : {}),
       });
       setForm300AMeta(toOshaForm300AMeta(saved, year));
     } catch (err) {
@@ -686,6 +657,7 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
           onClose={() => setSelectedId(null)}
           onPrint301={() => runPrint("301", selectedCase.id)}
           printing301={printing301}
+          divisionOptions={establishments}
         />
       ) : null}
 

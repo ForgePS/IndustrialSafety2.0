@@ -20,6 +20,7 @@ function logCase(overrides: Record<string, unknown>) {
     injuryDate: "2026-04-02",
     recordabilityStatus: "RECORDABLE",
     establishment: "Crowley",
+    division: "Crowley",
     caseNumber: "1",
     jobTitle: "Operator",
     eventLocation: "Line 2",
@@ -127,7 +128,7 @@ describe("Cases that cannot land on any log", () => {
   it("lists undated and unsited recordable cases next to the selected log", () => {
     const placed = logCase({ id: "ok" });
     const undated = logCase({ id: "nodate", injuryDate: null, calendarYear: null });
-    const unsited = logCase({ id: "nosite", establishment: "" });
+    const unsited = logCase({ id: "nosite", establishment: "", division: "" });
     const pendingUndated = logCase({
       id: "pending",
       injuryDate: null,
@@ -145,7 +146,7 @@ describe("Cases that cannot land on any log", () => {
   });
 
   it("matches establishments regardless of case and spacing", () => {
-    const row = logCase({ establishment: "Crowley  Plant" });
+    const row = logCase({ division: "Crowley  Plant" });
     expect(filterOshaCases([row], { year: 2026, establishment: "crowley plant" })).toHaveLength(1);
   });
 });

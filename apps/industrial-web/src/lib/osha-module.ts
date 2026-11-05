@@ -63,6 +63,8 @@ export type OshaCase = {
   privacyCase: boolean;
   reviewer: string;
   establishment: string;
+  /** The case's division — used as the OSHA establishment in filters and Form 300/300A. */
+  division: string;
   calendarYear: number | null;
   daysAway: number | null;
   restrictedDays: number | null;
@@ -276,6 +278,7 @@ export function toOshaCase(row: Record<string, unknown>): OshaCase {
     privacyCase: recordabilityStatus === "PRIVACY_CASE",
     reviewer: asText(row.reviewer) || asText(row.reviewedBy) || "Pending",
     establishment: asText(row.establishment) || asText(row.siteName) || asText(row.site),
+    division: asText(row.division) || asText(row.divisionName),
     calendarYear,
     daysAway:
       row.daysAway == null || row.daysAway === ""
@@ -379,12 +382,13 @@ export function filterOshaCases(
     // Cases with no date at all stay visible in every year so they can be fixed.
     const logYear = oshaCaseLogYear(row);
     if (opts.year != null && logYear != null && logYear !== opts.year) return false;
+    // OSHA establishments are divisions.
     if (establishment && establishment !== "all") {
-      if (oshaLogEstablishmentKey(row.establishment) !== establishment) return false;
+      if (oshaLogEstablishmentKey(row.division) !== establishment) return false;
     }
     if (q) {
       const hay =
-        `${row.title} ${row.employeeName} ${row.establishment} ${row.recordabilityStatus} ${row.caseNumber}`.toLowerCase();
+        `${row.title} ${row.employeeName} ${row.division} ${row.establishment} ${row.recordabilityStatus} ${row.caseNumber}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -419,7 +423,7 @@ export function oshaCaseIssues(c: OshaCase): string[] {
   if (!c.caseNumber.trim()) issues.push("No case number (column A).");
   if (!c.privacyCase && !c.employeeName.trim()) issues.push("No employee name (column B).");
   if (!c.injuryDate) issues.push("No date of injury or onset of illness (column D).");
-  if (!c.establishment.trim()) issues.push("No establishment.");
+  if (!c.division.trim()) issues.push("No establishment (division).");
   if (!c.description.trim()) issues.push("No description of the injury or illness (column F).");
   if (!c.caseOutcome) {
     issues.push("No outcome checked (columns G–J), so it is missing from the 300A case counts.");
@@ -464,7 +468,7 @@ export function form300UnplacedIssues(cases: OshaCase[], year: number): OshaCase
     .filter((c) => {
       if (!isOshaFormLogCase(c.recordabilityStatus)) return false;
       const logYear = oshaCaseLogYear(c);
-      return logYear == null || (logYear === year && !oshaLogEstablishmentKey(c.establishment));
+      return logYear == null || (logYear === year && !oshaLogEstablishmentKey(c.division));
     })
     .map((c) => ({
       caseId: c.id,
@@ -534,13 +538,18 @@ export function summarizeOshaCases(cases: OshaCase[]): {
   return summary;
 }
 
-export function uniqueEstablishments(cases: OshaCase[]): string[] {
-  const set = new Set<string>();
-  for (const row of cases) {
-    const name = row.establishment.trim();
-    if (name) set.add(name);
+/**
+ * Establishment choices: the tenant's division catalog, plus any division found on a case
+ * that isn't in the catalog yet (so no case becomes unreachable). Case-insensitive dedupe.
+ */
+export function uniqueEstablishments(cases: OshaCase[], divisionCatalog: string[] = []): string[] {
+  const byKey = new Map<string, string>();
+  for (const raw of [...divisionCatalog, ...cases.map((c) => c.division)]) {
+    const name = asText(raw);
+    const key = oshaLogEstablishmentKey(name);
+    if (key && !byKey.has(key)) byKey.set(key, name);
   }
-  return [...set].sort((a, b) => a.localeCompare(b));
+  return [...byKey.values()].sort((a, b) => a.localeCompare(b));
 }
 
 export function recordabilityBadgeClass(status: OshaRecordability): string {
