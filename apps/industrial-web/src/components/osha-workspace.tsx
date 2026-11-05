@@ -99,6 +99,8 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
   const [injuries, setInjuries] = useState<InjuryIncident[]>([]);
   const [year, setYear] = useState(() => new Date().getFullYear());
   const [establishment, setEstablishment] = useState("all");
+  // Sites are listed even with no OSHA cases, so a zero-case 300A can still be printed.
+  const [sites, setSites] = useState<Array<{ id: string; name: string }>>([]);
   const [incidentId, setIncidentId] = useState("");
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -180,14 +182,39 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
     }
   }, [awsReady, canManage]);
 
+  const loadSites = useCallback(async () => {
+    if (!awsReady) return;
+    try {
+      const res = await apiGet<ListResponse>("/api/v1/industrial/sites", {
+        query: { page: "1", pageSize: "500" },
+      });
+      setSites(
+        (res.items ?? [])
+          .map((row) => ({ id: String(row.id ?? ""), name: String(row.name ?? "").trim() }))
+          .filter((site) => site.id && site.name),
+      );
+    } catch {
+      // Without site access the selector falls back to establishments named on cases.
+      setSites([]);
+    }
+  }, [awsReady]);
+
+  /** Site id for an establishment name: the site record first, then any case at that site. */
+  const siteIdFor = useCallback(
+    (name: string) =>
+      sites.find((site) => site.name.toLowerCase() === name.toLowerCase())?.id ??
+      cases.find((c) => c.establishment === name && c.siteId)?.siteId ??
+      undefined,
+    [sites, cases],
+  );
+
   const loadForm300AMeta = useCallback(async () => {
     if (!awsReady || establishment === "all") {
       setForm300AMeta(emptyOshaForm300AMeta(year));
       return;
     }
     try {
-      const siteId =
-        cases.find((c) => c.establishment === establishment && c.siteId)?.siteId ?? undefined;
+      const siteId = siteIdFor(establishment);
       const res = await apiGet<Record<string, unknown>>(OSHA_FORM_300A_API, {
         query: {
           year: String(year),
@@ -199,7 +226,7 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
     } catch {
       setForm300AMeta(emptyOshaForm300AMeta(year, establishment));
     }
-  }, [awsReady, year, establishment, cases]);
+  }, [awsReady, year, establishment, siteIdFor]);
 
   useEffect(() => {
     if (!awsReady) {
@@ -208,13 +235,20 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
     }
     void loadCases();
     void loadInjuries();
-  }, [awsReady, loadCases, loadInjuries]);
+    void loadSites();
+  }, [awsReady, loadCases, loadInjuries, loadSites]);
 
   useEffect(() => {
     void loadForm300AMeta();
   }, [loadForm300AMeta]);
 
-  const establishments = useMemo(() => uniqueEstablishments(cases), [cases]);
+  const establishments = useMemo(() => {
+    const byKey = new Map<string, string>();
+    for (const name of [...sites.map((site) => site.name), ...uniqueEstablishments(cases)]) {
+      if (!byKey.has(name.toLowerCase())) byKey.set(name.toLowerCase(), name);
+    }
+    return [...byKey.values()].sort((a, b) => a.localeCompare(b));
+  }, [sites, cases]);
   const visible = useMemo(
     () => filterOshaCases(cases, { year, establishment }),
     [cases, year, establishment],
@@ -349,8 +383,7 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
     setSavingMeta(true);
     setError(null);
     try {
-      const siteId =
-        cases.find((c) => c.establishment === establishment && c.siteId)?.siteId ?? undefined;
+      const siteId = siteIdFor(establishment);
       const saved = await apiSend<Record<string, unknown>>(OSHA_FORM_300A_API, "PUT", {
         ...form300AMeta,
         year,

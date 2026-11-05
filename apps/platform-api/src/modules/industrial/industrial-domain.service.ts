@@ -17305,8 +17305,10 @@ export class IndustrialDomainService {
         String(body.title ?? fields.title ?? "").trim() ||
         String(fields.employeeName ?? "").trim() ||
         "OSHA case";
+      // Merge the request first so numbering uses the injury date that is actually saved.
+      const mergedSeed = mergeOshaCasePayloadFields(seed, body);
       const injuryDate =
-        (typeof seed.injuryDate === "string" && seed.injuryDate) ||
+        (typeof mergedSeed.injuryDate === "string" && mergedSeed.injuryDate) ||
         fields.dateOccurred?.slice(0, 10) ||
         null;
       const caseYear = injuryDate ? Number(injuryDate.slice(0, 4)) : null;
@@ -17338,7 +17340,8 @@ export class IndustrialDomainService {
           personnelId,
           sourceSystem: "FORGE",
           sourcePayload: {
-            ...mergeOshaCasePayloadFields(seed, body),
+            ...mergedSeed,
+            injuryDate,
             incidentId,
             title,
             caseNumber,
