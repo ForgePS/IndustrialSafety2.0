@@ -28,9 +28,10 @@ function issueToken() {
 }
 
 async function resolveDatabaseUrl() {
-  if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
+  if (process.env.DATABASE_URL?.trim()) return process.env.DATABASE_URL.trim();
   const secretArn = process.env.DATABASE_SECRET_ARN?.trim();
-  if (!secretArn) throw new Error("DATABASE_SECRET_ARN or DATABASE_URL required");
+  // Local runs with neither variable use the docker-compose database.
+  if (!secretArn) return defaultLocalDatabaseUrl();
   const apiRequire = repoRequireFrom("apps/platform-api/package.json");
   const { SecretsManagerClient, GetSecretValueCommand } = apiRequire(
     "@aws-sdk/client-secrets-manager",
@@ -56,7 +57,8 @@ async function main() {
   ).replace(/\/$/, "");
 
   const postgres = await resolvePostgres();
-  const sql = postgres(process.env.DATABASE_URL?.trim() || defaultLocalDatabaseUrl(), { max: 1 });
+  const databaseUrl = await resolveDatabaseUrl();
+  const sql = postgres(databaseUrl, { max: 1 });
   const now = new Date().toISOString();
 
   try {
@@ -207,8 +209,7 @@ async function main() {
     `;
     let portalToken = null;
     const reissueToken =
-      process.env.FORGE_TRAINING_UAT_REISSUE_TOKEN === "1" ||
-      String(process.env.DATABASE_URL ?? defaultLocalDatabaseUrl()).includes("localhost");
+      process.env.FORGE_TRAINING_UAT_REISSUE_TOKEN === "1" || databaseUrl.includes("localhost");
     if (!accessLink?.id) {
       const linkId = randomUUID();
       portalToken = issueToken();

@@ -39,6 +39,10 @@ function completedSteps(keys: string[]) {
 function createHarness(options?: {
   facilities?: Array<{ id: string; facilityKey: string }>;
   failProductCheck?: boolean;
+  stepKeys?: string[];
+  pendingStepKeys?: string[];
+  sessionData?: Record<string, unknown>;
+  entitlements?: Record<string, unknown>;
 }) {
   const facilities = [...(options?.facilities ?? [])];
   let insertedFacility: Record<string, unknown> | null = null;
@@ -56,23 +60,27 @@ function createHarness(options?: {
       securityConfigured: true,
       brandingConfigured: true,
       subscriptionWaived: true,
+      ...options?.sessionData,
     },
     activationErrorsJson: [],
   };
 
-  const steps = completedSteps([
-    "CREATE_TENANT",
-    "SELECT_CUSTOMER_TYPE",
-    "CREATE_PRIMARY_ORGANIZATION",
-    "SELECT_PRODUCTS",
-    "SELECT_MODULES",
-    "CONFIGURE_SUBSCRIPTION",
-    "CONFIGURE_BRANDING",
-    "CREATE_PRIMARY_ADMINISTRATOR",
-    "SEND_INVITATION",
-    "REVIEW_CONFIGURATION",
-    "ACTIVATE_TENANT",
-  ]);
+  const pending = new Set(options?.pendingStepKeys ?? []);
+  const steps = completedSteps(
+    options?.stepKeys ?? [
+      "CREATE_TENANT",
+      "SELECT_CUSTOMER_TYPE",
+      "CREATE_PRIMARY_ORGANIZATION",
+      "SELECT_PRODUCTS",
+      "SELECT_MODULES",
+      "CONFIGURE_SUBSCRIPTION",
+      "CONFIGURE_BRANDING",
+      "CREATE_PRIMARY_ADMINISTRATOR",
+      "SEND_INVITATION",
+      "REVIEW_CONFIGURATION",
+      "ACTIVATE_TENANT",
+    ],
+  ).map((step) => (pending.has(step.stepKey) ? { ...step, status: "PENDING" } : step));
 
   const tx = {
     execute: vi.fn(async () => undefined),
@@ -88,8 +96,17 @@ function createHarness(options?: {
       }),
     })),
     update: vi.fn(() => ({
-      set: vi.fn(() => ({
-        where: vi.fn(async () => undefined),
+      set: vi.fn((values: Record<string, unknown>) => ({
+        values,
+        // Awaitable directly, or via .returning() for the session row.
+        where: vi.fn(() => {
+          const result = Promise.resolve(undefined);
+          return Object.assign(result, {
+            returning: vi.fn(async () => [
+              { ...session, recordVersion: session.recordVersion + 1 },
+            ]),
+          });
+        }),
       })),
     })),
     query: {
@@ -155,7 +172,7 @@ function createHarness(options?: {
     db as never,
     tenants as never,
     {} as never,
-    {} as never,
+    (options?.entitlements ?? {}) as never,
     {} as never,
     {} as never,
     {} as never,
@@ -168,6 +185,13 @@ function createHarness(options?: {
     service,
     tenants,
     audit,
+    /** Values passed to every tx.update(...).set(...) call, in order. */
+    getUpdateSets: () =>
+      tx.update.mock.results.flatMap((result) =>
+        (result.value as { set: { mock: { calls: unknown[][] } } }).set.mock.calls.map(
+          (call) => call[0] as Record<string, unknown>,
+        ),
+      ),
     getInsertedFacility: () => insertedFacility,
     setFacilities: (rows: Array<{ id: string; facilityKey: string }>) => {
       facilities.splice(0, facilities.length, ...rows);
@@ -213,5 +237,65 @@ describe("OnboardingService MK-S7", () => {
     const templates = harness.service.listTemplates();
     expect(templates.length).toBeGreaterThan(0);
     expect(templates[0]?.onboarding.steps.at(-1)?.key).toBe("ACTIVATE_TENANT");
+  });
+
+  it("SELECT_MODULES assigns shared module codes to the selected product", async () => {
+    const putModule = vi.fn(async () => ({}));
+    harness = createHarness({
+      pendingStepKeys: ["SELECT_MODULES", "CONFIGURE_SUBSCRIPTION", "ACTIVATE_TENANT"],
+      sessionData: { productCodes: ["FORGE_INDUSTRIAL"] },
+      entitlements: { putModule },
+    });
+
+    await harness.service.completeStep(
+      SESSION_ID,
+      "SELECT_MODULES",
+      { moduleCodes: ["CORE", "PERSONNEL", "TRAINING", "LOCKOUT_TAGOUT"] },
+      principal(),
+      "*",
+      TENANT_ID,
+    );
+
+    expect(putModule).toHaveBeenCalledTimes(4);
+    for (const call of putModule.mock.calls as unknown as Array<
+      [string, string, { productCode?: string }]
+    >) {
+      expect(call[0]).toBe(TENANT_ID);
+      expect(call[2].productCode).toBe("FORGE_INDUSTRIAL");
+    }
+    expect(putModule.mock.calls.map((call) => (call as unknown[])[1])).toEqual([
+      "CORE",
+      "PERSONNEL",
+      "TRAINING",
+      "LOCKOUT_TAGOUT",
+    ]);
+  });
+
+  it("SELECT_MODULES stores bare codes so the invitation step can grant them", async () => {
+    const putModule = vi.fn(async () => ({}));
+    harness = createHarness({
+      pendingStepKeys: ["SELECT_MODULES", "CONFIGURE_SUBSCRIPTION", "ACTIVATE_TENANT"],
+      sessionData: { productCodes: ["FORGE_INDUSTRIAL"] },
+      entitlements: { putModule },
+    });
+
+    await harness.service.completeStep(
+      SESSION_ID,
+      "SELECT_MODULES",
+      { moduleCodes: ["FORGE_INDUSTRIAL:CORE", "TRAINING", "CORE"] },
+      principal(),
+      "*",
+      TENANT_ID,
+    );
+
+    expect((putModule.mock.calls[0] as unknown[])[2]).toMatchObject({
+      productCode: "FORGE_INDUSTRIAL",
+    });
+    const sessionUpdate = harness.getUpdateSets().find((values) => "sessionDataJson" in values) as
+      { sessionDataJson: { moduleCodes?: string[] } } | undefined;
+    expect(sessionUpdate?.sessionDataJson.moduleCodes).toEqual(["CORE", "TRAINING"]);
+    const stepUpdate = harness.getUpdateSets().find((values) => "payloadJson" in values) as
+      { payloadJson: { moduleCodes?: string[] } } | undefined;
+    expect(stepUpdate?.payloadJson.moduleCodes).toEqual(["CORE", "TRAINING"]);
   });
 });

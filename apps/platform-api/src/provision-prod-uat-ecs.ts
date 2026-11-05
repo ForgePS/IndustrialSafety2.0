@@ -27,7 +27,7 @@ import {
   type Database,
 } from "@forge/database";
 import type { ForgePrincipal } from "@forge/tenant-context";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { AppModule } from "./app.module.js";
 import { OnboardingService } from "./modules/onboarding/onboarding.service.js";
 import { DATABASE } from "./tokens.js";
@@ -302,7 +302,7 @@ async function onboardTenant(
   onboarding: OnboardingService,
   principal: ForgePrincipal,
   input: {
-    customerType: "INDUSTRIAL" | "FIRE_DEPARTMENT";
+    customerType: "INDUSTRIAL";
     tenantKey: string;
     slug: string;
     legalName: string;
@@ -340,17 +340,14 @@ async function onboardTenant(
     return result;
   };
 
-  const orgType = input.customerType === "INDUSTRIAL" ? "SAFETY_COMPANY" : "FIRE_DEPARTMENT";
   await complete("CREATE_PRIMARY_ORGANIZATION", {
     slug: input.orgSlug,
     legalName: input.legalName,
     displayName: input.displayName,
-    organizationTypeCode: orgType,
+    organizationTypeCode: "SAFETY_COMPANY",
   });
-  await complete("SELECT_PRODUCTS", {
-    productCodes: [input.customerType === "INDUSTRIAL" ? "FORGE_INDUSTRIAL" : "FORGE_RMS"],
-  });
-  const industrialModules = [
+  await complete("SELECT_PRODUCTS", { productCodes: ["FORGE_INDUSTRIAL"] });
+  const modules = [
     "CORE",
     "PERSONNEL",
     "TRAINING",
@@ -360,18 +357,22 @@ async function onboardTenant(
     "FORMS",
     "REPORTING",
   ];
-  const rmsModules = ["CORE", "PERSONNEL", "TRAINING", "APPARATUS", "DOCUMENTS", "REPORTS"];
-  const modules = input.customerType === "INDUSTRIAL" ? industrialModules : rmsModules;
   await complete("SELECT_MODULES", {
     moduleCodes: input.omitModule ? modules.filter((code) => code !== input.omitModule) : modules,
   });
   await complete("CONFIGURE_SUBSCRIPTION", { waiveSubscription: true });
+  // Steps 7–12; empty payloads accept the onboarding defaults.
+  await complete("CONFIGURE_LOCATIONS", {});
+  await complete("CONFIGURE_ORG_LOOKUPS", {});
+  await complete("CONFIGURE_DATA_IMPORT", {});
+  await complete("CONFIGURE_DOCUMENTS", {});
   await complete("CONFIGURE_BRANDING", { emailSenderName: input.displayName });
+  await complete("CONFIGURE_BUSINESS_SETTINGS", {});
   await complete("CREATE_PRIMARY_ADMINISTRATOR", {
     email: input.adminEmail,
     firstName: input.adminFirstName,
     lastName: input.adminLastName,
-    roleCode: input.customerType === "INDUSTRIAL" ? "INDUSTRIAL_TENANT_ADMIN" : undefined,
+    roleCode: "INDUSTRIAL_TENANT_ADMIN",
   });
   await complete("SEND_INVITATION", { send: false, expiresInHours: 168 });
   await complete("REVIEW_CONFIGURATION", { acknowledged: true });
@@ -434,21 +435,23 @@ async function main(): Promise<void> {
         })
       ).tenantId;
 
+    // Tenant B is the cross-tenant isolation peer. Reuse the legacy RMS UAT tenant where it
+    // already exists; RMS onboarding is gone, so new environments get a second Industrial tenant.
     const existingB = await db
       .select({ id: tenants.id })
       .from(tenants)
-      .where(eq(tenants.tenantKey, "forge-uat-rms-b"))
+      .where(inArray(tenants.tenantKey, ["forge-uat-industrial-b", "forge-uat-rms-b"]))
       .limit(1);
     const tenantB =
       existingB[0]?.id ??
       (
         await onboardTenant(onboarding, principal, {
-          customerType: "FIRE_DEPARTMENT",
-          tenantKey: "forge-uat-rms-b",
-          slug: "forge-uat-rms-b",
-          legalName: "FORGE INTERNAL TEST RMS UAT",
-          displayName: "FORGE INTERNAL TEST RMS",
-          orgSlug: "forge-uat-rms-b-org",
+          customerType: "INDUSTRIAL",
+          tenantKey: "forge-uat-industrial-b",
+          slug: "forge-uat-industrial-b",
+          legalName: "FORGE INTERNAL TEST Industrial UAT B",
+          displayName: "FORGE INTERNAL TEST Industrial B",
+          orgSlug: "forge-uat-industrial-b-org",
           adminEmail: ownerBEmail,
           adminFirstName: "UAT",
           adminLastName: "OwnerB",

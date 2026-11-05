@@ -38,6 +38,7 @@ import { OrganizationsService } from "../organizations/organizations.service.js"
 import { OutboxService } from "../outbox/outbox.service.js";
 import { SubscriptionsService } from "../subscriptions/subscriptions.service.js";
 import { TenantsService, type ExpectedVersion } from "../tenants/tenants.service.js";
+import { resolveModuleProducts } from "./onboarding-module-products.js";
 import {
   DEFAULT_ONBOARDING_FACILITY,
   ONBOARDING_STEPS,
@@ -474,18 +475,28 @@ export class OnboardingService {
           if (moduleCodes.length === 0) {
             throw new ForgeError("BAD_REQUEST", "At least one module must be selected");
           }
-          for (const moduleCode of moduleCodes) {
+          const selectedProducts =
+            sessionData.productCodes ?? (template ? [template.productCode] : []);
+          const resolvedModules = resolveModuleProducts(moduleCodes, selectedProducts);
+          for (const { moduleCode, productCode } of resolvedModules) {
             const isCore =
               template?.modules.find((mod) => mod.code === moduleCode)?.isCore ?? false;
             await this.entitlements.putModule(
               tenantId,
               moduleCode,
-              { status: "ACTIVE", sourceType: isCore ? "TEMPLATE_CORE" : "TEMPLATE" },
+              {
+                status: "ACTIVE",
+                sourceType: isCore ? "TEMPLATE_CORE" : "TEMPLATE",
+                ...(productCode ? { productCode } : {}),
+              },
               principal,
             );
           }
-          nextSessionData.moduleCodes = moduleCodes;
-          stepPayload = { moduleCodes };
+          // Persist bare codes: later steps (SEND_INVITATION → membership module access) match
+          // them against the tenant's own entitled modules, which never carry a product prefix.
+          const entitledModuleCodes = [...new Set(resolvedModules.map((mod) => mod.moduleCode))];
+          nextSessionData.moduleCodes = entitledModuleCodes;
+          stepPayload = { moduleCodes: entitledModuleCodes };
           break;
         }
         case "CONFIGURE_SUBSCRIPTION": {
