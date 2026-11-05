@@ -32,7 +32,7 @@ import {
   type OshaForm300AMeta,
   type OshaRecordability,
 } from "@/lib/osha-module";
-import { loadOrgCatalog } from "@/lib/industrial-dropdown-catalogs";
+import { useDivisionCatalog } from "@/hooks/use-division-catalog";
 import {
   buildForm300Pdf,
   fetchForm300Template,
@@ -195,21 +195,7 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
     }
   }, [awsReady, year, establishment]);
 
-  const [divisionCatalog, setDivisionCatalog] = useState<string[]>([]);
-  useEffect(() => {
-    if (!awsReady) return;
-    let cancelled = false;
-    void loadOrgCatalog(me?.tenantId ?? "", "divisions")
-      .then((rows) => {
-        if (!cancelled) setDivisionCatalog(rows.map((r) => r.label));
-      })
-      .catch(() => {
-        if (!cancelled) setDivisionCatalog([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [awsReady, me?.tenantId]);
+  const divisionCatalog = useDivisionCatalog(awsReady);
 
   useEffect(() => {
     if (!awsReady) {
