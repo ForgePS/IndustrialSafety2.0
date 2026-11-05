@@ -9,7 +9,8 @@ import {
   fetchForm301Template,
   openForm301PdfForPrint,
 } from "@/lib/osha-form-301-pdf";
-import { OSHA_API, toOshaCase, type OshaCase } from "@/lib/osha-module";
+import { OSHA_API, toOshaCase, uniqueEstablishments, type OshaCase } from "@/lib/osha-module";
+import { useDivisionCatalog } from "@/hooks/use-division-catalog";
 
 type Props = {
   caseId: string;
@@ -38,6 +39,8 @@ export function OshaInlinePanel({
   const [saving, setSaving] = useState(false);
   const [printing301, setPrinting301] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Same division choices as the OSHA workspace, so embedded edits can set the establishment.
+  const divisionCatalog = useDivisionCatalog();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -148,6 +151,7 @@ export function OshaInlinePanel({
           onSave={onSave}
           onClose={onClose ?? (() => undefined)}
           onPrint301={() => void onPrint301()}
+          divisionOptions={uniqueEstablishments([caseRow], divisionCatalog)}
         />
       ) : null}
     </div>
