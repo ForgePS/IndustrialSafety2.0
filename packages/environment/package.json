@@ -20,7 +20,7 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@aws-sdk/client-secrets-manager": "^3.1157.0",
+    "@aws-sdk/client-secrets-manager": "^3.1161.0",
     "@forge/shared-types": "workspace:*",
     "@forge/validation": "workspace:*",
     "zod": "^3.25.67"
