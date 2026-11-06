@@ -27,7 +27,7 @@ import {
   summarizeOshaCases,
   toOshaCase,
   toOshaForm300AMeta,
-  uniqueEstablishments,
+  establishmentOptions,
   type OshaCase,
   type OshaForm300AMeta,
   type OshaRecordability,
@@ -210,10 +210,7 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
     void loadForm300AMeta();
   }, [loadForm300AMeta]);
 
-  const establishments = useMemo(
-    () => uniqueEstablishments(cases, divisionCatalog),
-    [cases, divisionCatalog],
-  );
+  const establishments = useMemo(() => establishmentOptions(divisionCatalog), [divisionCatalog]);
   const visible = useMemo(
     () => filterOshaCases(cases, { year, establishment }),
     [cases, year, establishment],
