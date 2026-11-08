@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Put, Query, Req } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req } from "@nestjs/common";
 import type { ForgePrincipal } from "@forge/tenant-context";
 import { ok } from "../../common/api-response.js";
 import { Idempotent } from "../../common/idempotent.decorator.js";
@@ -98,6 +98,33 @@ export class IndustrialDocumentControlController {
     @Req() req: RequestWithIds,
   ) {
     return ok(await this.documents.create(principal, body), getRequestIds(req));
+  }
+
+  @Get("folders")
+  @RequireAnyPermission([...VIEW], { requiresEntitlement: ENTITLEMENT })
+  async listFolders(@Principal() principal: ForgePrincipal, @Req() req: RequestWithIds) {
+    return ok(await this.documents.listFolders(principal), getRequestIds(req));
+  }
+
+  @Post("folders")
+  @RequireAnyPermission([...MANAGE], { requiresEntitlement: ENTITLEMENT })
+  @Idempotent({ resourceType: "platform_document_folder" })
+  async createFolder(
+    @Principal() principal: ForgePrincipal,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.documents.createFolder(principal, body), getRequestIds(req));
+  }
+
+  @Delete("folders/:folderId")
+  @RequireAnyPermission([...MANAGE], { requiresEntitlement: ENTITLEMENT })
+  async deleteFolder(
+    @Principal() principal: ForgePrincipal,
+    @Param("folderId") folderId: string,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.documents.deleteFolder(principal, folderId), getRequestIds(req));
   }
 
   @Get(":id")
