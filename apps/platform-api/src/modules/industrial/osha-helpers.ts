@@ -1046,3 +1046,47 @@ export function hydrateOshaFromSource(input: {
     dateOfDeath: asDate(payload.dateOfDeath),
   };
 }
+
+/** Company details used to prefill an establishment's Form 300 / 300A header. */
+export type OshaEstablishmentDefaults = {
+  companyName: string;
+  /** True when the details come from an organization named like the division itself. */
+  matchesDivision: boolean;
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
+  phone: string;
+};
+
+/**
+ * Fill blank Form 300A establishment fields from company defaults. A saved name that is
+ * just the division code (e.g. "PRI") is expanded to the full company name.
+ */
+export function fillOshaForm300AMetaDefaults(
+  meta: OshaForm300AMeta,
+  division: string,
+  defaults: OshaEstablishmentDefaults,
+): OshaForm300AMeta {
+  const savedName = meta.establishmentName.trim();
+  const isDivisionCode = !savedName || savedName.toLowerCase() === division.trim().toLowerCase();
+  let establishmentName = savedName;
+  if (isDivisionCode) {
+    if (defaults.companyName && defaults.matchesDivision) {
+      establishmentName = defaults.companyName;
+    } else if (defaults.companyName) {
+      establishmentName = division ? `${defaults.companyName} – ${division}` : defaults.companyName;
+    } else {
+      establishmentName = division;
+    }
+  }
+  return {
+    ...meta,
+    establishmentName,
+    street: meta.street || defaults.street,
+    city: meta.city || defaults.city,
+    state: meta.state || defaults.state,
+    zip: meta.zip || defaults.zip,
+    phone: meta.phone || defaults.phone,
+  };
+}

@@ -382,10 +382,9 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
     setPrinting300(true);
     try {
       const template = await fetchForm300Template();
-      const establishmentName =
-        establishment === "all"
-          ? form300AMeta.establishmentName || "All establishments"
-          : establishment;
+      // Full name, city and state come from the Form 300A details (prefilled from the
+      // company record); the division code is only a last resort.
+      const establishmentName = form300AMeta.establishmentName.trim() || establishment;
       const pdfBytes = await buildForm300Pdf(
         template,
         {

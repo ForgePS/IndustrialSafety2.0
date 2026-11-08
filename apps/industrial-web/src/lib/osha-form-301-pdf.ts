@@ -5,6 +5,7 @@
  */
 
 import { PDFDocument, type PDFForm, type PDFRadioGroup } from "pdf-lib";
+import { flattenOshaForm, prepareOshaForm, setOshaText } from "@/lib/osha-pdf-fit";
 import {
   autofillForm301FromForm300,
   form301EmployeeName,
@@ -16,11 +17,7 @@ import { openOshaPdfForPrint } from "@/lib/osha-pdf-print";
 export const OSHA_FORM_301_PDF_PATH = "/forms/osha-301.pdf";
 
 function setText(form: PDFForm, name: string, value: string) {
-  try {
-    form.getTextField(name).setText(value);
-  } catch {
-    // Field missing on variant templates — skip.
-  }
+  setOshaText(form, name, value);
 }
 
 function selectRadio(form: PDFForm, name: string, option: string | null) {
@@ -95,9 +92,9 @@ export async function buildForm301Pdf(
   caseRow: OshaCase,
 ): Promise<Uint8Array> {
   const doc = await PDFDocument.load(templateBytes);
-  const form = doc.getForm();
+  const form = await prepareOshaForm(doc);
   fillForm301(form, caseRow);
-  form.flatten();
+  flattenOshaForm(form);
   return doc.save();
 }
 

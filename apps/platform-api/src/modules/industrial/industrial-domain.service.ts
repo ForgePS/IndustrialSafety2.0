@@ -55,6 +55,8 @@ import {
   persons,
   platformEhsAuditTemplates,
   roles,
+  organizations,
+  tenants,
   tenantSettings,
   userNotifications,
   users,
@@ -68,6 +70,7 @@ import type { ForgePrincipal } from "@forge/tenant-context";
 import { createHash, randomBytes } from "node:crypto";
 import {
   and,
+  asc,
   desc,
   eq,
   gte,
@@ -235,6 +238,8 @@ import {
 } from "./personnel-discipline-helpers.js";
 import {
   emptyOshaForm300AMeta,
+  fillOshaForm300AMetaDefaults,
+  type OshaEstablishmentDefaults,
   hydrateOshaFromSource,
   mergeOshaCasePayloadFields,
   mergeOshaSeedPreferExisting,
@@ -17673,7 +17678,11 @@ export class IndustrialDomainService {
           return emptyOshaForm300AMeta(year, "");
         }
         const setting = await this.findOshaDivisionMetaSetting(tx, principal.tenantId);
-        return readOshaForm300AMetaForDivision(setting?.valueJson, division, year);
+        return fillOshaForm300AMetaDefaults(
+          readOshaForm300AMetaForDivision(setting?.valueJson, division, year),
+          division,
+          await this.oshaEstablishmentDefaults(tx, principal.tenantId, division),
+        );
       }
       const site = await this.resolveOshaForm300ASite(tx, principal.tenantId, query);
       if (!site) {
@@ -17681,6 +17690,60 @@ export class IndustrialDomainService {
       }
       return readOshaForm300AMetaFromSitePayload(site.sourcePayload, year, site.name);
     });
+  }
+
+  /**
+   * Company details to prefill an establishment's Form 300/300A header when nothing is
+   * saved for it yet: an organization matching the division, else the tenant's top-level
+   * organization (else the tenant's own legal name).
+   */
+  private async oshaEstablishmentDefaults(
+    tx: DatabaseTransaction,
+    tenantId: string,
+    division: string,
+  ): Promise<OshaEstablishmentDefaults> {
+    const orgs = await tx
+      .select({
+        legalName: organizations.legalName,
+        displayName: organizations.displayName,
+        slug: organizations.slug,
+        externalKey: organizations.externalKey,
+        parentOrganizationId: organizations.parentOrganizationId,
+        phone: organizations.phone,
+        addressLine1: organizations.addressLine1,
+        city: organizations.city,
+        stateProvince: organizations.stateProvince,
+        postalCode: organizations.postalCode,
+        createdAt: organizations.createdAt,
+      })
+      .from(organizations)
+      .where(and(eq(organizations.tenantId, tenantId), isNull(organizations.archivedAt)))
+      .orderBy(asc(organizations.createdAt));
+    const key = division.trim().toLowerCase();
+    const matched = orgs.find((org) =>
+      [org.displayName, org.legalName, org.slug, org.externalKey].some(
+        (value) => (value ?? "").trim().toLowerCase() === key,
+      ),
+    );
+    const org = matched ?? orgs.find((o) => !o.parentOrganizationId) ?? orgs[0];
+    let companyName = org?.legalName?.trim() || org?.displayName?.trim() || "";
+    if (!companyName) {
+      const [tenant] = await tx
+        .select({ legalName: tenants.legalName, displayName: tenants.displayName })
+        .from(tenants)
+        .where(eq(tenants.id, tenantId))
+        .limit(1);
+      companyName = tenant?.legalName?.trim() || tenant?.displayName?.trim() || "";
+    }
+    return {
+      companyName,
+      matchesDivision: Boolean(matched),
+      street: org?.addressLine1?.trim() ?? "",
+      city: org?.city?.trim() ?? "",
+      state: org?.stateProvince?.trim() ?? "",
+      zip: org?.postalCode?.trim() ?? "",
+      phone: org?.phone?.trim() ?? "",
+    };
   }
 
   private findOshaDivisionMetaSetting(tx: DatabaseTransaction, tenantId: string) {

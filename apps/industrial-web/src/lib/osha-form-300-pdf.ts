@@ -5,6 +5,7 @@
 
 import { openOshaPdfForPrint } from "@/lib/osha-pdf-print";
 import { PDFDocument, type PDFForm, type PDFRadioGroup } from "pdf-lib";
+import { flattenOshaForm, prepareOshaForm, setOshaText } from "@/lib/osha-pdf-fit";
 import {
   cappedOshaDays,
   chunkForm300Pages,
@@ -44,12 +45,7 @@ const ILLNESS_RADIO: Record<OshaIllnessCategory, string> = {
 };
 
 function setText(form: PDFForm, name: string, value: string) {
-  try {
-    const field = form.getTextField(name);
-    field.setText(value);
-  } catch {
-    // Field missing on variant templates — skip.
-  }
+  setOshaText(form, name, value);
 }
 
 function selectRadio(form: PDFForm, name: string, option: string | null) {
@@ -142,7 +138,7 @@ async function fillSinglePage(
   pageCases: OshaCase[],
 ): Promise<Uint8Array> {
   const doc = await PDFDocument.load(templateBytes);
-  const form = doc.getForm();
+  const form = await prepareOshaForm(doc);
   fillHeader(form, header);
 
   for (let i = 1; i <= OSHA_FORM_300_ROWS_PER_PAGE; i += 1) {
@@ -154,7 +150,7 @@ async function fillSinglePage(
   fillPageTotals(form, pageCases);
 
   // Flatten so print shows values on the official form artwork.
-  form.flatten();
+  flattenOshaForm(form);
   return doc.save();
 }
 
