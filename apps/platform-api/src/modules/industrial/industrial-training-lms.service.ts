@@ -38,6 +38,7 @@ import {
   withoutSealedPortalToken,
 } from "./portal-token-crypto.js";
 import { qrCodePngBuffer } from "./qr-svg.js";
+import { courseTitleFor, missingCourseIds } from "./training-qc-course-titles.js";
 import type { CompletionQuizItem, TrainingPrintBranding } from "./training-personnel-report.js";
 import {
   buildCompletionPrintableHtml,
@@ -1264,19 +1265,6 @@ export class IndustrialTrainingLmsService {
         }
       }
 
-      const questionStats = [...stats.values()]
-        .filter((s) => s.presented > 0)
-        .map((s) => ({
-          stem: s.stem,
-          sourceId: s.sourceId,
-          sourceTitle: sourceTitleById.get(s.sourceId) ?? "Course",
-          presented: s.presented,
-          correct: s.correct,
-          incorrect: s.incorrect,
-          correctRate: Math.round((s.correct / s.presented) * 100),
-        }))
-        .sort((a, b) => a.correctRate - b.correctRate || b.presented - a.presented);
-
       const completionWhere = [
         eq(industrialTrainingCompletions.tenantId, tenantId),
         ...(sourceId ? [eq(industrialTrainingCompletions.sourceId, sourceId)] : []),
@@ -1298,6 +1286,41 @@ export class IndustrialTrainingLmsService {
         .where(and(...completionWhere))
         .orderBy(desc(industrialTrainingCompletions.completedAt))
         .limit(10000);
+
+      // The course filter list skips archived courses; look those up too so
+      // question and completion rows still show their real course name.
+      const unknownSourceIds = missingCourseIds(sourceTitleById, [
+        ...questions.map((q) => q.sourceId),
+        ...completions.map((c) => c.sourceId),
+      ]);
+      if (unknownSourceIds.length) {
+        const extraSources = await tx
+          .select({
+            id: industrialTrainingSources.id,
+            title: industrialTrainingSources.title,
+          })
+          .from(industrialTrainingSources)
+          .where(
+            and(
+              eq(industrialTrainingSources.tenantId, tenantId),
+              inArray(industrialTrainingSources.id, unknownSourceIds),
+            ),
+          );
+        for (const s of extraSources) sourceTitleById.set(s.id, s.title);
+      }
+
+      const questionStats = [...stats.values()]
+        .filter((s) => s.presented > 0)
+        .map((s) => ({
+          stem: s.stem,
+          sourceId: s.sourceId,
+          sourceTitle: courseTitleFor(sourceTitleById, s.sourceId),
+          presented: s.presented,
+          correct: s.correct,
+          incorrect: s.incorrect,
+          correctRate: Math.round((s.correct / s.presented) * 100),
+        }))
+        .sort((a, b) => a.correctRate - b.correctRate || b.presented - a.presented);
 
       const passed = completions.filter((c) => c.result === "PASSED");
       const failed = completions.filter((c) => c.result === "FAILED");
@@ -1350,7 +1373,7 @@ export class IndustrialTrainingLmsService {
       for (const c of completions) {
         const row = byCourseMap.get(c.sourceId) ?? {
           sourceId: c.sourceId,
-          title: sourceTitleById.get(c.sourceId) ?? "Course",
+          title: courseTitleFor(sourceTitleById, c.sourceId),
           completions: 0,
           passed: 0,
           scoreSum: 0,
@@ -1416,7 +1439,7 @@ export class IndustrialTrainingLmsService {
         id: c.id,
         employeeNumber: c.employeeNumber,
         sourceId: c.sourceId,
-        sourceTitle: sourceTitleById.get(c.sourceId) ?? "Course",
+        sourceTitle: courseTitleFor(sourceTitleById, c.sourceId),
         scorePercent: c.scorePercent,
         passingPercent: c.passingPercent,
         result: c.result,

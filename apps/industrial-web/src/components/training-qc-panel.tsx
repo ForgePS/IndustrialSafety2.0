@@ -86,7 +86,7 @@ function normalizeQcDashboard(raw: QcDashboard | LegacyQcDashboard): QcDashboard
   const questionStats = (legacy.questionStats ?? []).map((q) => ({
     stem: q.stem,
     sourceId: q.sourceId ?? "",
-    sourceTitle: q.sourceTitle ?? "Course",
+    sourceTitle: q.sourceTitle?.trim() || "—",
     presented: q.presented,
     correct: q.correct ?? Math.round((q.presented * q.correctRate) / 100),
     incorrect: q.incorrect ?? q.presented - Math.round((q.presented * q.correctRate) / 100),
