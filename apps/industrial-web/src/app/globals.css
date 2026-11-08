@@ -4764,3 +4764,36 @@ html[data-presentation-readonly="true"] [data-mutating="true"] {
 html[data-walkthrough-mode="interactive"] .layout-page {
   padding-bottom: 5.5rem;
 }
+
+/* Dashboard Injury History — injuries vs lost-time cases by year */
+.ind-dash-history.is-injuries,
+.ind-dash-history__swatch.is-injuries {
+  --ind-history-color: var(--bs-warning, #ffab00);
+}
+
+.ind-dash-history.is-lost-time,
+.ind-dash-history__swatch.is-lost-time {
+  --ind-history-color: var(--bs-danger, #ff3e1d);
+}
+
+.ind-dash-history__line {
+  fill: none;
+  stroke: var(--ind-history-color);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ind-dash-history__dot {
+  fill: var(--ind-surface, #fff);
+  stroke: var(--ind-history-color);
+  stroke-width: 2.5;
+}
+
+.ind-dash-history__dot.is-active {
+  fill: var(--ind-history-color);
+}
+
+.ind-dash-area__tooltip-swatch.ind-dash-history__swatch {
+  background: var(--ind-history-color);
+}
