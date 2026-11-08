@@ -8,9 +8,9 @@ import {
 describe("missingCourseIds", () => {
   it("returns each unknown course id once and skips known or empty ids", () => {
     const known = new Map([["active", "Forklift Safety"]]);
-    expect(missingCourseIds(known, ["active", "archived", "archived", "", null, undefined])).toEqual([
-      "archived",
-    ]);
+    expect(
+      missingCourseIds(known, ["active", "archived", "archived", "", null, undefined]),
+    ).toEqual(["archived"]);
   });
 });
 
