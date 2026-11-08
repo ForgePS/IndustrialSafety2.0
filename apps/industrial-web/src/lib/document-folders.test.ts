@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DOCUMENT_FOLDERS, EHS_POLICIES_CATEGORY, sortByDocumentName } from "./document-folders";
+import { sameFolderName, sortByDocumentName } from "./document-folders";
 
 const names = (items: { name: string }[]) => items.map((item) => item.name);
 
@@ -24,10 +24,10 @@ describe("sortByDocumentName", () => {
   });
 });
 
-describe("DOCUMENT_FOLDERS", () => {
-  it("includes an EHS Policies folder filtered by its category", () => {
-    expect(DOCUMENT_FOLDERS.find((f) => f.id === "ehs-policies")?.category).toBe(
-      EHS_POLICIES_CATEGORY,
-    );
+describe("sameFolderName", () => {
+  it("ignores case and surrounding spaces", () => {
+    expect(sameFolderName(" ehs policies", "EHS Policies")).toBe(true);
+    expect(sameFolderName("SOPs", "EHS Policies")).toBe(false);
+    expect(sameFolderName(null, "")).toBe(true);
   });
 });
