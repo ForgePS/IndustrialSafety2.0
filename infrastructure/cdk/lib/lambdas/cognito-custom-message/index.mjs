@@ -7,6 +7,7 @@
  *     set by scripts/configure-cognito-password-reset-email.mjs)
  */
 const RESET_PATH = "/auth/reset-password/";
+const LOOKUP_TIMEOUT_MS = 1500;
 
 let cognitoClient;
 const clientNameCache = new Map();
@@ -25,9 +26,11 @@ async function lookupClientName(userPoolId, clientId) {
     // The Lambda Node.js runtime bundles AWS SDK v3; load it lazily so tests need no SDK.
     const { CognitoIdentityProviderClient, DescribeUserPoolClientCommand } =
       await import("@aws-sdk/client-cognito-identity-provider");
-    cognitoClient ??= new CognitoIdentityProviderClient({});
+    cognitoClient ??= new CognitoIdentityProviderClient({ maxAttempts: 2 });
+    // Cognito gives CustomMessage triggers 5s in total, so give up early and use the default URL.
     const out = await cognitoClient.send(
       new DescribeUserPoolClientCommand({ UserPoolId: userPoolId, ClientId: clientId }),
+      { abortSignal: AbortSignal.timeout(LOOKUP_TIMEOUT_MS) },
     );
     const name = out.UserPoolClient?.ClientName ?? null;
     clientNameCache.set(clientId, name);
