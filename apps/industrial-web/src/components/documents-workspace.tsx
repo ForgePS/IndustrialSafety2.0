@@ -32,7 +32,10 @@ import {
 } from "@/lib/document-control";
 import {
   createDocumentFolder,
+  canRenameFolder,
   deleteDocumentFolder,
+  deleteFolderPrompt,
+  renameDocumentFolder,
   FALLBACK_DOCUMENT_FOLDERS,
   listDocumentFolders,
   sameFolderName,
@@ -105,6 +108,9 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
   const [activeFolderName, setActiveFolderName] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState("");
   const [showNewFolder, setShowNewFolder] = useState(false);
+  /** Name of the folder being renamed; null when the rename form is closed. */
+  const [renamingFolder, setRenamingFolder] = useState<string | null>(null);
+  const [renameFolderName, setRenameFolderName] = useState("");
   const activeFolder = activeFolderName
     ? (folders.find((f) => sameFolderName(f.name, activeFolderName)) ?? null)
     : null;
@@ -154,6 +160,7 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
   }, [canView]);
 
   function selectFolder(name: string | null) {
+    if (!sameFolderName(name, renamingFolder)) setRenamingFolder(null);
     setActiveFolderName(name);
     setNewCategory(name ?? "GENERAL");
   }
@@ -180,15 +187,55 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
     }
   }
 
-  async function onDeleteFolder(folder: DocumentFolder) {
-    if (!canManage || !folder.id || !folder.canDelete) return;
-    if (!window.confirm(`Delete the empty folder "${folder.name}"?`)) return;
+  function startRenameFolder(folder: DocumentFolder) {
+    setShowNewFolder(false);
+    setRenameFolderName(folder.name);
+    setRenamingFolder(folder.name);
+  }
+
+  async function onRenameFolder(event: FormEvent) {
+    event.preventDefault();
+    if (!canManage || !renamingFolder) return;
+    const newName = renameFolderName.replace(/\s+/g, " ").trim();
+    if (!newName) return;
+    if (newName === renamingFolder) {
+      setRenamingFolder(null);
+      return;
+    }
     setBusy(true);
     setError(null);
     setNotice(null);
     try {
-      await deleteDocumentFolder(folder.id);
-      setNotice(`Folder "${folder.name}" deleted`);
+      const result = await renameDocumentFolder(renamingFolder, newName);
+      setRenamingFolder(null);
+      setNotice(
+        `Folder renamed to "${result.name}"` +
+          (result.documentsMoved ? ` (${result.documentsMoved} documents updated)` : ""),
+      );
+      selectFolder(result.name);
+      await loadFolders();
+    } catch (e) {
+      setError(formatApiErrorMessage(e, "Unable to rename folder"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onDeleteFolder(folder: DocumentFolder) {
+    if (!canManage || !folder.canDelete) return;
+    if (!window.confirm(deleteFolderPrompt(folder))) return;
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const result = await deleteDocumentFolder(folder.name);
+      setNotice(
+        `Folder "${folder.name}" deleted` +
+          (result.documentsMoved
+            ? `; ${result.documentsMoved} documents moved to All documents`
+            : ""),
+      );
+      setRenamingFolder(null);
       selectFolder(null);
       await loadFolders();
     } catch (e) {
@@ -431,6 +478,17 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
                 New folder
               </button>
             ) : null}
+            {canManage && activeFolder && canRenameFolder(activeFolder) && !renamingFolder ? (
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                disabled={busy}
+                onClick={() => startRenameFolder(activeFolder)}
+              >
+                <i className="bx bx-edit-alt me-1" aria-hidden="true" />
+                Rename folder
+              </button>
+            ) : null}
             {canManage && activeFolder?.canDelete ? (
               <button
                 type="button"
@@ -443,6 +501,37 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
               </button>
             ) : null}
           </div>
+
+          {canManage && renamingFolder ? (
+            <form
+              className="d-flex flex-wrap align-items-end gap-2"
+              onSubmit={(e) => void onRenameFolder(e)}
+            >
+              <div>
+                <label className="form-label" htmlFor="rename-folder-name">
+                  Rename &ldquo;{renamingFolder}&rdquo; to
+                </label>
+                <input
+                  id="rename-folder-name"
+                  className="form-control form-control-sm"
+                  required
+                  maxLength={120}
+                  value={renameFolderName}
+                  onChange={(e) => setRenameFolderName(e.target.value)}
+                />
+              </div>
+              <button type="submit" className="btn btn-sm btn-primary" disabled={busy}>
+                Save
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => setRenamingFolder(null)}
+              >
+                Cancel
+              </button>
+            </form>
+          ) : null}
 
           {canManage && showNewFolder ? (
             <form

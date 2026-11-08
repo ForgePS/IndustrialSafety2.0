@@ -12,7 +12,9 @@ export type DocumentFolder = {
   name: string;
   documentCount: number;
   builtIn: boolean;
-  /** Only empty folders that someone created can be deleted. */
+  /** Every folder except built-ins can be renamed. Older APIs omit this. */
+  canRename?: boolean;
+  /** Every folder except built-ins can be deleted; its documents are kept. */
   canDelete: boolean;
 };
 
@@ -20,7 +22,14 @@ export const EHS_POLICIES_CATEGORY = "EHS Policies";
 
 /** Shown if the folder list can't load, so the built-in folder is still there. */
 export const FALLBACK_DOCUMENT_FOLDERS: readonly DocumentFolder[] = [
-  { id: null, name: EHS_POLICIES_CATEGORY, documentCount: 0, builtIn: true, canDelete: false },
+  {
+    id: null,
+    name: EHS_POLICIES_CATEGORY,
+    documentCount: 0,
+    builtIn: true,
+    canRename: false,
+    canDelete: false,
+  },
 ];
 
 export async function listDocumentFolders() {
@@ -31,11 +40,33 @@ export async function createDocumentFolder(name: string) {
   return apiSend<DocumentFolder>(`${DOCUMENTS_API}/folders`, "POST", { name });
 }
 
-export async function deleteDocumentFolder(id: string) {
-  return apiSend<{ id: string; deleted: boolean }>(
-    `${DOCUMENTS_API}/folders/${encodeURIComponent(id)}`,
-    "DELETE",
+/** Rename a folder; documents in it move to the new name. */
+export async function renameDocumentFolder(name: string, newName: string) {
+  return apiSend<{ id: string; name: string; documentsMoved: number }>(
+    `${DOCUMENTS_API}/folders/rename`,
+    "POST",
+    { name, newName },
   );
+}
+
+/** Delete a folder; its documents are kept and moved out of it. */
+export async function deleteDocumentFolder(name: string) {
+  return apiSend<{ name: string; deleted: boolean; documentsMoved: number }>(
+    `${DOCUMENTS_API}/folders/delete`,
+    "POST",
+    { name },
+  );
+}
+
+export function canRenameFolder(folder: DocumentFolder | null | undefined): boolean {
+  return Boolean(folder && !folder.builtIn && (folder.canRename ?? folder.canDelete));
+}
+
+export function deleteFolderPrompt(folder: Pick<DocumentFolder, "name" | "documentCount">) {
+  const count = folder.documentCount;
+  if (count === 0) return `Delete the folder "${folder.name}"?`;
+  const docs = count === 1 ? "1 document" : `${count} documents`;
+  return `Delete the folder "${folder.name}"? Its ${docs} will be kept and moved to All documents (no folder).`;
 }
 
 const nameCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });

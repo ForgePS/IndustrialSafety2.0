@@ -31,6 +31,7 @@ import {
   VERSION_WORKFLOW,
 } from "./document-control-workflow.js";
 import {
+  checkFolderRename,
   folderKey,
   MAX_FOLDER_NAME_LENGTH,
   mergeDocumentFolders,
@@ -345,45 +346,130 @@ export class IndustrialDocumentControlService {
           requestId: "",
           metadata: { name },
         });
-        return { id, name, documentCount: 0, builtIn: false, canDelete: true };
+        return {
+          id,
+          name,
+          documentCount: 0,
+          builtIn: false,
+          canRename: true,
+          canDelete: true,
+        };
       },
       principal.userId,
     );
   }
 
-  async deleteFolder(principal: ForgePrincipal, id: string) {
+  /**
+   * Rename a folder: every document filed in it (archived ones too) moves to the new name.
+   * Works for created folders and for categories already in use; built-ins are fixed.
+   */
+  async renameFolder(principal: ForgePrincipal, body: Record<string, unknown>) {
     return withTenantTransaction(
       this.db,
       principal.tenantId,
       async (tx) => {
-        const [folder] = await tx
-          .select()
-          .from(platformDocumentFolders)
-          .where(
-            and(
-              eq(platformDocumentFolders.id, id),
-              eq(platformDocumentFolders.tenantId, principal.tenantId),
-            ),
-          )
-          .limit(1);
-        if (!folder) throw new ForgeError("NOT_FOUND", "Folder not found");
-        const [inUse] = await tx
-          .select({ count: sql<number>`count(*)::int` })
-          .from(platformDocuments)
+        const folders = await this.loadFolders(tx, principal.tenantId);
+        const check = checkFolderRename(folders, body.name, body.newName);
+        if (!check.ok) throw new ForgeError(check.code, check.message);
+        const oldName = normalizeFolderName(body.name)!;
+        const now = new Date();
+
+        const moved = await tx
+          .update(platformDocuments)
+          .set({ category: check.name, updatedAt: now })
           .where(
             and(
               eq(platformDocuments.tenantId, principal.tenantId),
-              isNull(platformDocuments.archivedAt),
-              sql`lower(${platformDocuments.category}) = lower(${folder.name})`,
+              sql`lower(${platformDocuments.category}) = lower(${oldName})`,
+            ),
+          )
+          .returning({ id: platformDocuments.id });
+
+        const [stored] = await tx
+          .select({ id: platformDocumentFolders.id })
+          .from(platformDocumentFolders)
+          .where(
+            and(
+              eq(platformDocumentFolders.tenantId, principal.tenantId),
+              sql`lower(${platformDocumentFolders.name}) = lower(${oldName})`,
+            ),
+          )
+          .limit(1);
+        let folderId = stored?.id ?? null;
+        if (folderId) {
+          await tx
+            .update(platformDocumentFolders)
+            .set({ name: check.name, updatedAt: now })
+            .where(eq(platformDocumentFolders.id, folderId));
+        } else {
+          // A category-only folder becomes a stored folder so it survives being emptied.
+          folderId = createId();
+          await tx.insert(platformDocumentFolders).values({
+            id: folderId,
+            tenantId: principal.tenantId,
+            name: check.name,
+            createdByUserId: principal.userId,
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
+
+        await this.audit.writeInTransaction(tx, {
+          tenantId: principal.tenantId,
+          actorUserId: principal.userId,
+          actorPersonId: principal.personId,
+          actorType: "USER",
+          action: "document_control.folder_renamed",
+          resourceType: "platform_document_folder",
+          resourceId: folderId,
+          result: "SUCCESS",
+          riskLevel: "LOW",
+          correlationId: "",
+          requestId: "",
+          metadata: { from: oldName, to: check.name, documentsMoved: moved.length },
+        });
+        return { id: folderId, name: check.name, documentsMoved: moved.length };
+      },
+      principal.userId,
+    );
+  }
+
+  /**
+   * Delete a folder. Documents in it are kept: their category is cleared, so they show
+   * under All documents. Built-in folders can't be deleted.
+   */
+  async deleteFolderByName(principal: ForgePrincipal, rawName: unknown) {
+    const name = normalizeFolderName(rawName);
+    if (!name) throw new ForgeError("VALIDATION_FAILED", "Folder name is required");
+    return withTenantTransaction(
+      this.db,
+      principal.tenantId,
+      async (tx) => {
+        const folders = await this.loadFolders(tx, principal.tenantId);
+        const folder = folders.find((f) => folderKey(f.name) === folderKey(name));
+        if (!folder) throw new ForgeError("NOT_FOUND", "Folder not found");
+        if (!folder.canDelete) {
+          throw new ForgeError("VALIDATION_FAILED", `"${folder.name}" can't be deleted`);
+        }
+        const now = new Date();
+        const moved = await tx
+          .update(platformDocuments)
+          .set({ category: null, updatedAt: now })
+          .where(
+            and(
+              eq(platformDocuments.tenantId, principal.tenantId),
+              sql`lower(${platformDocuments.category}) = lower(${name})`,
+            ),
+          )
+          .returning({ id: platformDocuments.id });
+        await tx
+          .delete(platformDocumentFolders)
+          .where(
+            and(
+              eq(platformDocumentFolders.tenantId, principal.tenantId),
+              sql`lower(${platformDocumentFolders.name}) = lower(${name})`,
             ),
           );
-        if ((inUse?.count ?? 0) > 0) {
-          throw new ForgeError(
-            "CONFLICT",
-            "Move or archive the documents in this folder before deleting it",
-          );
-        }
-        await tx.delete(platformDocumentFolders).where(eq(platformDocumentFolders.id, id));
         await this.audit.writeInTransaction(tx, {
           tenantId: principal.tenantId,
           actorUserId: principal.userId,
@@ -391,17 +477,36 @@ export class IndustrialDocumentControlService {
           actorType: "USER",
           action: "document_control.folder_deleted",
           resourceType: "platform_document_folder",
-          resourceId: id,
+          resourceId: folder.id ?? folder.name,
           result: "SUCCESS",
-          riskLevel: "LOW",
+          riskLevel: "MEDIUM",
           correlationId: "",
           requestId: "",
-          metadata: { name: folder.name },
+          metadata: { name: folder.name, documentsMoved: moved.length },
         });
-        return { id, deleted: true };
+        return { name: folder.name, deleted: true, documentsMoved: moved.length };
       },
       principal.userId,
     );
+  }
+
+  /** Delete a stored folder by id (kept for clients that delete by id). */
+  async deleteFolder(principal: ForgePrincipal, id: string) {
+    const name = await withTenantTransaction(this.db, principal.tenantId, async (tx) => {
+      const [folder] = await tx
+        .select({ name: platformDocumentFolders.name })
+        .from(platformDocumentFolders)
+        .where(
+          and(
+            eq(platformDocumentFolders.id, id),
+            eq(platformDocumentFolders.tenantId, principal.tenantId),
+          ),
+        )
+        .limit(1);
+      return folder?.name ?? null;
+    });
+    if (!name) throw new ForgeError("NOT_FOUND", "Folder not found");
+    return this.deleteFolderByName(principal, name);
   }
 
   async update(principal: ForgePrincipal, id: string, body: Record<string, unknown>) {

@@ -117,6 +117,28 @@ export class IndustrialDocumentControlController {
     return ok(await this.documents.createFolder(principal, body), getRequestIds(req));
   }
 
+  /** Rename a folder by name: `{ name, newName }`. Documents in it move to the new name. */
+  @Post("folders/rename")
+  @RequireAnyPermission([...MANAGE], { requiresEntitlement: ENTITLEMENT })
+  async renameFolder(
+    @Principal() principal: ForgePrincipal,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.documents.renameFolder(principal, body), getRequestIds(req));
+  }
+
+  /** Delete a folder by name: `{ name }`. Its documents are kept and moved out of it. */
+  @Post("folders/delete")
+  @RequireAnyPermission([...MANAGE], { requiresEntitlement: ENTITLEMENT })
+  async deleteFolderByName(
+    @Principal() principal: ForgePrincipal,
+    @Body() body: { name?: unknown },
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.documents.deleteFolderByName(principal, body.name), getRequestIds(req));
+  }
+
   @Delete("folders/:folderId")
   @RequireAnyPermission([...MANAGE], { requiresEntitlement: ENTITLEMENT })
   async deleteFolder(

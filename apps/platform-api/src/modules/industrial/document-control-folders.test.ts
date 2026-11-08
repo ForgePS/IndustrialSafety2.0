@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { mergeDocumentFolders, normalizeFolderName } from "./document-control-folders";
+import {
+  checkFolderRename,
+  mergeDocumentFolders,
+  normalizeFolderName,
+} from "./document-control-folders";
 
 describe("normalizeFolderName", () => {
   it("trims and collapses whitespace", () => {
@@ -30,18 +34,18 @@ describe("mergeDocumentFolders", () => {
     ]);
   });
 
-  it("only lets empty stored folders be deleted", () => {
+  it("lets every folder except built-ins be renamed and deleted, even with documents", () => {
     const folders = mergeDocumentFolders({
-      stored: [
-        { id: "f1", name: "Empty" },
-        { id: "f2", name: "Used" },
+      stored: [{ id: "f1", name: "Used" }],
+      categoryCounts: [
+        { category: "Used", count: 1 },
+        { category: "GENERAL", count: 4 },
       ],
-      categoryCounts: [{ category: "Used", count: 1 }],
-      builtIns: [],
     });
-    expect(folders.map((f) => [f.name, f.canDelete])).toEqual([
-      ["Empty", true],
-      ["Used", false],
+    expect(folders.map((f) => [f.name, f.canRename, f.canDelete])).toEqual([
+      ["EHS Policies", false, false],
+      ["GENERAL", true, true],
+      ["Used", true, true],
     ]);
   });
 
@@ -55,5 +59,42 @@ describe("mergeDocumentFolders", () => {
       builtIns: [],
     });
     expect(folders.map((f) => f.name)).toEqual(["Area 2", "Area 10"]);
+  });
+});
+
+describe("checkFolderRename", () => {
+  const folders = mergeDocumentFolders({
+    stored: [{ id: "f1", name: "SOPs" }],
+    categoryCounts: [{ category: "GENERAL", count: 2 }],
+  });
+
+  it("allows a new unique name", () => {
+    expect(checkFolderRename(folders, "SOPs", " Standard  Procedures ")).toEqual({
+      ok: true,
+      name: "Standard Procedures",
+      caseOnly: false,
+    });
+  });
+
+  it("allows changing only the capitalization", () => {
+    expect(checkFolderRename(folders, "general", "General")).toEqual({
+      ok: true,
+      name: "General",
+      caseOnly: true,
+    });
+  });
+
+  it("rejects duplicates, built-ins, unknown folders, and blank names", () => {
+    expect(checkFolderRename(folders, "SOPs", "general")).toMatchObject({ code: "CONFLICT" });
+    expect(checkFolderRename(folders, "SOPs", "EHS policies")).toMatchObject({
+      code: "CONFLICT",
+    });
+    expect(checkFolderRename(folders, "EHS Policies", "Policies")).toMatchObject({
+      code: "VALIDATION_FAILED",
+    });
+    expect(checkFolderRename(folders, "Missing", "Other")).toMatchObject({ code: "NOT_FOUND" });
+    expect(checkFolderRename(folders, "SOPs", "  ")).toMatchObject({
+      code: "VALIDATION_FAILED",
+    });
   });
 });

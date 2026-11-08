@@ -14,7 +14,12 @@ export type DocumentFolderSummary = {
   name: string;
   documentCount: number;
   builtIn: boolean;
-  /** Only stored folders with no documents can be deleted. */
+  /** Every folder except built-ins can be renamed. */
+  canRename: boolean;
+  /**
+   * Every folder except built-ins can be deleted. Its documents are kept and moved out of
+   * the folder (category cleared).
+   */
   canDelete: boolean;
 };
 
@@ -30,10 +35,48 @@ export function folderKey(name: string): string {
   return name.trim().toLowerCase();
 }
 
+export function isBuiltInFolder(
+  name: string,
+  builtIns: readonly string[] = BUILT_IN_DOCUMENT_FOLDERS,
+) {
+  return builtIns.some((builtIn) => folderKey(builtIn) === folderKey(name));
+}
+
 const nameCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
 
 export function compareFolderNames(a: string, b: string): number {
   return nameCollator.compare(a, b);
+}
+
+export type FolderRenameCheck =
+  | { ok: true; name: string; caseOnly: boolean }
+  | { ok: false; code: "VALIDATION_FAILED" | "NOT_FOUND" | "CONFLICT"; message: string };
+
+/** Validate renaming `from` to `to` against the current folder list. */
+export function checkFolderRename(
+  folders: readonly DocumentFolderSummary[],
+  from: unknown,
+  to: unknown,
+): FolderRenameCheck {
+  const oldName = normalizeFolderName(from);
+  const newName = normalizeFolderName(to);
+  if (!oldName || !newName) {
+    return {
+      ok: false,
+      code: "VALIDATION_FAILED",
+      message: `Folder name is required (up to ${MAX_FOLDER_NAME_LENGTH} characters)`,
+    };
+  }
+  const current = folders.find((f) => folderKey(f.name) === folderKey(oldName));
+  if (!current) return { ok: false, code: "NOT_FOUND", message: "Folder not found" };
+  if (!current.canRename) {
+    return { ok: false, code: "VALIDATION_FAILED", message: `"${current.name}" can't be renamed` };
+  }
+  const caseOnly = folderKey(oldName) === folderKey(newName);
+  if (!caseOnly && folders.some((f) => folderKey(f.name) === folderKey(newName))) {
+    return { ok: false, code: "CONFLICT", message: `A folder named "${newName}" already exists` };
+  }
+  return { ok: true, name: newName, caseOnly };
 }
 
 export function mergeDocumentFolders(input: {
@@ -52,30 +95,21 @@ export function mergeDocumentFolders(input: {
   }
 
   const byKey = new Map<string, DocumentFolderSummary>();
-  for (const name of input.builtIns ?? BUILT_IN_DOCUMENT_FOLDERS) {
+  const add = (id: string | null, name: string, builtIn: boolean) => {
     const key = folderKey(name);
-    byKey.set(key, { id: null, name, documentCount: 0, builtIn: true, canDelete: false });
-  }
-  for (const row of input.stored) {
-    const key = folderKey(row.name);
-    if (byKey.has(key)) continue;
+    if (byKey.has(key)) return;
     byKey.set(key, {
-      id: row.id,
-      name: row.name,
-      documentCount: 0,
-      builtIn: false,
-      canDelete: true,
+      id,
+      name,
+      documentCount: counts.get(key) ?? 0,
+      builtIn,
+      canRename: !builtIn,
+      canDelete: !builtIn,
     });
-  }
-  for (const [key, name] of categoryNames) {
-    if (byKey.has(key)) continue;
-    byKey.set(key, { id: null, name, documentCount: 0, builtIn: false, canDelete: false });
-  }
+  };
+  for (const name of input.builtIns ?? BUILT_IN_DOCUMENT_FOLDERS) add(null, name, true);
+  for (const row of input.stored) add(row.id, row.name, false);
+  for (const name of categoryNames.values()) add(null, name, false);
 
-  return [...byKey.entries()]
-    .map(([key, folder]) => {
-      const documentCount = counts.get(key) ?? 0;
-      return { ...folder, documentCount, canDelete: folder.canDelete && documentCount === 0 };
-    })
-    .sort((a, b) => compareFolderNames(a.name, b.name));
+  return [...byKey.values()].sort((a, b) => compareFolderNames(a.name, b.name));
 }
