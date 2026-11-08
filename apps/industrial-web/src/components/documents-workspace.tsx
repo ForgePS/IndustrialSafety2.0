@@ -30,6 +30,7 @@ import {
   type ControlledDocumentVersion,
   type DocumentControlTab,
 } from "@/lib/document-control";
+import { DOCUMENT_FOLDERS, sortByDocumentName } from "@/lib/document-folders";
 
 export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
   const { me } = useAuth();
@@ -91,6 +92,9 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
   const [reviews, setReviews] = useState<ControlledDocument[]>([]);
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [folderId, setFolderId] = useState(DOCUMENT_FOLDERS[0]!.id);
+  const activeFolder = DOCUMENT_FOLDERS.find((f) => f.id === folderId) ?? DOCUMENT_FOLDERS[0]!;
+  const sortedItems = useMemo(() => sortByDocumentName(items), [items]);
   const [newName, setNewName] = useState("");
   const [newCategory, setNewCategory] = useState("GENERAL");
   const [editName, setEditName] = useState("");
@@ -111,6 +115,7 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
       const query: Record<string, string> = { pageSize: "100" };
       if (q.trim()) query.q = q.trim();
       if (statusFilter) query.workflowStatus = statusFilter;
+      if (activeFolder.category) query.category = activeFolder.category;
       const result = await listControlledDocuments(query);
       setItems(result.items ?? []);
     } catch (e) {
@@ -121,7 +126,13 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
     } finally {
       setLoading(false);
     }
-  }, [canView, q, statusFilter]);
+  }, [canView, q, statusFilter, activeFolder.category]);
+
+  function selectFolder(id: string) {
+    const folder = DOCUMENT_FOLDERS.find((f) => f.id === id);
+    setFolderId(id);
+    setNewCategory(folder?.category ?? "GENERAL");
+  }
 
   const loadDetail = useCallback(
     async (id: string) => {
@@ -313,6 +324,23 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
 
       {tab === "library" ? (
         <div className="d-flex flex-column gap-3">
+          <div className="d-flex flex-wrap gap-2" role="group" aria-label="Document folders">
+            {DOCUMENT_FOLDERS.map((folder) => (
+              <button
+                key={folder.id}
+                type="button"
+                className={`btn btn-sm ${
+                  folder.id === activeFolder.id ? "btn-primary" : "btn-outline-secondary"
+                }`}
+                aria-pressed={folder.id === activeFolder.id}
+                onClick={() => selectFolder(folder.id)}
+              >
+                <i className="bx bx-folder me-1" aria-hidden="true" />
+                {folder.label}
+              </button>
+            ))}
+          </div>
+
           <div className="card border shadow-none">
             <div className="card-body">
               <div className="row g-2 align-items-end">
@@ -412,14 +440,18 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {items.length === 0 ? (
+                  {sortedItems.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="text-muted text-center py-4">
-                        {loading ? "Loading…" : "No controlled documents found."}
+                        {loading
+                          ? "Loading…"
+                          : activeFolder.category
+                            ? `No documents in ${activeFolder.label} yet.`
+                            : "No controlled documents found."}
                       </td>
                     </tr>
                   ) : (
-                    items.map((item) => (
+                    sortedItems.map((item) => (
                       <tr key={item.id}>
                         <td className="fw-medium">{item.name}</td>
                         <td className="text-muted">{item.documentNumber ?? "—"}</td>
