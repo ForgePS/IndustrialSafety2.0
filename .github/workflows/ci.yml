@@ -293,7 +293,9 @@ jobs:
         run: pnpm infra:synth
         env:
           FORGE_PRODUCTION_ACCOUNT: "511343547817"
-          CDK_DEFAULT_ACCOUNT: "000000000000"
+          # Matches the availability-zone cache in cdk.context.json, so synth needs no AWS
+          # credentials (a placeholder account forces a live lookup and fails in CI).
+          CDK_DEFAULT_ACCOUNT: "511343547817"
           CDK_DEFAULT_REGION: us-east-1
           FORGE_ENV: development
 
