@@ -17712,37 +17712,50 @@ export class IndustrialDomainService {
           throw new ForgeError("VALIDATION_FAILED", "Select a specific division for Form 300A.");
         }
         const meta = parseOshaForm300AMeta(body, year, establishment);
-        const existing = await this.findOshaDivisionMetaSetting(tx, principal.tenantId);
-        const valueJson = writeOshaForm300AMetaForDivision(
-          existing?.valueJson,
-          establishment,
-          meta,
-        );
         const now = new Date();
-        if (existing) {
-          await tx
-            .update(tenantSettings)
-            .set({
-              valueJson,
-              recordVersion: sql`${tenantSettings.recordVersion} + 1`,
-              updatedAt: now,
-              updatedByUserId: principal.userId,
-            })
-            .where(eq(tenantSettings.id, existing.id));
-        } else {
-          await tx.insert(tenantSettings).values({
+        // One settings row holds every division/year. Create it if missing, then lock it so
+        // concurrent saves for other divisions or years merge in turn instead of overwriting.
+        await tx
+          .insert(tenantSettings)
+          .values({
             id: createId(),
             tenantId: principal.tenantId,
             namespace: "industrial",
             settingKey: OSHA_FORM300A_DIVISIONS_KEY,
-            valueJson,
+            valueJson: {},
             schemaVersion: 1,
             isSensitive: false,
             createdAt: now,
             updatedAt: now,
             updatedByUserId: principal.userId,
+          })
+          .onConflictDoNothing({
+            target: [tenantSettings.tenantId, tenantSettings.namespace, tenantSettings.settingKey],
           });
+        const [locked] = await tx
+          .select()
+          .from(tenantSettings)
+          .where(
+            and(
+              eq(tenantSettings.tenantId, principal.tenantId),
+              eq(tenantSettings.namespace, "industrial"),
+              eq(tenantSettings.settingKey, OSHA_FORM300A_DIVISIONS_KEY),
+            ),
+          )
+          .limit(1)
+          .for("update");
+        if (!locked) {
+          throw new ForgeError("CONFLICT", "Could not save Form 300A details. Try again.");
         }
+        await tx
+          .update(tenantSettings)
+          .set({
+            valueJson: writeOshaForm300AMetaForDivision(locked.valueJson, establishment, meta),
+            recordVersion: sql`${tenantSettings.recordVersion} + 1`,
+            updatedAt: now,
+            updatedByUserId: principal.userId,
+          })
+          .where(eq(tenantSettings.id, locked.id));
         return meta;
       }
       const site = await this.resolveOshaForm300ASite(tx, principal.tenantId, {

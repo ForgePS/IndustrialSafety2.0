@@ -539,12 +539,12 @@ export function summarizeOshaCases(cases: OshaCase[]): {
 }
 
 /**
- * Establishment choices: the tenant's division catalog, plus any division found on a case
- * that isn't in the catalog yet (so no case becomes unreachable). Case-insensitive dedupe.
+ * Establishment choices: only the tenant's division catalog (trimmed, case-insensitive dedupe,
+ * sorted). Divisions typed on cases but missing from the catalog are not offered.
  */
-export function uniqueEstablishments(cases: OshaCase[], divisionCatalog: string[] = []): string[] {
+export function establishmentOptions(divisionCatalog: string[]): string[] {
   const byKey = new Map<string, string>();
-  for (const raw of [...divisionCatalog, ...cases.map((c) => c.division)]) {
+  for (const raw of divisionCatalog) {
     const name = asText(raw);
     const key = oshaLogEstablishmentKey(name);
     if (key && !byKey.has(key)) byKey.set(key, name);
