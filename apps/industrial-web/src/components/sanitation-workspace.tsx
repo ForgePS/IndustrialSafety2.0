@@ -47,6 +47,8 @@ import {
   BUILTIN_SANITATION_TEMPLATES,
   downloadText,
   openPrintHtml,
+  openPrintWindow,
+  PRINT_POPUP_BLOCKED_MESSAGE,
   sanitationStatusDotColor,
   preopDisposition,
   saveSanitationDraft,
@@ -1857,15 +1859,19 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
   }
 
   async function printInspection(id: string) {
+    // Open the tab during the click; browsers block tabs opened after the fetch.
+    const printWindow = openPrintWindow();
     await withBusy(async () => {
       try {
+        if (!printWindow) throw new Error(PRINT_POPUP_BLOCKED_MESSAGE);
         const data = await apiGet<{ html?: string } | string>(
           `${API}/inspections/${encodeURIComponent(id)}/printable`,
         );
         const html = typeof data === "string" ? data : String(data.html ?? "");
         if (!html) throw new Error("Empty printable response");
-        openPrintHtml(html);
+        openPrintHtml(html, printWindow);
       } catch (e) {
+        printWindow?.close();
         if (e instanceof ApiError && e.status === 404) {
           throw new Error("Printable inspection endpoint is not available yet.");
         }
@@ -1876,8 +1882,10 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
 
   async function generateAuditPackage(ev: FormEvent) {
     ev.preventDefault();
+    const printWindow = openPrintWindow();
     await withBusy(async () => {
       try {
+        if (!printWindow) throw new Error(PRINT_POPUP_BLOCKED_MESSAGE);
         const data = await apiSend<{ html?: string } | string>(`${API}/audit-package`, "POST", {
           siteId: siteId || null,
           from: auditFrom || null,
@@ -1885,8 +1893,9 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
         });
         const html = typeof data === "string" ? data : String(data.html ?? "");
         if (!html) throw new Error("Empty audit package");
-        openPrintHtml(html);
+        openPrintHtml(html, printWindow);
       } catch (e) {
+        printWindow?.close();
         if (e instanceof ApiError && e.status === 404) {
           throw new Error("Audit package endpoint is not available yet.");
         }

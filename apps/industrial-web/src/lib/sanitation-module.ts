@@ -994,19 +994,57 @@ export function downloadText(
   URL.revokeObjectURL(url);
 }
 
-export function openPrintHtml(html: string): void {
+export const PRINT_POPUP_BLOCKED_MESSAGE =
+  "Your browser blocked the print window. Allow pop-ups for this site and try again.";
+
+/**
+ * Open the print tab right away, while the click still counts as a user action.
+ * Browsers block tabs opened after an await, and "noopener" makes window.open return
+ * null, which left an empty white tab with nothing written into it.
+ */
+export function openPrintWindow(): Window | null {
+  if (typeof window === "undefined") return null;
+  const w = window.open("", "_blank");
+  if (!w) return null;
+  try {
+    w.opener = null;
+    w.document.title = "Preparing report…";
+    w.document.body.innerHTML =
+      '<p style="font-family:system-ui,sans-serif;padding:24px;color:#555">Loading report…</p>';
+  } catch {
+    // Still usable; the report is written below.
+  }
+  return w;
+}
+
+/** Write report HTML into a print tab, then open the print dialog once images load. */
+export function openPrintHtml(html: string, target?: Window | null): void {
   if (typeof window === "undefined") return;
-  const w = window.open("", "_blank", "noopener,noreferrer");
-  if (!w) return;
+  const w = target ?? openPrintWindow();
+  if (!w || w.closed) throw new Error(PRINT_POPUP_BLOCKED_MESSAGE);
   w.document.open();
   w.document.write(html);
   w.document.close();
   w.focus();
-  try {
-    w.print();
-  } catch {
-    // Print may be blocked; window still shows content.
-  }
+  // Photos are inline data URLs; printing before they decode leaves blank boxes.
+  const images = Array.from(w.document.images);
+  const loaded = images.map((img) =>
+    img.complete
+      ? Promise.resolve()
+      : new Promise<void>((resolve) => {
+          img.addEventListener("load", () => resolve(), { once: true });
+          img.addEventListener("error", () => resolve(), { once: true });
+        }),
+  );
+  const timeout = new Promise<void>((resolve) => window.setTimeout(resolve, 5000));
+  void Promise.race([Promise.all(loaded), timeout]).then(() => {
+    try {
+      w.focus();
+      w.print();
+    } catch {
+      // Print may be blocked; the tab still shows the report and its own Print button.
+    }
+  });
 }
 
 export function sanitationStatusDotColor(status: string | null | undefined): string {
