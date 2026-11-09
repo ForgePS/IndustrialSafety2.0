@@ -1,5 +1,13 @@
 import { createServiceRoleClient } from '@repo/supabase/server'
 
+import {
+  detectIncidentTrends,
+  detectRecurringIncidents,
+  detectTrainingGaps,
+  type PatternAssignment,
+  type PatternIncident
+} from '@/lib/forgeAiWatchPatterns'
+
 type WatchCandidate = {
   ruleKey: string
   targetType: string
@@ -421,6 +429,333 @@ const evaluateTasksOverdue = async (
   }))
 }
 
+const locationNames = async (supabase: any, organizationId: string) => {
+  const { data } = await supabase.from('locations').select('id, name').eq('organization_id', organizationId)
+
+  return new Map<string, string>((data || []).map((row: any) => [row.id, row.name]))
+}
+
+const humanize = (value: string) => value.replaceAll('_', ' ')
+
+const evaluateSeriousIncidents = async (supabase: any, organizationId: string, config: Record<string, unknown>): Promise<WatchCandidate[]> => {
+  const lookbackHours = integerConfig(config, 'lookback_hours', 72, 1, 24 * 90)
+  const severities = Array.isArray(config.severities) && config.severities.length ? (config.severities as string[]) : ['serious']
+  const includeInjuries = config.include_injuries !== false
+  const since = new Date(Date.now() - lookbackHours * 3_600_000).toISOString()
+
+  const { data, error } = await supabase
+    .from('forge_incidents')
+    .select('id, incident_number, summary, severity, incident_type, involves_injury, status, occurred_at, reported_at, location_id, division_id')
+    .eq('organization_id', organizationId)
+    .neq('status', 'draft')
+    .gte('reported_at', since)
+    .order('reported_at', { ascending: false })
+
+  if (error) throw new Error('Serious incident watch failed: ' + error.message)
+
+  return (data || [])
+    .filter((row: any) => severities.includes(row.severity) || (includeInjuries && row.involves_injury))
+    .map((row: any) => ({
+      ruleKey: 'incident.serious_reported',
+      targetType: 'incident',
+      targetId: row.id,
+      targetReference: row.incident_number,
+      title: (severities.includes(row.severity) ? 'Serious incident reported: ' : 'Injury incident reported: ') + row.incident_number,
+      summary:
+        humanize(String(row.severity)) +
+        ' ' +
+        humanize(String(row.incident_type || 'incident')) +
+        (row.involves_injury ? ' involving an injury' : '') +
+        ', reported ' +
+        String(row.reported_at || row.occurred_at).slice(0, 10) +
+        ': ' +
+        String(row.summary || '').slice(0, 160),
+      locationId: row.location_id,
+      divisionId: row.division_id,
+      data: {
+        incident_number: row.incident_number,
+        severity: row.severity,
+        incident_type: row.incident_type,
+        involves_injury: row.involves_injury,
+        status: row.status,
+        path: '/incidents/' + row.id
+      }
+    }))
+}
+
+const loadPatternIncidents = async (supabase: any, organizationId: string, days: number) => {
+  const { data, error } = await supabase
+    .from('forge_incidents')
+    .select('id, incident_number, incident_type, occurred_at, location_id, division_id')
+    .eq('organization_id', organizationId)
+    .neq('status', 'draft')
+    .gte('occurred_at', new Date(Date.now() - days * 86_400_000).toISOString())
+
+  if (error) throw new Error('Incident pattern watch failed: ' + error.message)
+
+  return (data || []) as PatternIncident[]
+}
+
+const evaluateRecurringIncidents = async (supabase: any, organizationId: string, config: Record<string, unknown>): Promise<WatchCandidate[]> => {
+  const windowDays = integerConfig(config, 'window_days', 30, 7, 365)
+  const minCount = integerConfig(config, 'min_count', 3, 2, 100)
+  const [incidents, names] = await Promise.all([loadPatternIncidents(supabase, organizationId, windowDays), locationNames(supabase, organizationId)])
+
+  return detectRecurringIncidents(incidents, { windowDays, minCount }, new Date()).map(cluster => {
+    const place = names.get(cluster.locationId) || 'one location'
+    const references = cluster.incidents.map(item => item.incident_number)
+
+    return {
+      ruleKey: 'incident.recurring_type',
+      targetType: 'incident_pattern',
+      targetId: cluster.locationId + ':' + cluster.incidentType,
+      targetReference: references[references.length - 1] || null,
+      title: 'Recurring ' + humanize(cluster.incidentType) + ' incidents at ' + place,
+      summary: cluster.incidents.length + ' ' + humanize(cluster.incidentType) + ' incidents at ' + place + ' in ' + windowDays + ' days: ' + references.join(', ') + '.',
+      locationId: cluster.locationId,
+      divisionId: cluster.divisionId,
+      data: {
+        incident_type: cluster.incidentType,
+        window_days: windowDays,
+        incident_ids: cluster.incidents.map(item => item.id),
+        incident_numbers: references,
+        path: '/incidents'
+      }
+    }
+  })
+}
+
+const evaluateIncidentTrends = async (supabase: any, organizationId: string, config: Record<string, unknown>): Promise<WatchCandidate[]> => {
+  const windowDays = integerConfig(config, 'window_days', 30, 7, 180)
+  const baselineDays = integerConfig(config, 'baseline_days', 90, 14, 730)
+  const minCount = integerConfig(config, 'min_count', 3, 1, 100)
+  const ratio = Math.min(Math.max(Number(config.ratio) || 1.5, 1.1), 10)
+  const [incidents, names] = await Promise.all([
+    loadPatternIncidents(supabase, organizationId, windowDays + baselineDays),
+    locationNames(supabase, organizationId)
+  ])
+
+  return detectIncidentTrends(incidents, { windowDays, baselineDays, minCount, ratio }, new Date()).map(trend => {
+    const place = names.get(trend.locationId) || 'one location'
+
+    return {
+      ruleKey: 'incident.emerging_trend',
+      targetType: 'incident_trend',
+      targetId: trend.locationId,
+      targetReference: null,
+      title: 'Incidents rising at ' + place,
+      summary:
+        trend.recent.length +
+        ' incidents in the last ' +
+        windowDays +
+        ' days, against about ' +
+        trend.baselineRate +
+        ' per ' +
+        windowDays +
+        ' days over the prior ' +
+        baselineDays +
+        ' days (' +
+        trend.ratio +
+        'x).',
+      locationId: trend.locationId,
+      divisionId: trend.divisionId,
+      data: {
+        window_days: windowDays,
+        baseline_days: baselineDays,
+        recent_count: trend.recent.length,
+        baseline_count: trend.baselineCount,
+        ratio: trend.ratio,
+        incident_ids: trend.recent.map(item => item.id),
+        incident_numbers: trend.recent.map(item => item.incident_number),
+        path: '/incidents'
+      }
+    }
+  })
+}
+
+const evaluateFailedInspections = async (supabase: any, organizationId: string): Promise<WatchCandidate[]> => {
+  const { data, error } = await supabase
+    .from('forge_inspections')
+    .select('id, inspection_number, template_name_snapshot, status, inspection_date, location_id, division_id')
+    .eq('organization_id', organizationId)
+    .eq('result', 'fail')
+    .not('status', 'in', '(closed,canceled)')
+    .order('inspection_date')
+
+  if (error) throw new Error('Failed inspection watch failed: ' + error.message)
+
+  return (data || []).map((row: any) => ({
+    ruleKey: 'inspection.failed',
+    targetType: 'inspection',
+    targetId: row.id,
+    targetReference: row.inspection_number,
+    title: 'Failed inspection not closed: ' + row.inspection_number,
+    summary:
+      (row.template_name_snapshot || 'Inspection') +
+      ' on ' +
+      (row.inspection_date || 'an unknown date') +
+      ' failed and is still ' +
+      humanize(String(row.status)) +
+      '.',
+    locationId: row.location_id,
+    divisionId: row.division_id,
+    data: {
+      inspection_number: row.inspection_number,
+      status: row.status,
+      inspection_date: row.inspection_date,
+      inspection_id: row.id,
+      path: '/inspections/' + row.id
+    }
+  }))
+}
+
+const evaluateHighRiskObservations = async (supabase: any, organizationId: string, config: Record<string, unknown>): Promise<WatchCandidate[]> => {
+  const bands = Array.isArray(config.bands) && config.bands.length ? (config.bands as string[]) : ['high', 'very_high', 'critical', 'extreme']
+
+  const { data, error } = await supabase
+    .from('forge_observations')
+    .select('id, observation_number, title, status, initial_risk_band_key, occurred_at, location_id, division_id')
+    .eq('organization_id', organizationId)
+    .is('archived_at', null)
+    .in('initial_risk_band_key', bands)
+    .not('status', 'in', '(closed,no_action,draft)')
+    .order('occurred_at')
+
+  if (error) throw new Error('High-risk observation watch failed: ' + error.message)
+
+  return (data || []).map((row: any) => ({
+    ruleKey: 'observation.high_risk_open',
+    targetType: 'observation',
+    targetId: row.id,
+    targetReference: row.observation_number,
+    title: 'Open high-risk observation: ' + row.title,
+    summary: row.observation_number + ' is rated ' + humanize(String(row.initial_risk_band_key)) + ' and is still ' + humanize(String(row.status)) + '.',
+    locationId: row.location_id,
+    divisionId: row.division_id,
+    data: { observation_number: row.observation_number, band: row.initial_risk_band_key, status: row.status, path: '/observations/' + row.id }
+  }))
+}
+
+const evaluateRiskReviewsOverdue = async (supabase: any, organizationId: string, config: Record<string, unknown>): Promise<WatchCandidate[]> => {
+  const minimumDays = integerConfig(config, 'days_overdue', 0, 0, 3650)
+  const cutoff = new Date(Date.now() - minimumDays * 86_400_000).toISOString()
+
+  const { data, error } = await supabase
+    .from('forge_risks')
+    .select('id, risk_number, title, status, next_review_at, residual_band_key, inherent_band_key, location_id, division_id')
+    .eq('organization_id', organizationId)
+    .is('archived_at', null)
+    .not('status', 'in', '(closed,draft)')
+    .lt('next_review_at', cutoff)
+    .order('next_review_at')
+
+  if (error) throw new Error('Risk review watch failed: ' + error.message)
+
+  return (data || []).map((row: any) => ({
+    ruleKey: 'risk.review_overdue',
+    targetType: 'risk',
+    targetId: row.id,
+    targetReference: row.risk_number,
+    title: 'Risk review overdue: ' + row.title,
+    summary: row.risk_number + ' was due for review on ' + String(row.next_review_at).slice(0, 10) + ' (' + daysBetween(row.next_review_at) + ' day(s) ago).',
+    locationId: row.location_id,
+    divisionId: row.division_id,
+    data: {
+      risk_number: row.risk_number,
+      next_review_at: row.next_review_at,
+      band: row.residual_band_key || row.inherent_band_key,
+      path: '/risk-register/' + row.id
+    }
+  }))
+}
+
+const evaluateTrainingGaps = async (supabase: any, organizationId: string, config: Record<string, unknown>): Promise<WatchCandidate[]> => {
+  const minShare = Math.min(Math.max(Number(config.min_share) || 0.2, 0.01), 1)
+  const minOverdue = integerConfig(config, 'min_overdue', 3, 1, 1000)
+
+  const [{ data, error }, names] = await Promise.all([
+    supabase
+      .from('forge_training_assignments')
+      .select('id, due_date, status, forge_personnel(location_id, division_id, archived_at)')
+      .eq('organization_id', organizationId)
+      .not('status', 'in', '(completed,canceled)'),
+    locationNames(supabase, organizationId)
+  ])
+
+  if (error) throw new Error('Training gap watch failed: ' + error.message)
+
+  const assignments: PatternAssignment[] = (data || [])
+    .filter((row: any) => row.forge_personnel && !row.forge_personnel.archived_at)
+    .map((row: any) => ({
+      id: row.id,
+      due_date: row.due_date,
+      location_id: row.forge_personnel.location_id,
+      division_id: row.forge_personnel.division_id
+    }))
+
+  return detectTrainingGaps(assignments, { minShare, minOverdue }, new Date()).map(gap => {
+    const place = names.get(gap.locationId) || 'one location'
+
+    return {
+      ruleKey: 'training.location_gap',
+      targetType: 'training_gap',
+      targetId: gap.locationId,
+      targetReference: null,
+      title: 'Training gap at ' + place,
+      summary:
+        gap.overdue.length + ' of ' + gap.total + ' open training assignments at ' + place + ' are overdue (' + Math.round(gap.share * 100) + '%).',
+      locationId: gap.locationId,
+      divisionId: gap.divisionId,
+      data: {
+        total: gap.total,
+        overdue_count: gap.overdue.length,
+        share: gap.share,
+        assignment_ids: gap.overdue.map(item => item.id),
+        path: '/training'
+      }
+    }
+  })
+}
+
+const evaluateElevatedRisk = async (supabase: any, organizationId: string, config: Record<string, unknown>): Promise<WatchCandidate[]> => {
+  const bands = Array.isArray(config.bands) && config.bands.length ? (config.bands as string[]) : ['elevated', 'high']
+
+  const [{ data, error }, { data: locations }] = await Promise.all([
+    supabase
+      .from('forge_ai_risk_assessments')
+      .select('id, scope_type, scope_id, scope_name, score, band, model_version, computed_at')
+      .eq('organization_id', organizationId)
+      .order('computed_at', { ascending: false })
+      .limit(1000),
+    supabase.from('locations').select('id, division_id').eq('organization_id', organizationId)
+  ])
+
+  if (error) throw new Error('Risk indicator watch failed: ' + error.message)
+
+  const divisionOf = new Map<string, string | null>((locations || []).map((row: any) => [row.id, row.division_id]))
+  const latest = new Map<string, any>()
+
+  for (const row of data || []) {
+    const key = row.scope_type + ':' + row.scope_id
+
+    if (!latest.has(key)) latest.set(key, row)
+  }
+
+  return [...latest.values()]
+    .filter(row => bands.includes(row.band))
+    .map(row => ({
+      ruleKey: 'risk.indicator_elevated',
+      targetType: 'risk_assessment',
+      targetId: row.scope_type + ':' + row.scope_id,
+      targetReference: null,
+      title: 'Risk indicator ' + row.band + ' at ' + row.scope_name,
+      summary: row.scope_name + ' scored ' + row.score + ' (' + row.band + ') on the facility risk indicator, model v' + row.model_version + '.',
+      locationId: row.scope_type === 'location' ? row.scope_id : null,
+      divisionId: row.scope_type === 'division' ? row.scope_id : divisionOf.get(row.scope_id) || null,
+      data: { scope_type: row.scope_type, scope_id: row.scope_id, score: row.score, band: row.band, assessment_id: row.id, path: '/ai/risk' }
+    }))
+}
+
 const evaluateRule = async (
   supabase: any,
   organizationId: string,
@@ -453,6 +788,14 @@ const evaluateRule = async (
   if (ruleKey === 'tasks.overdue') {
     return evaluateTasksOverdue(supabase, organizationId, config)
   }
+  if (ruleKey === 'incident.serious_reported') return evaluateSeriousIncidents(supabase, organizationId, config)
+  if (ruleKey === 'incident.recurring_type') return evaluateRecurringIncidents(supabase, organizationId, config)
+  if (ruleKey === 'incident.emerging_trend') return evaluateIncidentTrends(supabase, organizationId, config)
+  if (ruleKey === 'inspection.failed') return evaluateFailedInspections(supabase, organizationId)
+  if (ruleKey === 'observation.high_risk_open') return evaluateHighRiskObservations(supabase, organizationId, config)
+  if (ruleKey === 'risk.review_overdue') return evaluateRiskReviewsOverdue(supabase, organizationId, config)
+  if (ruleKey === 'training.location_gap') return evaluateTrainingGaps(supabase, organizationId, config)
+  if (ruleKey === 'risk.indicator_elevated') return evaluateElevatedRisk(supabase, organizationId, config)
 
   return []
 }
@@ -557,6 +900,7 @@ export const runForgeAiWatch = async ({
               last_detected_at: now,
               resolved_at: nextStatus === 'open' ? null : undefined,
               resolved_by: nextStatus === 'open' ? null : undefined,
+              notified_at: existing.status === 'resolved' ? null : undefined,
               updated_at: now
             })
             .eq('id', existing.id)

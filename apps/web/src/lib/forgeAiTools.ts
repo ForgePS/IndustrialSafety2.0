@@ -16,6 +16,7 @@ import { searchKnowledge } from '@/lib/forgeHelpdeskKnowledge'
 import { fenceUntrustedExcerpt } from '@/lib/forgeAiResponseCheck'
 import { recordForgeAiAudit } from '@/lib/forgeAiExecution'
 import { getScopedForgeAiWatchAlerts } from '@/lib/forgeAiWatchAccess'
+import { getScopedForgeAiRiskAssessments } from '@/lib/forgeAiRisk'
 import {
   getForgeAiAssetAnalytics,
   getForgeAiExecutiveAnalytics,
@@ -507,6 +508,21 @@ const definitions: Record<string, any> = {
         limit: { type: ['integer','null'], minimum: 1, maximum: 50, description: 'Maximum alerts to return, or null for the default.' }
       },
       required: ['status','severity','limit'],
+      additionalProperties: false
+    }
+  },
+  get_risk_indicators: {
+    type: 'function',
+    name: 'get_risk_indicators',
+    description: 'Latest Forge facility and division risk indicators (0-100 weighted indicators over real records, not probabilities) with each contributing factor, its detail and the records behind it. Scopes without enough data have no score.',
+    strict: true,
+    parameters: {
+      type: 'object',
+      properties: {
+        scope_type: { type: ['string','null'], enum: ['location','division', null], description: 'Only facilities (location) or divisions, or null for both.' },
+        limit: { type: ['integer','null'], minimum: 1, maximum: 20, description: 'Maximum scopes to return, or null for the default.' }
+      },
+      required: ['scope_type','limit'],
       additionalProperties: false
     }
   },
@@ -1533,6 +1549,58 @@ const executeToolValue = async ({
           target_reference: alert.target_reference || alert.record_reference || null,
           first_detected_at: alert.first_detected_at || alert.created_at || null,
           last_detected_at: alert.last_detected_at || null
+        }))
+    }
+
+    case 'get_risk_indicators': {
+      const riskPermission = getPermission(context, 'forge_ai.view_risk')
+
+      if (!riskPermission) return { denied: true, reason: 'You do not have access to Forge AI risk indicators.' }
+
+      const scopeType = typeof args.scope_type === 'string' ? args.scope_type : null
+      const assessments = await getScopedForgeAiRiskAssessments({
+        organizationId,
+        userId,
+        permission: riskPermission,
+        permissionByKey: context.permissionByKey
+      })
+      // Evidence carries typed reference fields so cited records link back to Forge.
+      const referenceField: Record<string, string> = {
+        incident: 'incident_number',
+        inspection: 'inspection_number',
+        task: 'task_number',
+        risk: 'risk_number',
+        observation: 'observation_number',
+        training_assignment: 'course_code'
+      }
+
+      return assessments
+        .filter((row: any) => !scopeType || row.scope_type === scopeType)
+        .slice(0, limitValue(args.limit, 10))
+        .map((row: any) => ({
+          record_type: 'risk_indicator',
+          scope_type: row.scope_type,
+          scope_name: row.scope_name,
+          score: row.score,
+          band: row.band,
+          note: row.band === 'insufficient_data' ? row.metadata?.reason || 'Not enough data to score.' : null,
+          model: row.model_key + ' v' + row.model_version,
+          period_days: Math.round((new Date(row.period_end).getTime() - new Date(row.period_start).getTime()) / 86_400_000),
+          computed_at: row.computed_at,
+          factors: (row.indicators || []).map((item: any) => ({
+            factor: item.label,
+            available: item.available,
+            value: item.raw_value,
+            weight: item.weight,
+            contribution: item.contribution,
+            detail: item.detail,
+            records: (item.evidence || []).slice(0, 10).map((entry: any) => ({
+              record_type: entry.type,
+              id: entry.id,
+              [referenceField[entry.type] || 'reference']: entry.reference
+            })),
+            records_hidden: item.hidden_evidence || 0
+          }))
         }))
     }
 
