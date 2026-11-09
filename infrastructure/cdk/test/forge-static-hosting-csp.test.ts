@@ -8,7 +8,7 @@ import {
 } from "../lib/constructs/forge-static-hosting-csp.js";
 
 describe("ForgeStaticHosting CSP (FIS-M01)", () => {
-  it("omits unsafe-inline from script-src and does not use bare https: connect-src", () => {
+  it("limits script-src to self plus inline (never eval) and does not use bare https: connect-src", () => {
     const csp = buildContentSecurityPolicy({
       apiProxyOriginHostname: "api-dev.forgepublicsafety.com",
       cspConnectSrcExtras: [
@@ -17,8 +17,9 @@ describe("ForgeStaticHosting CSP (FIS-M01)", () => {
       ],
     });
 
-    expect(csp).toMatch(/script-src 'self'/);
-    expect(csp).not.toMatch(/script-src[^;]*'unsafe-inline'/);
+    // Next.js static export embeds RSC flight data as inline <script>, so unsafe-inline is
+    // intentional (see forge-static-hosting-csp.ts). No other script sources and never eval.
+    expect(csp.match(/script-src ([^;]+)/)?.[1]).toBe("'self' 'unsafe-inline'");
     expect(csp).not.toMatch(/script-src[^;]*'unsafe-eval'/);
     // Bare scheme allowlist (connect-src 'self' https:) must not appear; host allowlists use https://…
     const connectSrc = csp.match(/connect-src ([^;]+)/)?.[1] ?? "";

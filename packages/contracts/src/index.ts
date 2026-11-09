@@ -822,3 +822,4 @@ export const ALL_PERMISSIONS = [
 export type AnyPermission = (typeof ALL_PERMISSIONS)[number];
 
 export * from "@forge/ai-contracts";
+export * from "./osha-rules.js";

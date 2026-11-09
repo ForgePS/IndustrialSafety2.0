@@ -136,3 +136,19 @@ export const platformDocumentAcknowledgments = pgTable(
     index("platform_document_acknowledgments_doc_idx").on(t.tenantId, t.documentId),
   ],
 );
+
+/**
+ * User-created Document Control folders (migration 0114). A document is in a folder when
+ * platform_documents.category equals the folder name. The case-insensitive unique index on
+ * (tenant_id, lower(name)) lives in the migration.
+ */
+export const platformDocumentFolders = pgTable("platform_document_folders", {
+  id: uuid("id").primaryKey(),
+  tenantId: uuid("tenant_id")
+    .notNull()
+    .references(() => tenants.id),
+  name: varchar("name", { length: 120 }).notNull(),
+  createdByUserId: uuid("created_by_user_id").references(() => users.id),
+  createdAt: createdAtColumn,
+  updatedAt: updatedAtColumn,
+});

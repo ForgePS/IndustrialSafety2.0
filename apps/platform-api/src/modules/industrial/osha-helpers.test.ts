@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  cappedOshaDays,
   form300ATotalsFromCases,
+  nextOshaCaseNumber,
+  oshaCaseLogYear,
   hydrateOshaFromSource,
   mergeOshaCasePayloadFields,
   mergeOshaSeedPreferExisting,
@@ -240,5 +243,46 @@ describe("osha-helpers", () => {
     const merged = mergeOshaSeedPreferExisting({ employeeName: "Existing", street: "" }, seed);
     expect(merged.employeeName).toBe("Existing");
     expect(merged.street).toBe("100 Main St");
+  });
+});
+
+describe("OSHA audit fixes", () => {
+  it("numbers cases per establishment and year, never reusing a number", () => {
+    const rows = [
+      { logKey: "site 1", year: 2026, caseNumber: "1" },
+      { logKey: "site 1", year: 2026, caseNumber: "2026-004" },
+      { logKey: "site 2", year: 2026, caseNumber: "9" },
+      { logKey: "site 1", year: 2025, caseNumber: "12" },
+    ];
+    expect(nextOshaCaseNumber(rows, "site 1", 2026)).toBe("5");
+    expect(nextOshaCaseNumber(rows, "site 2", 2026)).toBe("10");
+    expect(nextOshaCaseNumber(rows, "site 1", 2027)).toBe("1");
+    expect(nextOshaCaseNumber(rows, "", null)).toBe("1");
+  });
+
+  it("uses the injury year over a stale calendarYear", () => {
+    expect(oshaCaseLogYear({ injuryDate: "2026-01-02", calendarYear: 2025 })).toBe(2026);
+    expect(oshaCaseLogYear({ injuryDate: null, calendarYear: 2025 })).toBe(2025);
+    const hydrated = hydrateOshaFromSource({
+      sourcePayload: { injuryDate: "2026-01-02", calendarYear: 2025 },
+    });
+    expect(hydrated.calendarYear).toBe(2026);
+  });
+
+  it("counts a case in one year only and caps days at 180", () => {
+    const base = {
+      recordabilityStatus: "RECORDABLE" as const,
+      caseOutcome: "DAYS_AWAY" as const,
+      illnessCategory: "1" as const,
+    };
+    const cases = [
+      { ...base, calendarYear: 2025, injuryDate: "2026-01-02", daysAway: 200, restrictedDays: 5 },
+    ];
+    expect(form300ATotalsFromCases(cases, 2025).daysAwayCases).toBe(0);
+    const totals = form300ATotalsFromCases(cases, 2026);
+    expect(totals.daysAwayCases).toBe(1);
+    expect(totals.daysAway).toBe(180);
+    expect(totals.restrictedDays).toBe(0);
+    expect(cappedOshaDays(100, 100)).toEqual({ daysAway: 100, restrictedDays: 80 });
   });
 });
