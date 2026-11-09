@@ -4,7 +4,11 @@ import { revalidatePath } from 'next/cache'
 import { createHash } from 'crypto'
 import { z } from 'zod'
 import { createServiceRoleClient } from '@repo/supabase/server'
-import { indexForgeAiKnowledgeSource } from '@/lib/forgeAiKnowledge'
+import {
+  createForgeAiKnowledgeVersion,
+  indexForgeAiKnowledgeSource,
+  reindexStaleForgeAiKnowledge
+} from '@/lib/forgeAiKnowledge'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 
 const sourceSchema = z.object({
@@ -86,6 +90,21 @@ export const saveForgeAiKnowledgeSource = async (
     return { error: error?.message || 'Unable to save knowledge source.' }
   }
 
+  // Every content change is kept as a numbered version.
+  if (contentChanged) {
+    try {
+      await createForgeAiKnowledgeVersion({
+        organizationId,
+        sourceId: saved.id,
+        actorUserId: context.user.id,
+        contentText: data.contentText,
+        origin: 'manual'
+      })
+    } catch (versionError) {
+      return { error: versionError instanceof Error ? versionError.message : 'Unable to record the new version.' }
+    }
+  }
+
   await supabase.from('forge_creator_audit_log').insert({
     actor_user_id: context.user.id,
     organization_id: organizationId,
@@ -131,9 +150,11 @@ export const indexKnowledgeSource = async (sourceId: string) => {
 
     return {
       message:
-        'Knowledge indexed successfully: ' +
+        'Knowledge indexed: ' +
         String(result.chunkCount) +
-        ' semantic chunk(s).'
+        ' chunk(s) from version ' +
+        String(result.versionNumber ?? 1) +
+        (result.retrievalMode === 'hybrid' ? ' (full-text and semantic search).' : ' (full-text search; semantic search turns on when an embedding provider is configured).')
     }
   } catch (error) {
     revalidatePath('/ai/knowledge')
@@ -186,4 +207,23 @@ export const archiveForgeAiKnowledgeSource = async (sourceId: string) => {
 
   revalidatePath('/ai/knowledge')
   return { message: 'Knowledge source archived.' }
+}
+
+// Re-index every source whose current version is not yet searchable.
+export const reindexStaleKnowledgeSources = async () => {
+  const context = await requireTenantPermission('forge_ai.manage_knowledge')
+  const results = await reindexStaleForgeAiKnowledge({
+    organizationId: context.activeOrganization.id,
+    actorUserId: context.user.id,
+    limit: 25
+  })
+
+  revalidatePath('/ai/knowledge')
+
+  const failed = results.filter(item => !item.ok)
+
+  if (!results.length) return { message: 'All knowledge sources are up to date.' }
+  if (failed.length) return { error: String(failed.length) + ' of ' + String(results.length) + ' source(s) failed to index: ' + failed[0].error }
+
+  return { message: 'Re-indexed ' + String(results.length) + ' knowledge source(s).' }
 }

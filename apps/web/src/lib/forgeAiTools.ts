@@ -13,6 +13,9 @@ import { listRisks, loadRisk } from '@/lib/forgeRiskRegister'
 import { listJsas } from '@/lib/forgeJsa'
 import { searchForgeAiKnowledge } from '@/lib/forgeAiKnowledge'
 import { searchKnowledge } from '@/lib/forgeHelpdeskKnowledge'
+import { fenceUntrustedExcerpt } from '@/lib/forgeAiResponseCheck'
+import { recordForgeAiAudit } from '@/lib/forgeAiExecution'
+import { getScopedForgeAiWatchAlerts } from '@/lib/forgeAiWatchAccess'
 import {
   getForgeAiAssetAnalytics,
   getForgeAiExecutiveAnalytics,
@@ -488,6 +491,22 @@ const definitions: Record<string, any> = {
         limit: { type: ['integer','null'], minimum: 1, maximum: 8, description: 'Maximum articles to return, or null for the default.' }
       },
       required: ['query','limit'],
+      additionalProperties: false
+    }
+  },
+  search_watch_alerts: {
+    type: 'function',
+    name: 'search_watch_alerts',
+    description: 'List Forge AI Watch alerts the user may see (rule-based detections over Forge records), newest first. Use to explain what needs attention.',
+    strict: true,
+    parameters: {
+      type: 'object',
+      properties: {
+        status: { type: ['string','null'], enum: ['open','acknowledged','resolved', null], description: 'Alert status, or null for open and acknowledged.' },
+        severity: { type: ['string','null'], enum: ['critical','high','warning','info', null], description: 'Only this severity, or null for all.' },
+        limit: { type: ['integer','null'], minimum: 1, maximum: 50, description: 'Maximum alerts to return, or null for the default.' }
+      },
+      required: ['status','severity','limit'],
       additionalProperties: false
     }
   },
@@ -1433,7 +1452,7 @@ const executeToolValue = async ({
         includeRestricted
       })
 
-      return results.map((item: any) => ({
+      const fenced = results.map((item: any) => ({
         record_type: 'forge_knowledge',
         source_title: item.source_title,
         source_type: item.source_type,
@@ -1441,9 +1460,28 @@ const executeToolValue = async ({
         source_reference: item.source_reference,
         section_title: item.section_title,
         page_number: item.page_number,
-        excerpt: item.content,
-        similarity: Number(item.similarity.toFixed(4))
+        // Document text is untrusted: labelled as data and flagged when it reads like instructions.
+        content: fenceUntrustedExcerpt(String(item.content || '')),
+        relevance: item.relevance,
+        matched_by: item.matched_by
       }))
+
+      const flagged = fenced.filter(item => item.content.instruction_like)
+
+      if (flagged.length) {
+        await recordForgeAiAudit({
+          organizationId,
+          actorUserId: userId,
+          actorType: 'system',
+          eventType: 'knowledge.instruction_like_content',
+          resourceType: 'forge_ai_knowledge_source',
+          detail: {
+            sources: flagged.map(item => ({ title: item.source_title, section: item.section_title, patterns: item.content.injection_patterns }))
+          }
+        })
+      }
+
+      return fenced
     }
 
     case 'search_help_articles': {
@@ -1460,10 +1498,42 @@ const executeToolValue = async ({
         record_type: 'help_article',
         title: item.title,
         summary: item.summary,
-        excerpt: item.snippet.replace(/\[\[|\]\]/g, ''),
+        content: fenceUntrustedExcerpt(item.snippet.replace(/\[\[|\]\]/g, '')),
         url: '/help-desk/articles/' + item.slug,
         updated_at: item.updated_at
       }))
+    }
+
+    case 'search_watch_alerts': {
+      const alertPermission = getPermission(context, 'forge_ai.view_alerts')
+
+      if (!alertPermission) return { denied: true, reason: 'You do not have access to Forge AI Watch alerts.' }
+
+      const status = typeof args.status === 'string' ? args.status : null
+      const severity = typeof args.severity === 'string' ? args.severity : null
+      const alerts = await getScopedForgeAiWatchAlerts({
+        organizationId,
+        userId,
+        alertPermission,
+        permissionByKey: context.permissionByKey
+      })
+
+      return alerts
+        .filter((alert: any) => (status ? alert.status === status : alert.status === 'open' || alert.status === 'acknowledged'))
+        .filter((alert: any) => !severity || alert.severity === severity)
+        .slice(0, limitValue(args.limit, 20))
+        .map((alert: any) => ({
+          record_type: 'watch_alert',
+          rule: alert.forge_ai_watch_rules?.name_override || alert.forge_ai_watch_rules?.forge_ai_watch_rule_templates?.name || alert.rule_key || null,
+          category: alert.forge_ai_watch_rules?.forge_ai_watch_rule_templates?.category || null,
+          severity: alert.severity,
+          status: alert.status,
+          title: alert.title,
+          summary: alert.summary || alert.description || null,
+          target_reference: alert.target_reference || alert.record_reference || null,
+          first_detected_at: alert.first_detected_at || alert.created_at || null,
+          last_detected_at: alert.last_detected_at || null
+        }))
     }
 
     case 'explain_access': {
