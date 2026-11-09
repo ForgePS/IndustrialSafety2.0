@@ -1025,6 +1025,57 @@ export function preopDisposition(complianceStatus: string | null | undefined): s
   return null;
 }
 
+/**
+ * Answers without their photos. Photos upload one at a time, so autosave, Complete and
+ * the device draft carry only the small answer data (the server keeps stored photos).
+ */
+export function stripResponsePhotos<T extends Record<string, unknown>>(
+  responses: Record<string, T>,
+): Record<string, Omit<T, "photos">> {
+  const out: Record<string, Omit<T, "photos">> = {};
+  for (const [key, entry] of Object.entries(responses)) {
+    if (entry && typeof entry === "object" && !Array.isArray(entry)) {
+      const { photos: _photos, ...rest } = entry;
+      out[key] = rest;
+    } else {
+      out[key] = entry;
+    }
+  }
+  return out;
+}
+
+export type SanitationAutosaveState = {
+  state: "idle" | "saving" | "saved" | "error" | "offline";
+  at?: string;
+};
+
+/** Status line shown next to Save / Complete. */
+export function sanitationAutosaveLabel(
+  autosave: SanitationAutosaveState,
+  photosWaiting: number,
+): string {
+  const photos =
+    photosWaiting > 0
+      ? ` · ${photosWaiting} photo${photosWaiting === 1 ? "" : "s"} waiting to upload`
+      : "";
+  switch (autosave.state) {
+    case "saving":
+      return `Saving…${photos}`;
+    case "saved": {
+      const at = autosave.at
+        ? new Date(autosave.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+        : "";
+      return `All changes saved${at ? ` at ${at}` : ""}${photos}`;
+    }
+    case "error":
+      return `Not saved yet. Retrying…${photos}`;
+    case "offline":
+      return `Offline. Saved on this device${photos}`;
+    default:
+      return photos ? photos.slice(3) : "";
+  }
+}
+
 export function saveSanitationDraft(
   inspectionId: string,
   responses: Record<string, unknown>,
