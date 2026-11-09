@@ -5,6 +5,8 @@
 
 import { cappedOshaDays, oshaCaseLogYear } from "@forge/contracts";
 
+import { incidentPlaceFromPayload, looksLikeBodyPartText } from "./workers-comp-helpers.js";
+
 export {
   cappedOshaDays,
   nextOshaCaseNumber,
@@ -443,6 +445,15 @@ export function oshaFlagsFromRecordability(status: OshaRecordability): {
   return { oshaRecordable: null, privacyCase: false };
 }
 
+/** First non-empty value that names a place rather than an injured body part. */
+function firstPlaceText(values: unknown[]): string {
+  for (const value of values) {
+    const text = asText(value);
+    if (text && !looksLikeBodyPartText(text)) return text;
+  }
+  return "";
+}
+
 /**
  * Seed Form 301 (and shared Form 300) fields from an incident source_payload
  * plus optional linked personnel profile values.
@@ -466,13 +477,16 @@ export function seedForm301FieldsFromIncident(input: {
     asText(payload.injuryDescription) ||
     "";
 
+  // Form 300 column E is the area where the event happened, never the body part.
+  // Injury incidents store the selected body parts in `location`.
   const eventLocation =
-    asText(payload.locationDetail) ||
-    asText(payload.exactLocation) ||
-    asText(payload.eventLocation) ||
-    asText(payload.whereEventOccurred) ||
-    asText(payload.location) ||
-    asText(payload.site) ||
+    firstPlaceText([
+      payload.locationDetail,
+      payload.exactLocation,
+      payload.eventLocation,
+      payload.whereEventOccurred,
+    ]) ||
+    incidentPlaceFromPayload(payload, input.title) ||
     "";
 
   const occurred = parseOccurredDateTime(payload.dateOccurred ?? payload.occurredAt);
@@ -888,6 +902,8 @@ export function hydrateOshaFromSource(input: {
     description?: string | null;
     daysAway?: unknown;
     restrictedDays?: unknown;
+    /** Area where the incident happened (never body-part text). */
+    eventLocation?: string | null;
   } | null;
   personnelName?: string | null;
   siteName?: string | null;
@@ -1006,10 +1022,10 @@ export function hydrateOshaFromSource(input: {
     jobTitle: asText(payload.jobTitle) || asText(linked.jobTitle) || asText(employee.jobTitle),
     description,
     caseNumber: asText(payload.caseNumber),
+    // Older cases were seeded with the body part here; fall back to the incident's area.
     eventLocation:
-      asText(payload.eventLocation) ||
-      asText(payload.whereEventOccurred) ||
-      asText(payload.location) ||
+      firstPlaceText([payload.eventLocation, payload.whereEventOccurred, payload.location]) ||
+      firstPlaceText([linked.eventLocation]) ||
       "",
     caseOutcome: normalizeOshaCaseOutcome(payload.caseOutcome ?? payload.outcome),
     illnessCategory: normalizeOshaIllnessCategory(
