@@ -97,16 +97,19 @@ export class ForgeCognito extends Construct {
     const defaultIndustrialUrl = config.domains?.industrial
       ? `https://${config.domains.industrial}`
       : "https://industrial.forgepublicsafety.com";
-    const appUrlByClient = Object.fromEntries(
+    // Keyed by app client name, not client ID: putting client IDs in the trigger's
+    // environment makes a cycle (pool -> trigger -> client -> pool). The Lambda looks up
+    // the caller's client name at runtime.
+    const appUrlByClientName = Object.fromEntries(
       [
-        [this.rmsClient.userPoolClientId, config.domains?.rms],
-        [this.creatorClient.userPoolClientId, config.domains?.creator],
-        [this.industrialClient.userPoolClientId, config.domains?.industrial],
-        [this.academyClient.userPoolClientId, config.domains?.academy],
-        [this.departmentClient.userPoolClientId, config.domains?.tenantAdmin],
+        [resourceName(config, "cognito", "rms-web"), config.domains?.rms],
+        [resourceName(config, "cognito", "creator-console"), config.domains?.creator],
+        [resourceName(config, "cognito", "industrial-web"), config.domains?.industrial],
+        [resourceName(config, "cognito", "academy-web"), config.domains?.academy],
+        [resourceName(config, "cognito", "department-portal"), config.domains?.tenantAdmin],
       ]
         .filter((entry): entry is [string, string] => Boolean(entry[1]))
-        .map(([clientId, host]) => [clientId, `https://${host}`]),
+        .map(([clientName, host]) => [clientName, `https://${host}`]),
     );
 
     const customMessageFn = new lambda.Function(this, "PasswordResetCustomMessage", {
@@ -117,9 +120,22 @@ export class ForgeCognito extends Construct {
       timeout: cdk.Duration.seconds(10),
       environment: {
         DEFAULT_APP_URL: defaultIndustrialUrl,
-        APP_URL_BY_CLIENT_JSON: JSON.stringify(appUrlByClient),
+        APP_URL_BY_CLIENT_NAME_JSON: JSON.stringify(appUrlByClientName),
       },
     });
+    // ARN built from the stack's account/region (not the pool) so it adds no dependency.
+    customMessageFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["cognito-idp:DescribeUserPoolClient"],
+        resources: [
+          cdk.Stack.of(this).formatArn({
+            service: "cognito-idp",
+            resource: "userpool",
+            resourceName: "*",
+          }),
+        ],
+      }),
+    );
     this.userPool.addTrigger(cognito.UserPoolOperation.CUSTOM_MESSAGE, customMessageFn);
     customMessageFn.addPermission("CognitoInvoke", {
       principal: new iam.ServicePrincipal("cognito-idp.amazonaws.com"),
