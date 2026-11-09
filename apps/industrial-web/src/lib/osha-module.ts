@@ -550,7 +550,10 @@ export function summarizeOshaCases(cases: OshaCase[]): {
  * and land on the right Form 300. Matches the whole establishment or any part of a
  * site path ("Producers Rice Mill / Stuttgart Milling", "Parboil - Packing").
  */
-export function withEstablishmentDivisions(cases: OshaCase[], divisionCatalog: string[]): OshaCase[] {
+export function withEstablishmentDivisions(
+  cases: OshaCase[],
+  divisionCatalog: string[],
+): OshaCase[] {
   const byKey = new Map<string, string>();
   for (const raw of divisionCatalog) {
     const name = asText(raw);

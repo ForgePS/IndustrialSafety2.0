@@ -169,6 +169,8 @@ describe("establishment-only cases", () => {
   it("names the establishment when it matches no division", () => {
     const [c] = withEstablishmentDivisions([siteOnly], ["Rice Milling"]);
     expect(c?.division).toBe("");
-    expect(oshaCaseIssues(c!).join(" ")).toContain('Establishment "Producers Rice Mill / Stuttgart Milling"');
+    expect(oshaCaseIssues(c!).join(" ")).toContain(
+      'Establishment "Producers Rice Mill / Stuttgart Milling"',
+    );
   });
 });
