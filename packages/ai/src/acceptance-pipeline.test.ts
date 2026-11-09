@@ -6,7 +6,7 @@ import {
   assertRecordAllowsAiMutation,
   validateProviderNarrative,
   redactSourceManifest,
-} from "@forge/ai";
+} from "./index.js";
 import { evaluateClassificationGate } from "@forge/ai-policy";
 
 const RECORD_ID = "019f9e06-aaaa-7000-8000-0000000000a1";

@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.32",
-    "aws-cdk": "^2.1018.1",
+    "aws-cdk": "^2.1148.0",
     "cdk-nag": "^2.35.100",
     "rimraf": "^6.0.1",
     "tsx": "^4.20.3",

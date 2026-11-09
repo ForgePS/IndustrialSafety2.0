@@ -30,6 +30,18 @@ import {
   type ControlledDocumentVersion,
   type DocumentControlTab,
 } from "@/lib/document-control";
+import {
+  createDocumentFolder,
+  canRenameFolder,
+  deleteDocumentFolder,
+  deleteFolderPrompt,
+  renameDocumentFolder,
+  FALLBACK_DOCUMENT_FOLDERS,
+  listDocumentFolders,
+  sameFolderName,
+  sortByDocumentName,
+  type DocumentFolder,
+} from "@/lib/document-folders";
 
 export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
   const { me } = useAuth();
@@ -91,6 +103,18 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
   const [reviews, setReviews] = useState<ControlledDocument[]>([]);
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [folders, setFolders] = useState<DocumentFolder[]>([...FALLBACK_DOCUMENT_FOLDERS]);
+  /** Selected folder name; null shows every document. */
+  const [activeFolderName, setActiveFolderName] = useState<string | null>(null);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [showNewFolder, setShowNewFolder] = useState(false);
+  /** Name of the folder being renamed; null when the rename form is closed. */
+  const [renamingFolder, setRenamingFolder] = useState<string | null>(null);
+  const [renameFolderName, setRenameFolderName] = useState("");
+  const activeFolder = activeFolderName
+    ? (folders.find((f) => sameFolderName(f.name, activeFolderName)) ?? null)
+    : null;
+  const sortedItems = useMemo(() => sortByDocumentName(items), [items]);
   const [newName, setNewName] = useState("");
   const [newCategory, setNewCategory] = useState("GENERAL");
   const [editName, setEditName] = useState("");
@@ -111,6 +135,7 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
       const query: Record<string, string> = { pageSize: "100" };
       if (q.trim()) query.q = q.trim();
       if (statusFilter) query.workflowStatus = statusFilter;
+      if (activeFolderName) query.category = activeFolderName;
       const result = await listControlledDocuments(query);
       setItems(result.items ?? []);
     } catch (e) {
@@ -121,7 +146,104 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
     } finally {
       setLoading(false);
     }
-  }, [canView, q, statusFilter]);
+  }, [canView, q, statusFilter, activeFolderName]);
+
+  const loadFolders = useCallback(async () => {
+    if (!canView) return;
+    try {
+      const result = await listDocumentFolders();
+      setFolders(result.items?.length ? result.items : [...FALLBACK_DOCUMENT_FOLDERS]);
+    } catch {
+      // Older APIs have no folder list; keep the built-in folders.
+      setFolders([...FALLBACK_DOCUMENT_FOLDERS]);
+    }
+  }, [canView]);
+
+  function selectFolder(name: string | null) {
+    if (!sameFolderName(name, renamingFolder)) setRenamingFolder(null);
+    setActiveFolderName(name);
+    setNewCategory(name ?? "GENERAL");
+  }
+
+  async function onCreateFolder(event: FormEvent) {
+    event.preventDefault();
+    if (!canManage) return;
+    const name = newFolderName.replace(/\s+/g, " ").trim();
+    if (!name) return;
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const created = await createDocumentFolder(name);
+      setNewFolderName("");
+      setShowNewFolder(false);
+      setNotice(`Folder "${created.name}" created`);
+      await loadFolders();
+      selectFolder(created.name);
+    } catch (e) {
+      setError(formatApiErrorMessage(e, "Unable to create folder"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function startRenameFolder(folder: DocumentFolder) {
+    setShowNewFolder(false);
+    setRenameFolderName(folder.name);
+    setRenamingFolder(folder.name);
+  }
+
+  async function onRenameFolder(event: FormEvent) {
+    event.preventDefault();
+    if (!canManage || !renamingFolder) return;
+    const newName = renameFolderName.replace(/\s+/g, " ").trim();
+    if (!newName) return;
+    if (newName === renamingFolder) {
+      setRenamingFolder(null);
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const result = await renameDocumentFolder(renamingFolder, newName);
+      setRenamingFolder(null);
+      setNotice(
+        `Folder renamed to "${result.name}"` +
+          (result.documentsMoved ? ` (${result.documentsMoved} documents updated)` : ""),
+      );
+      selectFolder(result.name);
+      await loadFolders();
+    } catch (e) {
+      setError(formatApiErrorMessage(e, "Unable to rename folder"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onDeleteFolder(folder: DocumentFolder) {
+    if (!canManage || !folder.canDelete) return;
+    if (!window.confirm(deleteFolderPrompt(folder))) return;
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const result = await deleteDocumentFolder(folder.name);
+      setNotice(
+        `Folder "${folder.name}" deleted` +
+          (result.documentsMoved
+            ? `; ${result.documentsMoved} documents moved to All documents`
+            : ""),
+      );
+      setRenamingFolder(null);
+      selectFolder(null);
+      await loadFolders();
+    } catch (e) {
+      setError(formatApiErrorMessage(e, "Unable to delete folder"));
+    } finally {
+      setBusy(false);
+    }
+  }
 
   const loadDetail = useCallback(
     async (id: string) => {
@@ -180,11 +302,12 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
 
   useEffect(() => {
     if (tab === "library") void loadLibrary();
+    if (tab === "library" || tab === "document") void loadFolders();
     if (tab === "document" && selectedId) void loadDetail(selectedId);
     if (tab === "approvals") void loadApprovals();
     if (tab === "acknowledgments") void loadAcks();
     if (tab === "reviews") void loadReviews();
-  }, [tab, selectedId, loadLibrary, loadDetail, loadApprovals, loadAcks, loadReviews]);
+  }, [tab, selectedId, loadLibrary, loadFolders, loadDetail, loadApprovals, loadAcks, loadReviews]);
 
   useEffect(() => {
     if (deepLinkId) {
@@ -211,7 +334,7 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
       });
       setNewName("");
       setNotice("Document created");
-      await loadLibrary();
+      await Promise.all([loadLibrary(), loadFolders()]);
       openDocument(created.id);
     } catch (e) {
       setError(formatApiErrorMessage(e, "Unable to create document"));
@@ -233,7 +356,7 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
       });
       setNotice("Document updated");
       await loadDetail(selectedId);
-      await loadLibrary();
+      await Promise.all([loadLibrary(), loadFolders()]);
     } catch (e) {
       setError(formatApiErrorMessage(e, "Unable to update document"));
     } finally {
@@ -313,6 +436,144 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
 
       {tab === "library" ? (
         <div className="d-flex flex-column gap-3">
+          <div className="d-flex flex-wrap align-items-center gap-2">
+            <div className="d-flex flex-wrap gap-2" role="group" aria-label="Document folders">
+              <button
+                type="button"
+                className={`btn btn-sm ${
+                  activeFolderName == null ? "btn-primary" : "btn-outline-secondary"
+                }`}
+                aria-pressed={activeFolderName == null}
+                onClick={() => selectFolder(null)}
+              >
+                <i className="bx bx-folder-open me-1" aria-hidden="true" />
+                All documents
+              </button>
+              {folders.map((folder) => {
+                const active = sameFolderName(folder.name, activeFolderName);
+                return (
+                  <button
+                    key={folder.id ?? `name:${folder.name}`}
+                    type="button"
+                    className={`btn btn-sm ${active ? "btn-primary" : "btn-outline-secondary"}`}
+                    aria-pressed={active}
+                    onClick={() => selectFolder(folder.name)}
+                  >
+                    <i className="bx bx-folder me-1" aria-hidden="true" />
+                    {folder.name}
+                    <span className="badge rounded-pill bg-label-secondary ms-2">
+                      {folder.documentCount}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            {canManage && !showNewFolder ? (
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-primary"
+                onClick={() => setShowNewFolder(true)}
+              >
+                <i className="bx bx-folder-plus me-1" aria-hidden="true" />
+                New folder
+              </button>
+            ) : null}
+            {canManage && activeFolder && canRenameFolder(activeFolder) && !renamingFolder ? (
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                disabled={busy}
+                onClick={() => startRenameFolder(activeFolder)}
+              >
+                <i className="bx bx-edit-alt me-1" aria-hidden="true" />
+                Rename folder
+              </button>
+            ) : null}
+            {canManage && activeFolder?.canDelete ? (
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-danger"
+                disabled={busy}
+                onClick={() => void onDeleteFolder(activeFolder)}
+              >
+                <i className="bx bx-trash me-1" aria-hidden="true" />
+                Delete folder
+              </button>
+            ) : null}
+          </div>
+
+          {canManage && renamingFolder ? (
+            <form
+              className="d-flex flex-wrap align-items-end gap-2"
+              onSubmit={(e) => void onRenameFolder(e)}
+            >
+              <div>
+                <label className="form-label" htmlFor="rename-folder-name">
+                  Rename &ldquo;{renamingFolder}&rdquo; to
+                </label>
+                <input
+                  id="rename-folder-name"
+                  className="form-control form-control-sm"
+                  required
+                  maxLength={120}
+                  value={renameFolderName}
+                  onChange={(e) => setRenameFolderName(e.target.value)}
+                />
+              </div>
+              <button type="submit" className="btn btn-sm btn-primary" disabled={busy}>
+                Save
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => setRenamingFolder(null)}
+              >
+                Cancel
+              </button>
+            </form>
+          ) : null}
+
+          {canManage && showNewFolder ? (
+            <form
+              className="d-flex flex-wrap align-items-end gap-2"
+              onSubmit={(e) => void onCreateFolder(e)}
+            >
+              <div>
+                <label className="form-label" htmlFor="new-folder-name">
+                  Folder name
+                </label>
+                <input
+                  id="new-folder-name"
+                  className="form-control form-control-sm"
+                  required
+                  maxLength={120}
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.target.value)}
+                  placeholder="e.g. Safety Data Sheets"
+                />
+              </div>
+              <button type="submit" className="btn btn-sm btn-primary" disabled={busy}>
+                Create folder
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => {
+                  setShowNewFolder(false);
+                  setNewFolderName("");
+                }}
+              >
+                Cancel
+              </button>
+            </form>
+          ) : null}
+
+          <datalist id="doc-folder-options">
+            {folders.map((folder) => (
+              <option key={folder.id ?? `name:${folder.name}`} value={folder.name} />
+            ))}
+          </datalist>
+
           <div className="card border shadow-none">
             <div className="card-body">
               <div className="row g-2 align-items-end">
@@ -379,11 +640,12 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
                   </div>
                   <div className="col-md-3">
                     <label className="form-label" htmlFor="new-doc-cat">
-                      Category
+                      Folder / category
                     </label>
                     <input
                       id="new-doc-cat"
                       className="form-control form-control-sm"
+                      list="doc-folder-options"
                       value={newCategory}
                       onChange={(e) => setNewCategory(e.target.value)}
                     />
@@ -412,14 +674,18 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {items.length === 0 ? (
+                  {sortedItems.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="text-muted text-center py-4">
-                        {loading ? "Loading…" : "No controlled documents found."}
+                        {loading
+                          ? "Loading…"
+                          : activeFolderName
+                            ? `No documents in ${activeFolder?.name ?? activeFolderName} yet.`
+                            : "No controlled documents found."}
                       </td>
                     </tr>
                   ) : (
-                    items.map((item) => (
+                    sortedItems.map((item) => (
                       <tr key={item.id}>
                         <td className="fw-medium">{item.name}</td>
                         <td className="text-muted">{item.documentNumber ?? "—"}</td>
@@ -501,14 +767,20 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
                       </div>
                       <div>
                         <label className="form-label small" htmlFor="edit-cat">
-                          Category
+                          Folder / category
                         </label>
                         <input
                           id="edit-cat"
                           className="form-control form-control-sm"
+                          list="doc-folder-edit-options"
                           value={editCategory}
                           onChange={(e) => setEditCategory(e.target.value)}
                         />
+                        <datalist id="doc-folder-edit-options">
+                          {folders.map((folder) => (
+                            <option key={folder.id ?? `name:${folder.name}`} value={folder.name} />
+                          ))}
+                        </datalist>
                       </div>
                       <div>
                         <label className="form-label small" htmlFor="edit-review">

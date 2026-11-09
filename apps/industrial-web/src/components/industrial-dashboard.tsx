@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { INDUSTRIAL_PRODUCT_CODE, filterIndustrialDashboardAttentionItems } from "@forge/contracts";
 import { ApiError, apiGet, apiGetResult, useAuth } from "@forge/web-kit";
 import {
@@ -658,51 +658,57 @@ export function IndustrialDashboard() {
         </p>
       ) : (
         <div className="forge-ws-grid" aria-label="Dashboard">
-          {visibleBlocks.map((item) => (
-            <DashboardBlockFrame
-              key={item.id}
-              item={item}
-              editing={editingDash}
-              available={availableBlocks.has(item.id)}
-              onSizeChange={(size: WorkspaceWidgetSize) =>
-                persistDash((prev) => updateDashboardItem(prev, item.id, { size }))
-              }
-              onHide={() =>
-                persistDash((prev) => updateDashboardItem(prev, item.id, { isVisible: false }))
-              }
-              onMove={(direction) =>
-                persistDash((prev) => moveDashboardItem(prev, item.id, direction))
-              }
-              onDragStart={(id) => {
-                dragBlockRef.current = id;
-                dragOverBlockRef.current = null;
-              }}
-              onDragOver={(overId) => {
-                const fromId = dragBlockRef.current;
-                if (!fromId || fromId === overId || dragOverBlockRef.current === overId) return;
-                dragOverBlockRef.current = overId;
-                persistDash((prev) => {
-                  const keys = visibleDashboardItems(prev).map((v) => v.id);
-                  const fromIndex = keys.indexOf(fromId);
-                  const toIndex = keys.indexOf(overId);
-                  if (fromIndex < 0 || toIndex < 0) return prev;
-                  const nextKeys = [...keys];
-                  nextKeys.splice(fromIndex, 1);
-                  nextKeys.splice(toIndex, 0, fromId);
-                  const hidden = prev.items
-                    .filter((row) => !row.isVisible)
-                    .sort((a, b) => a.sortOrder - b.sortOrder)
-                    .map((row) => row.id);
-                  return reorderDashboardItems(prev, [...nextKeys, ...hidden]);
-                });
-              }}
-              onDragEnd={() => {
-                dragBlockRef.current = null;
-                dragOverBlockRef.current = null;
-              }}
-            >
-              {renderBlockBody(item.id)}
-            </DashboardBlockFrame>
+          {visibleBlocks.map((item, index) => (
+            <Fragment key={item.id}>
+              <DashboardBlockFrame
+                item={item}
+                editing={editingDash}
+                available={availableBlocks.has(item.id)}
+                onSizeChange={(size: WorkspaceWidgetSize) =>
+                  persistDash((prev) => updateDashboardItem(prev, item.id, { size }))
+                }
+                onHide={() =>
+                  persistDash((prev) => updateDashboardItem(prev, item.id, { isVisible: false }))
+                }
+                onMove={(direction) =>
+                  persistDash((prev) => moveDashboardItem(prev, item.id, direction))
+                }
+                onDragStart={(id) => {
+                  dragBlockRef.current = id;
+                  dragOverBlockRef.current = null;
+                }}
+                onDragOver={(overId) => {
+                  const fromId = dragBlockRef.current;
+                  if (!fromId || fromId === overId || dragOverBlockRef.current === overId) return;
+                  dragOverBlockRef.current = overId;
+                  persistDash((prev) => {
+                    const keys = visibleDashboardItems(prev).map((v) => v.id);
+                    const fromIndex = keys.indexOf(fromId);
+                    const toIndex = keys.indexOf(overId);
+                    if (fromIndex < 0 || toIndex < 0) return prev;
+                    const nextKeys = [...keys];
+                    nextKeys.splice(fromIndex, 1);
+                    nextKeys.splice(toIndex, 0, fromId);
+                    const hidden = prev.items
+                      .filter((row) => !row.isVisible)
+                      .sort((a, b) => a.sortOrder - b.sortOrder)
+                      .map((row) => row.id);
+                    return reorderDashboardItems(prev, [...nextKeys, ...hidden]);
+                  });
+                }}
+                onDragEnd={() => {
+                  dragBlockRef.current = null;
+                  dragOverBlockRef.current = null;
+                }}
+              >
+                {renderBlockBody(item.id)}
+              </DashboardBlockFrame>
+              {item.id === "attention" &&
+              availableBlocks.has("attention") &&
+              visibleBlocks.slice(index + 1).some((next) => availableBlocks.has(next.id)) ? (
+                <hr className="forge-ws-divider" aria-hidden="true" />
+              ) : null}
+            </Fragment>
           ))}
         </div>
       )}

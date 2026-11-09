@@ -145,6 +145,8 @@ jobs:
           PGPASSWORD=forge_local_only psql -h localhost -U forge -d forge_platform_test -f database/docker/init-databases.sql
         env:
           PGPASSWORD: forge_local_only
+      - name: Build database package and its dependencies
+        run: pnpm exec turbo run build --filter=@forge/database...
       - name: Database migrate and seed
         run: |
           pnpm db:migrate:test
@@ -282,12 +284,18 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: CDK validate
         run: pnpm infra:validate
+        env:
+          # Production config fails closed without the approved account ID.
+          FORGE_PRODUCTION_ACCOUNT: "511343547817"
       - name: CDK unit tests
         run: pnpm infra:test
       - name: CDK synth
         run: pnpm infra:synth
         env:
-          CDK_DEFAULT_ACCOUNT: "000000000000"
+          FORGE_PRODUCTION_ACCOUNT: "511343547817"
+          # Matches the availability-zone cache in cdk.context.json, so synth needs no AWS
+          # credentials (a placeholder account forces a live lookup and fails in CI).
+          CDK_DEFAULT_ACCOUNT: "511343547817"
           CDK_DEFAULT_REGION: us-east-1
           FORGE_ENV: development
 

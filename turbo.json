@@ -45,7 +45,16 @@
     },
     "infra:synth": {
       "dependsOn": ["^build"],
-      "cache": false
+      "cache": false,
+      "passThroughEnv": [
+        "FORGE_ENV",
+        "FORGE_PRODUCTION_ACCOUNT",
+        "FORGE_STAGING_ACCOUNT",
+        "FORGE_TESTING_ACCOUNT",
+        "FORGE_GOVCLOUD_DEV_ACCOUNT",
+        "CDK_DEFAULT_ACCOUNT",
+        "CDK_DEFAULT_REGION"
+      ]
     }
   }
 }
