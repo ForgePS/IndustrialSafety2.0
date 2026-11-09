@@ -258,6 +258,7 @@ import {
   writeOshaForm300AMetaToSitePayload,
   type OshaRecordability,
 } from "./osha-helpers.js";
+import { incidentOccurredDate, monthlyIncidentTrend } from "./incident-trend.js";
 import {
   ehsDirectorSignatureValueChanged,
   FORM_STATUS_PENDING_SIGNATURE,
@@ -16146,6 +16147,30 @@ export class IndustrialDomainService {
         return rows.map((r) => ({ month: r.month, count: r.count }));
       };
 
+      /** Incidents per month by the date they occurred (imports keep their real dates). */
+      const incidentTrendByOccurred = async () => {
+        const conditions = [
+          eq(industrialIncidents.tenantId, principal.tenantId),
+          isNull(industrialIncidents.archivedAt),
+        ];
+        const site = siteClause(industrialIncidents);
+        if (site) conditions.push(site);
+        const rows = await tx
+          .select({
+            sourcePayload: industrialIncidents.sourcePayload,
+            createdAt: industrialIncidents.createdAt,
+          })
+          .from(industrialIncidents)
+          .where(and(...conditions));
+        return monthlyIncidentTrend(
+          rows.map((row) =>
+            incidentOccurredDate(this.unwrapSourcePayload(row.sourcePayload), row.createdAt),
+          ),
+          start,
+          end,
+        );
+      };
+
       const statusBreakdown = async (table: TitledTable, since: Date) => {
         const conditions = [
           eq(table.tenantId, principal.tenantId),
@@ -16258,7 +16283,7 @@ export class IndustrialDomainService {
         observationsByStatus,
         formDefs,
       ] = await Promise.all([
-        monthlyTrend(industrialIncidents, start),
+        incidentTrendByOccurred(),
         monthlyTrend(industrialObservations, start),
         monthlyTrend(industrialInspections, start),
         statusBreakdown(industrialIncidents, start),
