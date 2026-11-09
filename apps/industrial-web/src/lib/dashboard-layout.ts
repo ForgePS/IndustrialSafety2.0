@@ -40,6 +40,7 @@ export type DashboardBlockId =
   | "upcoming-reminders"
   | "workspace"
   | "insight-trend"
+  | "insight-history"
   | "insight-safety"
   | "insight-tasks"
   | "insight-inspections"
@@ -51,6 +52,8 @@ export type DashboardBlockDefinition = {
   /** Sizes the block may use on the 6-col grid. */
   supportedSizes: readonly WorkspaceWidgetSize[];
   defaultSize: WorkspaceWidgetSize;
+  /** For saved layouts that predate this block: place it after this block instead of last. */
+  insertAfter?: DashboardBlockId;
 };
 
 export type DashboardLayoutItem = {
@@ -101,6 +104,13 @@ export const DASHBOARD_BLOCKS: readonly DashboardBlockDefinition[] = [
     label: "Incident trend",
     supportedSizes: ["medium", "wide", "large", "full"],
     defaultSize: "wide",
+  },
+  {
+    id: "insight-history",
+    label: "Injury history",
+    supportedSizes: ["medium", "wide", "large", "full"],
+    defaultSize: "wide",
+    insertAfter: "insight-trend",
   },
   {
     id: "insight-safety",
@@ -183,15 +193,14 @@ export function resolveDashboardLayout(
 
   for (const def of DASHBOARD_BLOCKS) {
     if (!available.has(def.id) || seen.has(def.id)) continue;
-    items.push({
-      id: def.id,
-      sortOrder: items.length,
-      size: def.defaultSize,
-      isVisible: true,
-    });
+    const item = { id: def.id, sortOrder: 0, size: def.defaultSize, isVisible: true };
+    const after = def.insertAfter ? items.findIndex((i) => i.id === def.insertAfter) : -1;
+    if (after >= 0) items.splice(after + 1, 0, item);
+    else items.push(item);
+    seen.add(def.id);
   }
 
-  return { version: 1, items };
+  return { version: 1, items: items.map((item, index) => ({ ...item, sortOrder: index })) };
 }
 
 export function loadDashboardLayout(

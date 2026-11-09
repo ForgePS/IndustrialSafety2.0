@@ -11,6 +11,12 @@ import {
   type SafetyIndexPeriod,
   type SiteCount,
 } from "@/lib/dashboard-insights";
+import {
+  injuryHistoryChange,
+  type InjuryHistoryChange,
+  type InjuryHistorySeries,
+  type InjuryHistoryYear,
+} from "@/lib/injury-history";
 
 export type { SiteCount } from "@/lib/dashboard-insights";
 export type DashboardTask = {
@@ -495,6 +501,242 @@ export function InspectionsBySiteCard({
               </li>
             ))}
           </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const HISTORY_SERIES: Array<{ key: InjuryHistorySeries; label: string; className: string }> = [
+  { key: "injuries", label: "Injuries", className: "is-injuries" },
+  { key: "lostTimeCases", label: "Lost-time cases", className: "is-lost-time" },
+];
+
+function InjuryHistoryChart({
+  years,
+  currentYear,
+}: {
+  years: InjuryHistoryYear[];
+  currentYear: number;
+}) {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+
+  const width = 640;
+  const height = 220;
+  const pad = { top: 16, right: 24, bottom: 32, left: 24 };
+  const plotW = width - pad.left - pad.right;
+  const plotH = height - pad.top - pad.bottom;
+  const max = Math.max(1, ...years.flatMap((y) => [y.injuries, y.lostTimeCases]));
+
+  const xAt = useCallback(
+    (i: number) =>
+      years.length === 1 ? pad.left + plotW / 2 : pad.left + (i / (years.length - 1)) * plotW,
+    [years.length, pad.left, plotW],
+  );
+  const yAt = useCallback(
+    (value: number) => pad.top + plotH - (value / max) * plotH,
+    [pad.top, plotH, max],
+  );
+
+  const lines = useMemo(
+    () =>
+      HISTORY_SERIES.map((series) => {
+        const pts = years.map((y, i) => ({ x: xAt(i), y: yAt(y[series.key]) }));
+        const d = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
+        return { ...series, pts, d };
+      }),
+    [years, xAt, yAt],
+  );
+
+  const gridYs = [0.25, 0.5, 0.75, 1].map((t) => pad.top + plotH * (1 - t));
+
+  const onMove = useCallback(
+    (ev: PointerEvent<SVGSVGElement>) => {
+      if (years.length === 0) return;
+      const rect = ev.currentTarget.getBoundingClientRect();
+      const x = ((ev.clientX - rect.left) / rect.width) * width;
+      let best = 0;
+      let bestDist = Infinity;
+      years.forEach((_, i) => {
+        const dist = Math.abs(xAt(i) - x);
+        if (dist < bestDist) {
+          bestDist = dist;
+          best = i;
+        }
+      });
+      setActiveIndex(best);
+    },
+    [years, xAt],
+  );
+
+  const active = activeIndex != null ? years[activeIndex] : null;
+  const activeX = activeIndex != null ? xAt(activeIndex) : 0;
+  const yearLabel = (year: number) => (year === currentYear ? `${year} YTD` : String(year));
+
+  return (
+    <div className="ind-dash-area">
+      <svg
+        className="ind-dash-area__svg"
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label="Injuries and lost-time cases by year"
+        onPointerMove={onMove}
+        onPointerLeave={() => setActiveIndex(null)}
+      >
+        {gridYs.map((y) => (
+          <line
+            key={y}
+            className="ind-dash-area__grid"
+            x1={pad.left}
+            x2={width - pad.right}
+            y1={y}
+            y2={y}
+          />
+        ))}
+
+        {active ? (
+          <line
+            className="ind-dash-area__crosshair"
+            x1={activeX}
+            x2={activeX}
+            y1={pad.top}
+            y2={pad.top + plotH}
+          />
+        ) : null}
+
+        {lines.map((line) => (
+          <g key={line.key} className={`ind-dash-history ${line.className}`}>
+            <path className="ind-dash-history__line" d={line.d} />
+            {line.pts.map((p, i) => (
+              <circle
+                key={years[i]!.year}
+                className={`ind-dash-history__dot ${activeIndex === i ? "is-active" : ""}`}
+                cx={p.x}
+                cy={p.y}
+                r={activeIndex === i ? 5 : 3.5}
+              />
+            ))}
+          </g>
+        ))}
+
+        {years.map((y, i) => (
+          <text
+            key={y.year}
+            className="ind-dash-area__axis"
+            x={xAt(i)}
+            y={height - 8}
+            textAnchor="middle"
+          >
+            {yearLabel(y.year)}
+          </text>
+        ))}
+      </svg>
+
+      {active ? (
+        <div
+          className="ind-dash-area__tooltip"
+          style={{
+            left: `${(activeX / width) * 100}%`,
+            top: `${(yAt(Math.max(active.injuries, active.lostTimeCases)) / height) * 100}%`,
+          }}
+        >
+          <div className="ind-dash-area__tooltip-title">{yearLabel(active.year)}</div>
+          {HISTORY_SERIES.map((series) => (
+            <div key={series.key} className="ind-dash-area__tooltip-row">
+              <span
+                className={`ind-dash-area__tooltip-swatch ind-dash-history__swatch ${series.className}`}
+                aria-hidden="true"
+              />
+              <span>
+                {series.label}: <strong>{active[series.key]}</strong>
+              </span>
+            </div>
+          ))}
+          <div className="ind-dash-area__tooltip-row">
+            <span>
+              Days away: <strong>{active.daysAway}</strong>
+            </span>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function HistoryChangeBadge({
+  label,
+  change,
+}: {
+  label: string;
+  change: InjuryHistoryChange | null;
+}) {
+  if (!change) return null;
+  // Fewer injuries is progress, so "down" is shown as good.
+  const tone =
+    change.direction === "down"
+      ? "bg-label-success"
+      : change.direction === "up"
+        ? "bg-label-danger"
+        : "bg-label-secondary";
+  const arrow = change.direction === "down" ? "↓" : change.direction === "up" ? "↑" : "→";
+  const amount =
+    change.percent != null ? `${Math.abs(change.percent)}%` : `${change.from} → ${change.to}`;
+  return (
+    <span
+      className={`badge ${tone}`}
+      title={`${label}: ${change.from} in ${change.fromYear}, ${change.to} in ${change.toYear}`}
+    >
+      {label} {arrow} {amount} vs {change.fromYear}
+    </span>
+  );
+}
+
+/**
+ * Year-by-year injuries and lost-time cases, to show progress in preventing accidents.
+ */
+export function InjuryHistoryCard({
+  years,
+  currentYear = new Date().getFullYear(),
+}: {
+  years: InjuryHistoryYear[];
+  currentYear?: number;
+}) {
+  const injuriesChange = injuryHistoryChange(years, "injuries", currentYear);
+  const lostTimeChange = injuryHistoryChange(years, "lostTimeCases", currentYear);
+  return (
+    <div className="card border shadow-none h-100">
+      <div className="card-body p-4">
+        <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+          <div>
+            <h5 className="mb-1">Injury History</h5>
+            <p className="text-muted small mb-0">Injuries and lost-time cases by year</p>
+          </div>
+          <Link
+            className="small text-primary fw-semibold text-decoration-none"
+            href="/modules/osha/"
+          >
+            View OSHA log →
+          </Link>
+        </div>
+        {years.length === 0 ? (
+          <p className="text-muted mb-0">No injuries or OSHA cases recorded yet.</p>
+        ) : (
+          <>
+            <div className="d-flex flex-wrap align-items-center gap-3 mb-2 small">
+              {HISTORY_SERIES.map((series) => (
+                <span key={series.key} className="d-inline-flex align-items-center gap-1">
+                  <span
+                    className={`ind-dash-area__tooltip-swatch ind-dash-history__swatch ${series.className}`}
+                    aria-hidden="true"
+                  />
+                  {series.label}
+                </span>
+              ))}
+              <HistoryChangeBadge label="Injuries" change={injuriesChange} />
+              <HistoryChangeBadge label="Lost time" change={lostTimeChange} />
+            </div>
+            <InjuryHistoryChart years={years} currentYear={currentYear} />
+          </>
         )}
       </div>
     </div>

@@ -50,6 +50,27 @@ describe("dashboard layout", () => {
     expect(layout.items.find((i) => i.id === "upcoming-events")?.isVisible).toBe(false);
   });
 
+  it("places a new block after its insertAfter block in saved layouts", () => {
+    const available = new Set<DashboardBlockId>([...ALL, "insight-history"]);
+    const layout = resolveDashboardLayout(
+      {
+        version: 1,
+        items: [
+          { id: "insight-trend", sortOrder: 0, size: "wide", isVisible: true },
+          { id: "attention", sortOrder: 1, size: "full", isVisible: true },
+        ],
+      },
+      available,
+    );
+    expect(layout.items.map((i) => i.id).slice(0, 3)).toEqual([
+      "insight-trend",
+      "insight-history",
+      "attention",
+    ]);
+    expect(layout.items.map((i) => i.sortOrder)).toEqual(layout.items.map((_, i) => i));
+    expect(defaultDashboardLayout(available).items.map((i) => i.id)).toContain("insight-history");
+  });
+
   it("reorders and hides", () => {
     const base = defaultDashboardLayout(ALL);
     const reordered = reorderDashboardItems(base, ["body-map", "attention", "workspace"]);

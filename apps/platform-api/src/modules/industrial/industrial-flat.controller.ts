@@ -492,6 +492,18 @@ export class IndustrialFlatController {
     return ok(await this.domain.analyticsOverview(principal, query), getRequestIds(req));
   }
 
+  @Get("analytics/injury-history")
+  @RequireAnyPermission(["industrial.access", "industrial.admin"], {
+    requiresEntitlement: ENTITLEMENT,
+  })
+  async injuryHistory(
+    @Principal() principal: ForgePrincipal,
+    @Query() query: ListQuery,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.domain.injuryHistory(principal, query), getRequestIds(req));
+  }
+
   @Post("analytics/performance-report")
   @RequireAnyPermission(["industrial.access", "industrial.admin"], {
     requiresEntitlement: ENTITLEMENT,

@@ -258,6 +258,7 @@ import {
   writeOshaForm300AMetaToSitePayload,
   type OshaRecordability,
 } from "./osha-helpers.js";
+import { buildInjuryHistory, incidentYear, isInjuryCategory } from "./injury-history.js";
 import { incidentOccurredDate, monthlyIncidentTrend } from "./incident-trend.js";
 import {
   ehsDirectorSignatureValueChanged,
@@ -17055,6 +17056,130 @@ export class IndustrialDomainService {
     };
   }
 
+  /** All OSHA cases (newest first) hydrated with linked incident and division fields. */
+  private async loadHydratedOshaCases(
+    tx: DatabaseTransaction,
+    tenantId: string,
+    opts: { siteId?: string } = {},
+  ) {
+    const rows = await tx
+      .select({
+        case: industrialOshaCases,
+        personnelName: industrialPersonnel.displayName,
+        personnelDivision: industrialPersonnel.divisionName,
+        siteName: industrialSites.name,
+      })
+      .from(industrialOshaCases)
+      .leftJoin(industrialPersonnel, eq(industrialPersonnel.id, industrialOshaCases.personnelId))
+      .leftJoin(industrialSites, eq(industrialSites.id, industrialOshaCases.siteId))
+      .where(
+        and(
+          eq(industrialOshaCases.tenantId, tenantId),
+          isNull(industrialOshaCases.archivedAt),
+          ...(opts.siteId ? [eq(industrialOshaCases.siteId, opts.siteId)] : []),
+        ),
+      )
+      // No row cap: Forms 300/300A must see every case (OSHA requires five years kept).
+      .orderBy(desc(industrialOshaCases.updatedAt));
+
+    const firebaseIncidentIds = new Set<string>();
+    const incidentIds = new Set<string>();
+    for (const { case: row } of rows) {
+      const payload = this.unwrapSourcePayload(row.sourcePayload);
+      const id = String(payload.incidentId ?? payload.incident_id ?? "").trim();
+      if (UUID_PATTERN.test(id)) incidentIds.add(id);
+      else if (id) firebaseIncidentIds.add(id);
+      const awsId = String(payload.awsIncidentId ?? "").trim();
+      if (UUID_PATTERN.test(awsId)) incidentIds.add(awsId);
+    }
+
+    if (firebaseIncidentIds.size > 0) {
+      const mapped = await tx
+        .select({
+          sourceDocumentId: industrialIncidents.sourceDocumentId,
+          id: industrialIncidents.id,
+        })
+        .from(industrialIncidents)
+        .where(
+          and(
+            eq(industrialIncidents.tenantId, tenantId),
+            inArray(industrialIncidents.sourceDocumentId, [...firebaseIncidentIds]),
+          ),
+        );
+      for (const row of mapped) {
+        if (row.sourceDocumentId && row.id) {
+          incidentIds.add(row.id);
+        }
+      }
+    }
+
+    const incidentsById = new Map<
+      string,
+      ReturnType<IndustrialDomainService["incidentFieldsForOsha"]>
+    >();
+    const incidentsBySourceId = new Map<
+      string,
+      ReturnType<IndustrialDomainService["incidentFieldsForOsha"]>
+    >();
+    if (incidentIds.size > 0 || firebaseIncidentIds.size > 0) {
+      const conditions = [
+        eq(industrialIncidents.tenantId, tenantId),
+        incidentIds.size > 0
+          ? inArray(industrialIncidents.id, [...incidentIds])
+          : firebaseIncidentIds.size > 0
+            ? inArray(industrialIncidents.sourceDocumentId, [...firebaseIncidentIds])
+            : sql`false`,
+      ];
+      if (incidentIds.size > 0 && firebaseIncidentIds.size > 0) {
+        conditions[1] = or(
+          inArray(industrialIncidents.id, [...incidentIds]),
+          inArray(industrialIncidents.sourceDocumentId, [...firebaseIncidentIds]),
+        )!;
+      }
+      const incidents = await tx
+        .select()
+        .from(industrialIncidents)
+        .where(and(...conditions));
+      for (const incident of incidents) {
+        const fields = this.incidentFieldsForOsha(incident);
+        incidentsById.set(incident.id, fields);
+        if (incident.sourceDocumentId) {
+          incidentsBySourceId.set(incident.sourceDocumentId, fields);
+        }
+      }
+    }
+
+    const departmentDivisions = await this.loadDepartmentDivisions(tx, tenantId, [
+      ...rows.map(({ case: row }) => row.departmentId),
+      ...[...incidentsById.values()].map((fields) => fields.departmentId),
+    ]);
+
+    return rows.map(({ case: row, personnelName, personnelDivision, siteName }) => {
+      const payload = this.unwrapSourcePayload(row.sourcePayload);
+      const rawIncidentId = String(payload.incidentId ?? payload.incident_id ?? "").trim();
+      const awsIncidentId = String(payload.awsIncidentId ?? "").trim();
+      const incident =
+        (UUID_PATTERN.test(awsIncidentId) ? incidentsById.get(awsIncidentId) : null) ||
+        (UUID_PATTERN.test(rawIncidentId) ? incidentsById.get(rawIncidentId) : null) ||
+        (rawIncidentId ? incidentsBySourceId.get(rawIncidentId) : null) ||
+        null;
+      const incidentDeptDivision = incident?.departmentId
+        ? departmentDivisions.get(incident.departmentId)
+        : undefined;
+      return this.mapOshaCase(row, {
+        incident: incident
+          ? { ...incident, division: incident.division || incidentDeptDivision || null }
+          : null,
+        personnelName,
+        siteName,
+        departmentDivision: row.departmentId
+          ? (departmentDivisions.get(row.departmentId) ?? null)
+          : null,
+        personnelDivision: personnelDivision?.trim() || null,
+      });
+    });
+  }
+
   async listOsha(principal: ForgePrincipal, query: ListQuery) {
     // Forms 300/300A load every case, so allow one large page.
     const { page, pageSize, offset } = this.page(query, 5000);
@@ -17063,121 +17188,7 @@ export class IndustrialDomainService {
     const year = yearRaw ? Number(yearRaw) : null;
     const establishment = (query.establishment ?? "").trim().toLowerCase();
     return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
-      const rows = await tx
-        .select({
-          case: industrialOshaCases,
-          personnelName: industrialPersonnel.displayName,
-          personnelDivision: industrialPersonnel.divisionName,
-          siteName: industrialSites.name,
-        })
-        .from(industrialOshaCases)
-        .leftJoin(industrialPersonnel, eq(industrialPersonnel.id, industrialOshaCases.personnelId))
-        .leftJoin(industrialSites, eq(industrialSites.id, industrialOshaCases.siteId))
-        .where(
-          and(
-            eq(industrialOshaCases.tenantId, principal.tenantId),
-            isNull(industrialOshaCases.archivedAt),
-          ),
-        )
-        // No row cap: Forms 300/300A must see every case (OSHA requires five years kept).
-        .orderBy(desc(industrialOshaCases.updatedAt));
-
-      const firebaseIncidentIds = new Set<string>();
-      const incidentIds = new Set<string>();
-      for (const { case: row } of rows) {
-        const payload = this.unwrapSourcePayload(row.sourcePayload);
-        const id = String(payload.incidentId ?? payload.incident_id ?? "").trim();
-        if (UUID_PATTERN.test(id)) incidentIds.add(id);
-        else if (id) firebaseIncidentIds.add(id);
-        const awsId = String(payload.awsIncidentId ?? "").trim();
-        if (UUID_PATTERN.test(awsId)) incidentIds.add(awsId);
-      }
-
-      if (firebaseIncidentIds.size > 0) {
-        const mapped = await tx
-          .select({
-            sourceDocumentId: industrialIncidents.sourceDocumentId,
-            id: industrialIncidents.id,
-          })
-          .from(industrialIncidents)
-          .where(
-            and(
-              eq(industrialIncidents.tenantId, principal.tenantId),
-              inArray(industrialIncidents.sourceDocumentId, [...firebaseIncidentIds]),
-            ),
-          );
-        for (const row of mapped) {
-          if (row.sourceDocumentId && row.id) {
-            incidentIds.add(row.id);
-          }
-        }
-      }
-
-      const incidentsById = new Map<
-        string,
-        ReturnType<IndustrialDomainService["incidentFieldsForOsha"]>
-      >();
-      const incidentsBySourceId = new Map<
-        string,
-        ReturnType<IndustrialDomainService["incidentFieldsForOsha"]>
-      >();
-      if (incidentIds.size > 0 || firebaseIncidentIds.size > 0) {
-        const conditions = [
-          eq(industrialIncidents.tenantId, principal.tenantId),
-          incidentIds.size > 0
-            ? inArray(industrialIncidents.id, [...incidentIds])
-            : firebaseIncidentIds.size > 0
-              ? inArray(industrialIncidents.sourceDocumentId, [...firebaseIncidentIds])
-              : sql`false`,
-        ];
-        if (incidentIds.size > 0 && firebaseIncidentIds.size > 0) {
-          conditions[1] = or(
-            inArray(industrialIncidents.id, [...incidentIds]),
-            inArray(industrialIncidents.sourceDocumentId, [...firebaseIncidentIds]),
-          )!;
-        }
-        const incidents = await tx
-          .select()
-          .from(industrialIncidents)
-          .where(and(...conditions));
-        for (const incident of incidents) {
-          const fields = this.incidentFieldsForOsha(incident);
-          incidentsById.set(incident.id, fields);
-          if (incident.sourceDocumentId) {
-            incidentsBySourceId.set(incident.sourceDocumentId, fields);
-          }
-        }
-      }
-
-      const departmentDivisions = await this.loadDepartmentDivisions(tx, principal.tenantId, [
-        ...rows.map(({ case: row }) => row.departmentId),
-        ...[...incidentsById.values()].map((fields) => fields.departmentId),
-      ]);
-
-      let mapped = rows.map(({ case: row, personnelName, personnelDivision, siteName }) => {
-        const payload = this.unwrapSourcePayload(row.sourcePayload);
-        const rawIncidentId = String(payload.incidentId ?? payload.incident_id ?? "").trim();
-        const awsIncidentId = String(payload.awsIncidentId ?? "").trim();
-        const incident =
-          (UUID_PATTERN.test(awsIncidentId) ? incidentsById.get(awsIncidentId) : null) ||
-          (UUID_PATTERN.test(rawIncidentId) ? incidentsById.get(rawIncidentId) : null) ||
-          (rawIncidentId ? incidentsBySourceId.get(rawIncidentId) : null) ||
-          null;
-        const incidentDeptDivision = incident?.departmentId
-          ? departmentDivisions.get(incident.departmentId)
-          : undefined;
-        return this.mapOshaCase(row, {
-          incident: incident
-            ? { ...incident, division: incident.division || incidentDeptDivision || null }
-            : null,
-          personnelName,
-          siteName,
-          departmentDivision: row.departmentId
-            ? (departmentDivisions.get(row.departmentId) ?? null)
-            : null,
-          personnelDivision: personnelDivision?.trim() || null,
-        });
-      });
+      let mapped = await this.loadHydratedOshaCases(tx, principal.tenantId);
 
       if (year != null && Number.isFinite(year)) {
         mapped = mapped.filter((item) => item.calendarYear === year);
@@ -17197,6 +17208,43 @@ export class IndustrialDomainService {
       const total = mapped.length;
       const items = mapped.slice(offset, offset + pageSize);
       return { page, pageSize, total, items };
+    });
+  }
+
+  /** Injuries and lost-time cases per year for the dashboard history graph. */
+  async injuryHistory(principal: ForgePrincipal, query: ListQuery) {
+    const siteId = (query.siteId ?? query.facilityId ?? "").trim();
+    return withTenantTransaction(this.db, principal.tenantId, async (tx) => {
+      const incidentConditions = [
+        eq(industrialIncidents.tenantId, principal.tenantId),
+        isNull(industrialIncidents.archivedAt),
+      ];
+      if (siteId) incidentConditions.push(eq(industrialIncidents.siteId, siteId));
+      const incidents = await tx
+        .select({
+          sourcePayload: industrialIncidents.sourcePayload,
+          createdAt: industrialIncidents.createdAt,
+        })
+        .from(industrialIncidents)
+        .where(and(...incidentConditions));
+      const injuryYears: Array<number | null> = [];
+      for (const row of incidents) {
+        const payload = this.unwrapSourcePayload(row.sourcePayload);
+        if (!isInjuryCategory(payload.category ?? payload.incidentCategory)) continue;
+        injuryYears.push(incidentYear(payload, row.createdAt));
+      }
+
+      const oshaCases = await this.loadHydratedOshaCases(
+        tx,
+        principal.tenantId,
+        siteId ? { siteId } : {},
+      );
+      const years = buildInjuryHistory({
+        injuryYears,
+        oshaCases,
+        currentYear: new Date().getUTCFullYear(),
+      });
+      return { years };
     });
   }
 

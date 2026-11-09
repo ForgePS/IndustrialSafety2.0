@@ -6,6 +6,7 @@ import { INDUSTRIAL_PRODUCT_CODE, filterIndustrialDashboardAttentionItems } from
 import { ApiError, apiGet, apiGetResult, useAuth } from "@forge/web-kit";
 import {
   IncidentTrendCard,
+  InjuryHistoryCard,
   InspectionsBySiteCard,
   SafetyIndexCard,
   TaskSchedulerCard,
@@ -41,6 +42,7 @@ import {
   toSafetyIntelligenceReport,
   type SafetyIntelligenceReport,
 } from "@/lib/safety-intelligence";
+import { toInjuryHistory, type InjuryHistoryYear } from "@/lib/injury-history";
 
 type AttentionItem = {
   key: string;
@@ -168,6 +170,7 @@ export function IndustrialDashboard() {
   const [dashError, setDashError] = useState<string | null>(null);
   const [injuries, setInjuries] = useState<IncidentRecord[]>([]);
   const [analytics, setAnalytics] = useState<SafetyIntelligenceReport | null>(null);
+  const [injuryHistory, setInjuryHistory] = useState<InjuryHistoryYear[]>([]);
   const [tasks, setTasks] = useState<DashboardTask[]>([]);
   const [upcoming, setUpcoming] = useState<UpcomingPayload | null>(null);
   const [inspectionSites, setInspectionSites] = useState<
@@ -237,6 +240,27 @@ export function IndustrialDashboard() {
       cancelled = true;
     };
   }, [facilityQuery, showIncidentTrend, showSafetyIndex]);
+
+  useEffect(() => {
+    if (!showIncidentTrend) {
+      setInjuryHistory([]);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const raw = await apiGet<unknown>("/api/v1/industrial/analytics/injury-history", {
+          query: facilityQuery,
+        });
+        if (!cancelled) setInjuryHistory(toInjuryHistory(raw));
+      } catch {
+        if (!cancelled) setInjuryHistory([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [facilityQuery, showIncidentTrend]);
 
   useEffect(() => {
     if (!showTasks) return;
@@ -332,6 +356,7 @@ export function IndustrialDashboard() {
     if (hasUpcomingReminders) ids.add("upcoming-reminders");
     if (me?.tenantId && me?.userId && available.length > 0) ids.add("workspace");
     if (showIncidentTrend) ids.add("insight-trend");
+    if (showIncidentTrend) ids.add("insight-history");
     if (showSafetyIndex) ids.add("insight-safety");
     if (showTasks) ids.add("insight-tasks");
     if (showInspections) ids.add("insight-inspections");
@@ -530,6 +555,8 @@ export function IndustrialDashboard() {
         ) : null;
       case "insight-trend":
         return <IncidentTrendCard points={incidentTrend} dateStart={dateStart} dateEnd={dateEnd} />;
+      case "insight-history":
+        return <InjuryHistoryCard years={injuryHistory} />;
       case "insight-safety":
         return <SafetyIndexCard report={analytics} showDotScore={showDotScore} />;
       case "insight-tasks":
