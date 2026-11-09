@@ -17,6 +17,7 @@ import { fenceUntrustedExcerpt } from '@/lib/forgeAiResponseCheck'
 import { recordForgeAiAudit } from '@/lib/forgeAiExecution'
 import { getScopedForgeAiWatchAlerts } from '@/lib/forgeAiWatchAccess'
 import { getScopedForgeAiRiskAssessments } from '@/lib/forgeAiRisk'
+import { getScopedForgeAiRecommendations } from '@/lib/forgeAiRecommendations'
 import {
   getForgeAiAssetAnalytics,
   getForgeAiExecutiveAnalytics,
@@ -523,6 +524,22 @@ const definitions: Record<string, any> = {
         limit: { type: ['integer','null'], minimum: 1, maximum: 20, description: 'Maximum scopes to return, or null for the default.' }
       },
       required: ['scope_type','limit'],
+      additionalProperties: false
+    }
+  },
+  get_recommendations: {
+    type: 'function',
+    name: 'get_recommendations',
+    description: 'Forge AI recommendations: suggested next steps built from open AI Watch alerts and elevated risk indicator factors, each with its rationale, the records behind it, any proposed corrective action and its approval and verification status. Read-only: recommendations are accepted, approved and verified by people on the Recommendations page.',
+    strict: true,
+    parameters: {
+      type: 'object',
+      properties: {
+        status: { type: ['string','null'], enum: ['open','proposed','in_review','executed','verified','closed', null], description: 'open (default) for everything still in progress, closed for finished ones, or one status.' },
+        priority: { type: ['string','null'], enum: ['critical','high','medium','low', null], description: 'Only this priority, or null for all.' },
+        limit: { type: ['integer','null'], minimum: 1, maximum: 25, description: 'Maximum recommendations to return, or null for the default.' }
+      },
+      required: ['status','priority','limit'],
       additionalProperties: false
     }
   },
@@ -1601,6 +1618,68 @@ const executeToolValue = async ({
             })),
             records_hidden: item.hidden_evidence || 0
           }))
+        }))
+    }
+
+    case 'get_recommendations': {
+      if (!getPermission(context, 'forge_ai.view_recommendations')) {
+        return { denied: true, reason: 'You do not have access to Forge AI recommendations.' }
+      }
+
+      const OPEN_STATUSES = ['proposed', 'in_review', 'approved', 'executing', 'executed']
+      const status = typeof args.status === 'string' ? args.status : 'open'
+      const priority = typeof args.priority === 'string' ? args.priority : null
+
+      const recommendations = await getScopedForgeAiRecommendations({
+        organizationId,
+        userId,
+        permissionByKey: context.permissionByKey
+      })
+
+      const referenceField: Record<string, string> = {
+        incident: 'incident_number',
+        inspection: 'inspection_number',
+        task: 'task_number',
+        risk: 'risk_number',
+        observation: 'observation_number',
+        asset: 'asset_number',
+        training_assignment: 'course_code'
+      }
+
+      const priorityRank: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 }
+
+      return recommendations
+        .filter((row: any) =>
+          status === 'open' ? OPEN_STATUSES.includes(row.status) : status === 'closed' ? !OPEN_STATUSES.includes(row.status) : row.status === status
+        )
+        .filter((row: any) => !priority || row.priority === priority)
+        .sort((a: any, b: any) => priorityRank[a.priority] - priorityRank[b.priority])
+        .slice(0, limitValue(args.limit, 10))
+        .map((row: any) => ({
+          record_type: 'recommendation',
+          title: row.title,
+          kind: row.kind,
+          priority: row.priority,
+          status: row.status,
+          rationale: row.rationale,
+          source: row.source_type === 'watch_alert' ? 'AI Watch alert' : 'Risk indicator factor',
+          proposed_action: row.proposed_action
+            ? { action: 'Create corrective action', title: row.proposed_action.payload?.title, severity: row.proposed_action.payload?.severity }
+            : null,
+          verification: row.verification_result
+            ? { outcome: row.verification_result.outcome, checks: (row.verification_result.checks || []).map((check: any) => check.detail) }
+            : null,
+          generated_at: row.generated_at,
+          records: (row.evidence || [])
+            .filter((entry: any) => entry.type !== 'watch_alert' && entry.type !== 'risk_assessment')
+            .slice(0, 10)
+            .map((entry: any) => ({
+              record_type: entry.type,
+              id: entry.id,
+              [referenceField[entry.type] || 'reference']: entry.reference
+            })),
+          records_hidden: row.hidden_evidence || 0,
+          path: '/ai/recommendations'
         }))
     }
 

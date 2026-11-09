@@ -1,6 +1,7 @@
 import { createServiceRoleClient } from '@repo/supabase/server'
 
 import { recordForgeAiAudit } from '@/lib/forgeAiExecution'
+import { generateForgeAiRecommendations, verifyForgeAiRecommendations } from '@/lib/forgeAiRecommendations'
 import { runForgeAiRiskAssessments } from '@/lib/forgeAiRisk'
 import { runForgeAiWatch } from '@/lib/forgeAiWatch'
 import { getScopedForgeAiWatchAlerts } from '@/lib/forgeAiWatchAccess'
@@ -204,7 +205,8 @@ export const notifyForgeAiWatchAlerts = async ({ organizationId }: { organizatio
 }
 
 // One full monitoring cycle for a tenant: refresh risk indicators (so the elevated-risk rule
-// sees current scores), evaluate every Watch rule, then notify.
+// sees current scores), evaluate every Watch rule, turn the results into recommendations and
+// verify finished ones, then notify.
 export const runForgeAiMonitoringCycle = async ({
   organizationId,
   triggerType,
@@ -222,9 +224,11 @@ export const runForgeAiMonitoringCycle = async ({
     startedBy: actorUserId
   })
 
+  const recommendations = await generateForgeAiRecommendations({ organizationId, actorUserId })
+  const verification = await verifyForgeAiRecommendations({ organizationId })
   const notified = await notifyForgeAiWatchAlerts({ organizationId })
 
-  return { risk, watch, notified }
+  return { risk, watch, recommendations, verification, notified }
 }
 
 // Event-driven monitoring: run a cycle for each tenant that has new domain events (incident
