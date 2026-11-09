@@ -16885,6 +16885,7 @@ export class IndustrialDomainService {
       description: typeof seeded.description === "string" ? seeded.description : null,
       daysAway: seeded.daysAway,
       restrictedDays: seeded.restrictedDays,
+      eventLocation: typeof seeded.eventLocation === "string" ? seeded.eventLocation : null,
       form301Seed: seeded,
     };
   }

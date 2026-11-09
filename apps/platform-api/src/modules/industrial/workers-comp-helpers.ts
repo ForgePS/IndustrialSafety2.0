@@ -1054,7 +1054,8 @@ export function oshaPayloadFromWorkersComp(input: {
     employeeName: asText(input.workerName),
     jobTitle: asText(input.osha.oshaJobTitle),
     injuryDate: injuryDate || null,
-    eventLocation: asText(input.locationText),
+    // Form 300 column E is the area, never the injured body part.
+    eventLocation: looksLikeBodyPartText(input.locationText) ? "" : asText(input.locationText),
     description,
     injuryOrIllness: description,
     daysAway: input.daysAway,

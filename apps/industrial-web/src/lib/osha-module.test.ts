@@ -11,7 +11,9 @@ import {
   incidentHref,
   logCasesForForm300,
   summarizeOshaCases,
+  oshaCaseIssues,
   toOshaCase,
+  withEstablishmentDivisions,
   establishmentOptions,
 } from "./osha-module";
 
@@ -141,5 +143,34 @@ describe("osha-module", () => {
 
   it("links OSHA cases to the incidents deep-link query", () => {
     expect(incidentHref("abc-123")).toBe("/modules/incidents/?tab=injuries&incident=abc-123");
+  });
+});
+
+describe("establishment-only cases", () => {
+  const siteOnly = toOshaCase({
+    id: "9",
+    employeeName: "Craig Woolfolk",
+    injuryDate: "2026-06-19",
+    recordabilityStatus: "RECORDABLE",
+    establishment: "Producers Rice Mill / Stuttgart Milling",
+  });
+
+  it("takes the division from an establishment that names one", () => {
+    const [c] = withEstablishmentDivisions([siteOnly], ["Stuttgart Milling", "Rice Milling"]);
+    expect(c?.division).toBe("Stuttgart Milling");
+    expect(oshaCaseIssues(c!).some((i) => i.includes("establishment"))).toBe(false);
+  });
+
+  it("keeps an existing division", () => {
+    const [c] = withEstablishmentDivisions([sample], ["Crowley"]);
+    expect(c?.division).toBe("Rice Milling");
+  });
+
+  it("names the establishment when it matches no division", () => {
+    const [c] = withEstablishmentDivisions([siteOnly], ["Rice Milling"]);
+    expect(c?.division).toBe("");
+    expect(oshaCaseIssues(c!).join(" ")).toContain(
+      'Establishment "Producers Rice Mill / Stuttgart Milling"',
+    );
   });
 });

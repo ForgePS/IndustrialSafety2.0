@@ -30,6 +30,7 @@ import {
   toOshaCase,
   toOshaForm300AMeta,
   establishmentOptions,
+  withEstablishmentDivisions,
   type OshaCase,
   type OshaForm300AMeta,
   type OshaRecordability,
@@ -99,7 +100,7 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
     moduleCode: "OSHA",
     canView,
   });
-  const [cases, setCases] = useState<OshaCase[]>([]);
+  const [rawCases, setCases] = useState<OshaCase[]>([]);
   const [injuries, setInjuries] = useState<InjuryIncident[]>([]);
   const [year, setYear] = useState(() => new Date().getFullYear());
   const [establishment, setEstablishment] = useState("all");
@@ -221,6 +222,11 @@ export function OshaWorkspace({ moduleName }: { moduleName: string }) {
   }, [loadForm300AMeta]);
 
   const establishments = useMemo(() => establishmentOptions(divisionCatalog), [divisionCatalog]);
+  // Cases with only an establishment (site) that names a division count for that division.
+  const cases = useMemo(
+    () => withEstablishmentDivisions(rawCases, divisionCatalog),
+    [rawCases, divisionCatalog],
+  );
   const visible = useMemo(
     () => filterOshaCases(cases, { year, establishment }),
     [cases, year, establishment],

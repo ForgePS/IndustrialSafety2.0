@@ -286,3 +286,46 @@ describe("OSHA audit fixes", () => {
     expect(cappedOshaDays(100, 100)).toEqual({ daysAway: 100, restrictedDays: 80 });
   });
 });
+
+describe("Form 300 column E (where the event occurred)", () => {
+  it("uses the incident area, not the body part stored in `location`", () => {
+    const seed = seedForm301FieldsFromIncident({
+      incidentId: "inc-1",
+      title: "02/05/26 Erv Howard - Left foot / ankle",
+      payload: {
+        location: "Left foot / ankle, Right foot / ankle",
+        bodyParts: "Left foot / ankle, Right foot / ankle",
+        bodyLocations: ["left-foot-front", "right-foot-front"],
+        departmentName: "Parboil",
+        community: "Packing",
+      },
+    });
+    expect(seed.eventLocation).toBe("Parboil - Packing");
+  });
+
+  it("keeps an explicit scene detail", () => {
+    const seed = seedForm301FieldsFromIncident({
+      incidentId: "inc-2",
+      payload: { location: "Lower back", locationDetail: "Dock 3", division: "PRI" },
+    });
+    expect(seed.eventLocation).toBe("Dock 3");
+  });
+
+  it("repairs saved cases whose location is body-part text from the linked incident", () => {
+    const hydrated = hydrateOshaFromSource({
+      sourcePayload: { eventLocation: "Left shoulder" },
+      incident: { eventLocation: "Producers Rice Mill / Stuttgart Milling" },
+    });
+    expect(hydrated.eventLocation).toBe("Producers Rice Mill / Stuttgart Milling");
+  });
+
+  it("leaves column E blank rather than printing a body part", () => {
+    const hydrated = hydrateOshaFromSource({ sourcePayload: { eventLocation: "Mouth" } });
+    expect(hydrated.eventLocation).toBe("");
+  });
+
+  it("keeps place names that contain an anatomy word", () => {
+    const hydrated = hydrateOshaFromSource({ sourcePayload: { eventLocation: "Back dock" } });
+    expect(hydrated.eventLocation).toBe("Back dock");
+  });
+});

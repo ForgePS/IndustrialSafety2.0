@@ -423,7 +423,13 @@ export function oshaCaseIssues(c: OshaCase): string[] {
   if (!c.caseNumber.trim()) issues.push("No case number (column A).");
   if (!c.privacyCase && !c.employeeName.trim()) issues.push("No employee name (column B).");
   if (!c.injuryDate) issues.push("No date of injury or onset of illness (column D).");
-  if (!c.division.trim()) issues.push("No establishment (division).");
+  if (!c.division.trim()) {
+    issues.push(
+      c.establishment.trim()
+        ? `Establishment "${c.establishment.trim()}" is not one of your divisions. Choose the division in the case's Establishment field.`
+        : "No establishment (division).",
+    );
+  }
   if (!c.description.trim()) issues.push("No description of the injury or illness (column F).");
   if (!c.caseOutcome) {
     issues.push("No outcome checked (columns G–J), so it is missing from the 300A case counts.");
@@ -536,6 +542,36 @@ export function summarizeOshaCases(cases: OshaCase[]): {
     else if (row.recordabilityStatus === "PRIVACY_CASE") summary.privacy += 1;
   }
   return summary;
+}
+
+/**
+ * Cases with no division but an establishment (site) that names one of the tenant's
+ * divisions get that division, so they are not flagged as missing an establishment
+ * and land on the right Form 300. Matches the whole establishment or any part of a
+ * site path ("Producers Rice Mill / Stuttgart Milling", "Parboil - Packing").
+ */
+export function withEstablishmentDivisions(
+  cases: OshaCase[],
+  divisionCatalog: string[],
+): OshaCase[] {
+  const byKey = new Map<string, string>();
+  for (const raw of divisionCatalog) {
+    const name = asText(raw);
+    const key = oshaLogEstablishmentKey(name);
+    if (key && !byKey.has(key)) byKey.set(key, name);
+  }
+  if (byKey.size === 0) return cases;
+  return cases.map((c) => {
+    if (c.division.trim()) return c;
+    const est = c.establishment.trim();
+    if (!est) return c;
+    const parts = [est, ...est.split(/\s*(?:\/|>|\||,|\s-\s)\s*/)];
+    for (const part of parts) {
+      const match = byKey.get(oshaLogEstablishmentKey(part));
+      if (match) return { ...c, division: match };
+    }
+    return c;
+  });
 }
 
 /**
