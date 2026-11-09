@@ -1558,9 +1558,12 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
         `Answer every question before completing: ${unanswered.length} of ${runQuestions.length} ` +
           `still need Yes, No or N/A. First: "${first.label}".`,
       );
-      document
-        .getElementById(`sanitation-question-${first.id}`)
-        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      // Scroll after the error banner renders, so the layout shift doesn't cancel it.
+      window.setTimeout(() => {
+        document
+          .getElementById(`sanitation-question-${first.id}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 50);
       return;
     }
     const missingNotes = runQuestions.filter((q) => {
@@ -3628,6 +3631,12 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                 <span className="small text-body-secondary align-self-center" aria-live="polite">
                   {sanitationAutosaveLabel(autosave, unsavedPhotoIds.size)}
                 </span>
+                {/* The page-level banner is off screen down here, so repeat the error by the buttons. */}
+                {error ? (
+                  <div className="w-100 small text-danger" role="alert">
+                    {error}
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </>
