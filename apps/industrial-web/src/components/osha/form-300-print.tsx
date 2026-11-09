@@ -2,6 +2,7 @@
 
 import {
   chunkForm300Pages,
+  cappedOshaDays,
   displayEmployeeName,
   formatOshaMonthDay,
   form300PageTotals,
@@ -157,8 +158,16 @@ function Form300Page({
                   <td>
                     <Mark on={row.caseOutcome === "OTHER_RECORDABLE"} />
                   </td>
-                  <td>{row.daysAway ?? ""}</td>
-                  <td>{row.restrictedDays ?? ""}</td>
+                  <td>
+                    {row.daysAway == null
+                      ? ""
+                      : cappedOshaDays(row.daysAway, row.restrictedDays).daysAway}
+                  </td>
+                  <td>
+                    {row.restrictedDays == null
+                      ? ""
+                      : cappedOshaDays(row.daysAway, row.restrictedDays).restrictedDays}
+                  </td>
                   <td>
                     <Mark on={row.illnessCategory === "1"} />
                   </td>

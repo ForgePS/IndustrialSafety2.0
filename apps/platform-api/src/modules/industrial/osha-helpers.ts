@@ -3,6 +3,16 @@
  * Form 300 / 300A / 301 fields for list/detail APIs.
  */
 
+import { cappedOshaDays, oshaCaseLogYear } from "@forge/contracts";
+
+export {
+  cappedOshaDays,
+  nextOshaCaseNumber,
+  OSHA_MAX_COUNTED_DAYS,
+  oshaCaseLogYear,
+  oshaLogEstablishmentKey,
+} from "@forge/contracts";
+
 export const OSHA_RECORDABILITY = [
   "PENDING",
   "RECORDABLE",
@@ -775,12 +785,9 @@ export function form300ATotalsFromCases(
   }>,
   year: number,
 ): OshaForm300ATotals {
-  const inYear = cases.filter((c) => {
-    if (!isOshaFormLogCase(c.recordabilityStatus)) return false;
-    if (c.calendarYear === year) return true;
-    if (c.injuryDate && c.injuryDate.startsWith(String(year))) return true;
-    return false;
-  });
+  const inYear = cases.filter(
+    (c) => isOshaFormLogCase(c.recordabilityStatus) && oshaCaseLogYear(c) === year,
+  );
 
   const totals: OshaForm300ATotals = {
     year,
@@ -804,8 +811,9 @@ export function form300ATotalsFromCases(
     else if (row.caseOutcome === "JOB_TRANSFER_RESTRICTION") totals.jobTransferCases += 1;
     else if (row.caseOutcome === "OTHER_RECORDABLE") totals.otherRecordableCases += 1;
 
-    totals.daysAway += row.daysAway ?? 0;
-    totals.restrictedDays += row.restrictedDays ?? 0;
+    const days = cappedOshaDays(row.daysAway, row.restrictedDays);
+    totals.daysAway += days.daysAway;
+    totals.restrictedDays += days.restrictedDays;
 
     if (row.illnessCategory === "1") totals.injuries += 1;
     else if (row.illnessCategory === "2") totals.skinDisorders += 1;
@@ -949,10 +957,11 @@ export function hydrateOshaFromSource(input: {
     employeeName ||
     "OSHA case";
 
+  // The injury date decides the log year; a stored calendarYear can be stale after a date edit.
   const calendarYear =
+    (injuryDate ? Number(injuryDate.slice(0, 4)) : null) ||
     asYear(payload.calendarYear) ||
-    asYear(payload.year) ||
-    (injuryDate ? Number(injuryDate.slice(0, 4)) : null);
+    asYear(payload.year);
 
   const description =
     asText(payload.description) ||
@@ -1035,5 +1044,49 @@ export function hydrateOshaFromSource(input: {
     injuryOrIllness: asText(payload.injuryOrIllness) || description,
     objectOrSubstance: asText(payload.objectOrSubstance),
     dateOfDeath: asDate(payload.dateOfDeath),
+  };
+}
+
+/** Company details used to prefill an establishment's Form 300 / 300A header. */
+export type OshaEstablishmentDefaults = {
+  companyName: string;
+  /** True when the details come from an organization named like the division itself. */
+  matchesDivision: boolean;
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
+  phone: string;
+};
+
+/**
+ * Fill blank Form 300A establishment fields from company defaults. A saved name that is
+ * just the division code (e.g. "PRI") is expanded to the full company name.
+ */
+export function fillOshaForm300AMetaDefaults(
+  meta: OshaForm300AMeta,
+  division: string,
+  defaults: OshaEstablishmentDefaults,
+): OshaForm300AMeta {
+  const savedName = meta.establishmentName.trim();
+  const isDivisionCode = !savedName || savedName.toLowerCase() === division.trim().toLowerCase();
+  let establishmentName = savedName;
+  if (isDivisionCode) {
+    if (defaults.companyName && defaults.matchesDivision) {
+      establishmentName = defaults.companyName;
+    } else if (defaults.companyName) {
+      establishmentName = division ? `${defaults.companyName} – ${division}` : defaults.companyName;
+    } else {
+      establishmentName = division;
+    }
+  }
+  return {
+    ...meta,
+    establishmentName,
+    street: meta.street || defaults.street,
+    city: meta.city || defaults.city,
+    state: meta.state || defaults.state,
+    zip: meta.zip || defaults.zip,
+    phone: meta.phone || defaults.phone,
   };
 }

@@ -344,10 +344,33 @@ function resolveTenantAdminBuildEnv(environment) {
   return buildEnv;
 }
 
+function isProductionEnvironment(environment) {
+  return environment === "production" || environment === "govcloud-production";
+}
+
+/**
+ * Industrial production must call the API same-origin (CloudFront /api proxy). The
+ * __Host- session cookie is SameSite=Strict, so a cross-site API host means
+ * /auth/session/refresh never gets the cookie and users are signed out about an hour
+ * after login. Set FORGE_SAME_ORIGIN_API=0 to opt out on purpose.
+ */
+function industrialUsesSameOriginApi(environment) {
+  if (process.env.FORGE_SAME_ORIGIN_API === "1") return true;
+  if (process.env.FORGE_SAME_ORIGIN_API === "0") return false;
+  return isProductionEnvironment(environment);
+}
+
 function resolveIndustrialBuildEnv(environment) {
   const buildEnv = { ...process.env };
 
-  if (process.env.FORGE_SAME_ORIGIN_API === "1") {
+  if (industrialUsesSameOriginApi(environment)) {
+    const ignored = String(buildEnv.NEXT_PUBLIC_API_URL ?? "").trim();
+    if (ignored) {
+      console.warn(
+        `Ignoring NEXT_PUBLIC_API_URL=${ignored}: industrial ${environment} builds use the same-origin /api proxy (set FORGE_SAME_ORIGIN_API=0 to override).`,
+      );
+    }
+    buildEnv.FORGE_SAME_ORIGIN_API = "1";
     buildEnv.NEXT_PUBLIC_API_URL = "";
     console.log("Resolved NEXT_PUBLIC_API_URL= (same-origin /api proxy)");
   } else if (!buildEnv.NEXT_PUBLIC_API_URL) {
@@ -875,6 +898,15 @@ function assertProductionArtifactProvenance(appName, artifactRoot, envName, buil
     );
     throw new Error(
       `[${appName}] production artifact is not same-origin despite FORGE_SAME_ORIGIN_API`,
+    );
+  }
+  if (appName === "industrial" && !artifactSameOrigin && industrialUsesSameOriginApi(envName)) {
+    console.error("PRODUCTION_ARTIFACT_PROVENANCE=FAIL");
+    console.error(
+      `  industrial ${envName} build bakes a cross-site API host; users would be signed out after ~1 hour`,
+    );
+    throw new Error(
+      "[industrial] production artifact must use the same-origin API (set FORGE_SAME_ORIGIN_API=0 to override)",
     );
   }
   if (artifactSameOrigin && !sameOriginApi) {

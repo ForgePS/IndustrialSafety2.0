@@ -28,6 +28,15 @@ describe("injury history", () => {
     ]);
   });
 
+  it("follows OSHA log rules: injury year wins and days away cap at 180", () => {
+    const years = buildInjuryHistory({
+      injuryYears: [],
+      oshaCases: [{ ...daysAwayCase(2023, 400), injuryDate: "2024-02-10" }],
+      currentYear: 2024,
+    });
+    expect(years).toEqual([{ year: 2024, injuries: 0, lostTimeCases: 1, daysAway: 180 }]);
+  });
+
   it("keeps only the last maxYears years and ignores future years", () => {
     const years = buildInjuryHistory({
       injuryYears: [2010, 2023, 2030],

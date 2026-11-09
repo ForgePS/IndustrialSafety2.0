@@ -1,9 +1,6 @@
-import {
-  isOshaFormLogCase,
-  parseOccurredDateTime,
-  type OshaCaseOutcome,
-  type OshaRecordability,
-} from "./osha-helpers.js";
+import { cappedOshaDays, oshaCaseLogYear } from "@forge/contracts";
+import { incidentOccurredDate } from "./incident-trend.js";
+import { isOshaFormLogCase, type OshaCaseOutcome, type OshaRecordability } from "./osha-helpers.js";
 
 /** One calendar year on the dashboard injury history graph. */
 export type InjuryHistoryYear = {
@@ -30,9 +27,8 @@ export function incidentYear(
   payload: Record<string, unknown>,
   createdAt: Date | null,
 ): number | null {
-  const occurred = parseOccurredDateTime(payload.dateOccurred ?? payload.occurredAt).date;
-  if (occurred) return Number(occurred.slice(0, 4));
-  return createdAt ? createdAt.getUTCFullYear() : null;
+  const date = incidentOccurredDate(payload, createdAt);
+  return date ? Number(date.slice(0, 4)) : null;
 }
 
 /**
@@ -44,6 +40,7 @@ export function buildInjuryHistory(input: {
   oshaCases: Array<{
     recordabilityStatus: OshaRecordability;
     calendarYear: number | null;
+    injuryDate?: string | null;
     caseOutcome: OshaCaseOutcome | null;
     daysAway: number | null;
   }>;
@@ -70,10 +67,11 @@ export function buildInjuryHistory(input: {
   }
   for (const c of input.oshaCases) {
     if (!isOshaFormLogCase(c.recordabilityStatus) || c.caseOutcome !== "DAYS_AWAY") continue;
-    const row = bucket(c.calendarYear);
+    // Same rules as the OSHA log: injury year wins, days away count up to 180.
+    const row = bucket(oshaCaseLogYear(c));
     if (!row) continue;
     row.lostTimeCases += 1;
-    row.daysAway += Math.max(0, c.daysAway ?? 0);
+    row.daysAway += cappedOshaDays(c.daysAway, null).daysAway;
   }
 
   if (byYear.size === 0) return [];
