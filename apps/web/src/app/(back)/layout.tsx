@@ -23,6 +23,7 @@ import { getForgePlatformRole } from '@/lib/forgeCreatorAuth'
 import { getTenantContext } from '@/lib/forgeTenantContext'
 import { getEffectiveExperience } from '@/lib/forgeExperience'
 import { getHelpdeskStaffAccess } from '@/lib/forgeHelpdeskAccess'
+import { getForgeAiHeaderState } from '@/lib/forgeAiHeader'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -58,6 +59,11 @@ const AdminLayout = async ({ children }: { children: ReactNode }) => {
         })
       : []
 
+  const forgeAi =
+    tenantContext.user && tenantContext.activeOrganization
+      ? await getForgeAiHeaderState({ organizationId: tenantContext.activeOrganization.id, userId: tenantContext.user.id })
+      : null
+
   return (
     <SidebarProvider defaultOpen={sidebarCookie ? JSON.parse(sidebarCookie.value) : appConfig.layout === 'vertical'}>
       <VerticalLayout
@@ -75,6 +81,7 @@ const AdminLayout = async ({ children }: { children: ReactNode }) => {
           <Header
             organizations={tenantContext.organizations}
             activeOrganizationId={tenantContext.activeOrganization?.id || null}
+            forgeAi={forgeAi}
           />
         }
       >
