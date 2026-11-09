@@ -35,6 +35,12 @@ import { and, count, desc, eq, gte, inArray, isNull, lte, or, sql } from "drizzl
 import { DATABASE } from "../../tokens.js";
 import { NotificationsService } from "../notifications/notifications.service.js";
 import {
+  addSanitationResponsePhoto,
+  mergeSanitationResponses,
+  parseSanitationPhoto,
+  removeSanitationResponsePhoto,
+} from "./sanitation-responses.js";
+import {
   buildSanitationAuditPackageHtml,
   buildSanitationInspectionPrintableHtml,
   escapeSanitationHtml,
@@ -3115,14 +3121,20 @@ export class IndustrialSanitationService {
             isNull(industrialSanitationInspections.archivedAt),
           ),
         )
-        .limit(1);
+        .limit(1)
+        .for("update");
       if (!existing) throw new ForgeError("NOT_FOUND", "Inspection not found");
       if (existing.status === "COMPLETED") {
         throw new ForgeError("VALIDATION_FAILED", "Inspection is already completed");
       }
 
+      // merge: autosave sends answers without photos; keep stored answers and photos.
+      const merge = body.merge === true;
+      const incoming = asJsonObject(body.responsesJson ?? body.responses);
       const patch: Partial<typeof industrialSanitationInspections.$inferInsert> = {
-        responsesJson: asJsonObject(body.responsesJson ?? body.responses),
+        responsesJson: merge
+          ? mergeSanitationResponses(asJsonObject(existing.responsesJson), incoming)
+          : incoming,
         updatedAt: now,
         updatedByUserId: principal.userId ?? null,
       };
@@ -3134,7 +3146,81 @@ export class IndustrialSanitationService {
         .where(eq(industrialSanitationInspections.id, inspectionId))
         .returning();
       if (!row) throw new ForgeError("INTERNAL_ERROR", "Failed to save responses");
+      // Autosave runs often; don't send every stored photo back each time.
+      if (merge) return { id: row.id, status: row.status, updatedAt: iso(row.updatedAt) };
       return mapInspection(row);
+    });
+  }
+
+  /** Upload one checklist photo on its own, so saves never carry every photo at once. */
+  async addInspectionPhoto(principal: ForgePrincipal, id: string, body: Record<string, unknown>) {
+    const questionKey = String(body.questionKey ?? "").trim();
+    if (!questionKey || questionKey.length > 200) {
+      throw new ForgeError("VALIDATION_FAILED", "questionKey is required");
+    }
+    const photo = parseSanitationPhoto(body.photo);
+    const answerFields: Record<string, unknown> = {};
+    if (typeof body.label === "string") answerFields.label = body.label.slice(0, 500);
+    if (typeof body.severity === "string") answerFields.severity = body.severity.slice(0, 64);
+    await this.updateInspectionResponses(principal, id, (responses) =>
+      addSanitationResponsePhoto(responses, questionKey, photo, answerFields),
+    );
+    return { inspectionId: id, questionKey, photoId: photo.id };
+  }
+
+  async removeInspectionPhoto(
+    principal: ForgePrincipal,
+    id: string,
+    photoId: string,
+    body: Record<string, unknown>,
+  ) {
+    const questionKey = String(body.questionKey ?? "").trim();
+    if (!questionKey) throw new ForgeError("VALIDATION_FAILED", "questionKey is required");
+    await this.updateInspectionResponses(principal, id, (responses) =>
+      removeSanitationResponsePhoto(responses, questionKey, photoId),
+    );
+    return { inspectionId: id, questionKey, photoId, removed: true };
+  }
+
+  /** Read-modify-write an in-progress inspection's answers under a row lock. */
+  private async updateInspectionResponses(
+    principal: ForgePrincipal,
+    id: string,
+    change: (responses: Record<string, unknown>) => Record<string, unknown>,
+  ) {
+    const tenantId = this.tenant(principal);
+    const inspectionId = asRequiredUuid(id, "id");
+    await withTenantTransaction(this.db, tenantId, async (tx) => {
+      const [existing] = await tx
+        .select({
+          status: industrialSanitationInspections.status,
+          responsesJson: industrialSanitationInspections.responsesJson,
+        })
+        .from(industrialSanitationInspections)
+        .where(
+          and(
+            eq(industrialSanitationInspections.id, inspectionId),
+            eq(industrialSanitationInspections.tenantId, tenantId),
+            isNull(industrialSanitationInspections.archivedAt),
+          ),
+        )
+        .limit(1)
+        .for("update");
+      if (!existing) throw new ForgeError("NOT_FOUND", "Inspection not found");
+      if (existing.status === "COMPLETED") {
+        throw new ForgeError("VALIDATION_FAILED", "Inspection is already completed");
+      }
+      const current = asJsonObject(existing.responsesJson);
+      const next = change(current);
+      if (next === current) return;
+      await tx
+        .update(industrialSanitationInspections)
+        .set({
+          responsesJson: next,
+          updatedAt: new Date(),
+          updatedByUserId: principal.userId ?? null,
+        })
+        .where(eq(industrialSanitationInspections.id, inspectionId));
     });
   }
 
@@ -3154,16 +3240,24 @@ export class IndustrialSanitationService {
             isNull(industrialSanitationInspections.archivedAt),
           ),
         )
-        .limit(1);
+        .limit(1)
+        .for("update");
       if (!existing) throw new ForgeError("NOT_FOUND", "Inspection not found");
       if (existing.status === "COMPLETED") {
         throw new ForgeError("VALIDATION_FAILED", "Inspection is already completed");
       }
 
-      const responses =
+      const stored = asJsonObject(existing.responsesJson);
+      const sent =
         body.responsesJson != null || body.responses != null
           ? asJsonObject(body.responsesJson ?? body.responses)
-          : asJsonObject(existing.responsesJson);
+          : null;
+      // merge: the web app uploads photos separately and sends answers without them.
+      const responses = !sent
+        ? stored
+        : body.merge === true
+          ? mergeSanitationResponses(stored, sent)
+          : sent;
 
       let templateQuestions: TemplateQuestion[] = [];
       let templateCategory: string | null = null;

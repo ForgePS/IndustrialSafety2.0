@@ -405,6 +405,35 @@ export class IndustrialSanitationController {
     );
   }
 
+  @Post("inspections/:id/photos")
+  @RequireAnyPermission([...INSPECT], { requiresEntitlement: ENTITLEMENT })
+  async addInspectionPhoto(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(
+      await this.sanitation.addInspectionPhoto(principal, id, body ?? {}),
+      getRequestIds(req),
+    );
+  }
+
+  @Post("inspections/:id/photos/:photoId/delete")
+  @RequireAnyPermission([...INSPECT], { requiresEntitlement: ENTITLEMENT })
+  async removeInspectionPhoto(
+    @Principal() principal: ForgePrincipal,
+    @Param("id") id: string,
+    @Param("photoId") photoId: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(
+      await this.sanitation.removeInspectionPhoto(principal, id, photoId, body ?? {}),
+      getRequestIds(req),
+    );
+  }
+
   @Post("inspections/:id/complete")
   @RequireAnyPermission([...INSPECT], { requiresEntitlement: ENTITLEMENT })
   @Idempotent({ resourceType: "industrial_sanitation_inspection_complete" })

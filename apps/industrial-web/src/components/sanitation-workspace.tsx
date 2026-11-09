@@ -51,6 +51,9 @@ import {
   preopDisposition,
   saveSanitationDraft,
   loadSanitationDraft,
+  stripResponsePhotos,
+  sanitationAutosaveLabel,
+  type SanitationAutosaveState,
   clearSanitationDraft,
   filterSanitationTabs,
   type SanitationTabId,
@@ -531,6 +534,16 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
   const [expandedQuestionIds, setExpandedQuestionIds] = useState<Record<string, boolean>>({});
   const [isOnline, setIsOnline] = useState(true);
   const [draftRestored, setDraftRestored] = useState(false);
+  // Answers autosave without photos; each photo uploads on its own (see flushAnswers / uploadPhoto).
+  const [autosave, setAutosave] = useState<SanitationAutosaveState>({ state: "idle" });
+  const [unsavedPhotoIds, setUnsavedPhotoIds] = useState<Set<string>>(() => new Set());
+  const lastSavedAnswersRef = useRef("");
+  const autosaveInFlightRef = useRef<Promise<boolean> | null>(null);
+  const uploadingPhotoIdsRef = useRef<Set<string>>(new Set());
+  const responsesRef = useRef(responses);
+  const activeInspectionRef = useRef(activeInspection);
+  const unsavedPhotoIdsRef = useRef(unsavedPhotoIds);
+  const flushAllRef = useRef<() => Promise<void>>(async () => {});
   const [qrTokenPreview, setQrTokenPreview] = useState<string | null>(null);
   const [tplName, setTplName] = useState("");
   const [tplCategory, setTplCategory] = useState("GENERAL");
@@ -986,10 +999,30 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
   }, []);
 
   useEffect(() => {
+    responsesRef.current = responses;
+    activeInspectionRef.current = activeInspection;
+    unsavedPhotoIdsRef.current = unsavedPhotoIds;
+  });
+
+  // Keep a photo-free draft on the device and autosave answers shortly after each change.
+  useEffect(() => {
     if (!activeInspection?.id) return;
     if (String(activeInspection.status ?? "").toUpperCase() === "COMPLETED") return;
-    saveSanitationDraft(activeInspection.id, responses);
+    saveSanitationDraft(activeInspection.id, stripResponsePhotos(responses));
+    const timer = window.setTimeout(() => void flushAllRef.current(), 1500);
+    return () => window.clearTimeout(timer);
   }, [activeInspection, responses]);
+
+  // Retry after a failed save, and as soon as the device is back online.
+  useEffect(() => {
+    if (!isOnline) return;
+    if (autosave.state !== "error" && autosave.state !== "offline") return;
+    const timer = window.setTimeout(
+      () => void flushAllRef.current(),
+      autosave.state === "error" ? 15_000 : 1_000,
+    );
+    return () => window.clearTimeout(timer);
+  }, [isOnline, autosave]);
 
   const visibleTabs = useMemo(() => {
     const tenantVisible = filterSanitationTabs(disabledTabs);
@@ -1088,24 +1121,39 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
           next[key] = { result: String(val ?? "") as InspectionAnswer };
         }
       }
+      lastSavedAnswersRef.current = JSON.stringify(stripResponsePhotos(next));
+      setAutosave({ state: "idle" });
+      const serverPhotoIds = new Set(
+        Object.values(next).flatMap((entry) => (entry.photos ?? []).map((p) => p.id)),
+      );
       const draft = loadSanitationDraft(id);
-      if (draft?.responses && typeof window !== "undefined" && !navigator.onLine) {
+      const draftIsNewer =
+        Boolean(draft?.savedAt) &&
+        Boolean(row.updatedAt) &&
+        Date.parse(String(draft?.savedAt)) > Date.parse(String(row.updatedAt));
+      let restored = false;
+      if (
+        draft?.responses &&
+        typeof window !== "undefined" &&
+        (!navigator.onLine || draftIsNewer || Object.keys(next).length === 0)
+      ) {
+        // Device drafts carry answers only, so merging keeps the server's photos.
         for (const [key, val] of Object.entries(draft.responses)) {
           if (val && typeof val === "object") {
             next[key] = { ...next[key], ...(val as ResponseEntry) };
           }
         }
-        setDraftRestored(true);
-      } else if (draft?.responses && Object.keys(next).length === 0) {
-        for (const [key, val] of Object.entries(draft.responses)) {
-          if (val && typeof val === "object") {
-            next[key] = val as ResponseEntry;
-          }
-        }
-        setDraftRestored(true);
-      } else {
-        setDraftRestored(false);
+        restored = JSON.stringify(stripResponsePhotos(next)) !== lastSavedAnswersRef.current;
       }
+      setDraftRestored(restored);
+      // Drafts saved before photos uploaded separately may hold photos the server never got.
+      setUnsavedPhotoIds(
+        new Set(
+          Object.values(next)
+            .flatMap((entry) => (entry.photos ?? []).map((p) => p.id))
+            .filter((photoId) => !serverPhotoIds.has(photoId)),
+        ),
+      );
       setResponses(next);
       setCompleteResult(null);
       setSignatureName("");
@@ -1178,6 +1226,9 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
       await loadInspections();
       setActiveInspection(created);
       setResponses({});
+      lastSavedAnswersRef.current = "{}";
+      setUnsavedPhotoIds(new Set());
+      setAutosave({ state: "idle" });
       setCompleteResult(null);
       setDraftRestored(false);
       setSignatureName("");
@@ -1282,9 +1333,12 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
           dataUrl,
         });
       }
+      const room = MAX_QUESTION_PHOTOS - (responsesRef.current[questionId]?.photos?.length ?? 0);
+      const accepted = added.slice(0, Math.max(0, room));
+      if (accepted.length === 0) return;
       setResponses((prev) => {
         const existing = prev[questionId];
-        const photos = [...(existing?.photos ?? []), ...added].slice(0, MAX_QUESTION_PHOTOS);
+        const photos = [...(existing?.photos ?? []), ...accepted].slice(0, MAX_QUESTION_PHOTOS);
         return {
           ...prev,
           [questionId]: {
@@ -1294,12 +1348,140 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
           },
         };
       });
+      setUnsavedPhotoIds((prev) => new Set([...prev, ...accepted.map((p) => p.id)]));
+      const inspectionId = String(activeInspection?.id ?? "");
+      if (!inspectionId || !navigator.onLine) return;
+      let failed = 0;
+      for (const photo of accepted) {
+        if (!(await uploadPhoto(inspectionId, questionId, photo))) failed += 1;
+      }
+      if (failed > 0) {
+        setError(
+          `${failed} photo${failed === 1 ? "" : "s"} didn't upload yet. ` +
+            "They stay on this screen and retry automatically.",
+        );
+      }
     } catch (e) {
       setError(imageCompressErrorMessage(e, "Could not compress photo"));
     }
   }
 
+  /** Upload one photo; the server adds it to the question's answer. */
+  async function uploadPhoto(
+    inspectionId: string,
+    questionId: string,
+    photo: ResponsePhoto,
+  ): Promise<boolean> {
+    if (uploadingPhotoIdsRef.current.has(photo.id)) return true;
+    uploadingPhotoIdsRef.current.add(photo.id);
+    const entry = responsesRef.current[questionId];
+    try {
+      await apiSend(`${API}/inspections/${encodeURIComponent(inspectionId)}/photos`, "POST", {
+        questionKey: questionId,
+        photo,
+        ...(entry?.label ? { label: entry.label } : {}),
+        ...(entry?.severity ? { severity: entry.severity } : {}),
+      });
+      setUnsavedPhotoIds((prev) => {
+        if (!prev.has(photo.id)) return prev;
+        const next = new Set(prev);
+        next.delete(photo.id);
+        return next;
+      });
+      return true;
+    } catch {
+      return false;
+    } finally {
+      uploadingPhotoIdsRef.current.delete(photo.id);
+    }
+  }
+
+  /** Retry photos that haven't uploaded. Returns how many are still waiting. */
+  async function flushPhotos(): Promise<number> {
+    const inspection = activeInspectionRef.current;
+    const pending = unsavedPhotoIdsRef.current;
+    if (!inspection?.id || pending.size === 0) return 0;
+    if (!navigator.onLine) return pending.size;
+    let remaining = 0;
+    for (const [questionId, entry] of Object.entries(responsesRef.current)) {
+      for (const photo of entry.photos ?? []) {
+        if (!pending.has(photo.id) || uploadingPhotoIdsRef.current.has(photo.id)) continue;
+        if (!(await uploadPhoto(String(inspection.id), questionId, photo))) remaining += 1;
+      }
+    }
+    return remaining;
+  }
+
+  /** Save answers (without photos) if they changed since the last save. */
+  async function flushAnswers(): Promise<boolean> {
+    if (autosaveInFlightRef.current) await autosaveInFlightRef.current;
+    const inspection = activeInspectionRef.current;
+    if (!inspection?.id || !canInspect) return true;
+    if (String(inspection.status ?? "").toUpperCase() === "COMPLETED") return true;
+    const answers = stripResponsePhotos(responsesRef.current);
+    const json = JSON.stringify(answers);
+    if (json === lastSavedAnswersRef.current) return true;
+    if (!navigator.onLine) {
+      setAutosave({ state: "offline" });
+      return false;
+    }
+    const run = (async () => {
+      setAutosave({ state: "saving" });
+      try {
+        await apiSend(
+          `${API}/inspections/${encodeURIComponent(String(inspection.id))}/responses`,
+          "POST",
+          { responsesJson: answers, merge: true },
+        );
+        lastSavedAnswersRef.current = json;
+        setAutosave({ state: "saved", at: new Date().toISOString() });
+        return true;
+      } catch {
+        setAutosave({ state: "error" });
+        return false;
+      }
+    })();
+    autosaveInFlightRef.current = run;
+    try {
+      return await run;
+    } finally {
+      autosaveInFlightRef.current = null;
+    }
+  }
+
+  async function flushAll() {
+    const answersSaved = await flushAnswers();
+    const photosLeft = await flushPhotos();
+    if (photosLeft > 0) {
+      setAutosave({ state: navigator.onLine ? "error" : "offline" });
+    } else if (answersSaved) {
+      setAutosave((prev) =>
+        prev.state === "error" || prev.state === "offline"
+          ? { state: "saved", at: new Date().toISOString() }
+          : prev,
+      );
+    }
+  }
+  useEffect(() => {
+    flushAllRef.current = flushAll;
+  });
+
   function removeQuestionPhoto(questionId: string, photoId: string) {
+    const uploaded = !unsavedPhotoIdsRef.current.has(photoId);
+    const inspectionId = String(activeInspection?.id ?? "");
+    setUnsavedPhotoIds((prev) => {
+      if (!prev.has(photoId)) return prev;
+      const next = new Set(prev);
+      next.delete(photoId);
+      return next;
+    });
+    if (uploaded && inspectionId) {
+      void apiSend(
+        `${API}/inspections/${encodeURIComponent(inspectionId)}/photos/${encodeURIComponent(photoId)}/delete`,
+        "POST",
+        { questionKey: questionId },
+      ).catch(() => setError("Couldn't remove that photo from the saved inspection. Try again."));
+    }
     setResponses((prev) => {
       const existing = prev[questionId];
       if (!existing) return prev;
@@ -1343,24 +1525,27 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
 
   async function saveResponses() {
     if (!activeInspection || !canInspect) return;
-    await withBusy(
-      async () => {
-        if (typeof window !== "undefined" && !navigator.onLine) {
-          saveSanitationDraft(activeInspection.id, responses);
-          return;
-        }
-        const updated = await apiSend<Row>(
-          `${API}/inspections/${encodeURIComponent(activeInspection.id)}/responses`,
-          "POST",
-          { responsesJson: responses },
+    setBusy(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      saveSanitationDraft(activeInspection.id, stripResponsePhotos(responses));
+      const photosLeft = await flushPhotos();
+      const saved = await flushAnswers();
+      if (saved && photosLeft === 0) {
+        setSuccess("Responses saved");
+      } else if (!navigator.onLine) {
+        setSuccess("Saved on this device. It uploads when you're back online.");
+      } else if (photosLeft > 0) {
+        setError(
+          `${photosLeft} photo${photosLeft === 1 ? "" : "s"} didn't upload. Check your connection and tap Save again.`,
         );
-        setActiveInspection(updated);
-        saveSanitationDraft(activeInspection.id, responses);
-      },
-      typeof window !== "undefined" && !navigator.onLine
-        ? "Draft saved locally"
-        : "Responses saved",
-    );
+      } else {
+        setError("Couldn't save responses. Check your connection and tap Save again.");
+      }
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function completeInspection() {
@@ -1387,6 +1572,18 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
       setError("Add an inspector signature (typed name or drawing) before completing.");
       return;
     }
+    setBusy(true);
+    setError(null);
+    const photosLeft = await flushPhotos();
+    await flushAnswers();
+    setBusy(false);
+    if (photosLeft > 0) {
+      setError(
+        `${photosLeft} photo${photosLeft === 1 ? "" : "s"} haven't uploaded yet. ` +
+          "Your answers are saved. Check your connection and tap Complete again.",
+      );
+      return;
+    }
     await withBusy(async () => {
       const signaturesJson = [
         {
@@ -1399,7 +1596,8 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
       const result = await apiSend<Row & { findings?: Row[] }>(
         `${API}/inspections/${encodeURIComponent(activeInspection.id)}/complete`,
         "POST",
-        { responsesJson: responses, signaturesJson },
+        // Photos are already on the server; merge keeps them.
+        { responsesJson: stripResponsePhotos(responses), signaturesJson, merge: true },
       );
       setActiveInspection(result);
       setCompleteResult({
@@ -3300,6 +3498,11 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                                       style={{ width: 72, height: 72, objectFit: "cover" }}
                                       className="rounded border"
                                     />
+                                    {unsavedPhotoIds.has(p.id) ? (
+                                      <span className="badge bg-warning text-dark position-absolute bottom-0 start-0 small">
+                                        Not uploaded
+                                      </span>
+                                    ) : null}
                                     {!disabled ? (
                                       <button
                                         type="button"
@@ -3386,6 +3589,9 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                 >
                   Complete inspection
                 </button>
+                <span className="small text-body-secondary align-self-center" aria-live="polite">
+                  {sanitationAutosaveLabel(autosave, unsavedPhotoIds.size)}
+                </span>
               </div>
             ) : null}
           </>
