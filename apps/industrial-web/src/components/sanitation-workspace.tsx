@@ -53,6 +53,8 @@ import {
   loadSanitationDraft,
   stripResponsePhotos,
   sanitationAutosaveLabel,
+  isSanitationAnswered,
+  unansweredSanitationQuestions,
   type SanitationAutosaveState,
   clearSanitationDraft,
   filterSanitationTabs,
@@ -577,10 +579,9 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
 
   const runProgress = useMemo(() => {
     if (!runQuestions.length) return 0;
-    const answered = runQuestions.filter((q) => {
-      const r = responses[q.id]?.result;
-      return r === "PASS" || r === "FAIL" || r === "NA" || r === "YES" || r === "NO";
-    }).length;
+    const answered = runQuestions.filter((q) =>
+      isSanitationAnswered(responses[q.id]?.result),
+    ).length;
     return Math.round((answered / runQuestions.length) * 100);
   }, [runQuestions, responses]);
 
@@ -1550,6 +1551,21 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
 
   async function completeInspection() {
     if (!activeInspection || !canInspect) return;
+    const unanswered = unansweredSanitationQuestions(runQuestions, responses);
+    if (unanswered.length) {
+      const first = unanswered[0]!;
+      setError(
+        `Answer every question before completing: ${unanswered.length} of ${runQuestions.length} ` +
+          `still need Yes, No or N/A. First: "${first.label}".`,
+      );
+      // Scroll after the error banner renders, so the layout shift doesn't cancel it.
+      window.setTimeout(() => {
+        document
+          .getElementById(`sanitation-question-${first.id}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 50);
+      return;
+    }
     const missingNotes = runQuestions.filter((q) => {
       const entry = responses[q.id];
       const result = String(entry?.result ?? "").toUpperCase();
@@ -3309,7 +3325,11 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                     const photoCount = entry?.photos?.length ?? 0;
                     const hasNotes = Boolean(String(entry?.notes ?? "").trim());
                     return (
-                      <div key={q.id} className={`border rounded ${isNo ? "border-danger" : ""}`}>
+                      <div
+                        key={q.id}
+                        id={`sanitation-question-${q.id}`}
+                        className={`border rounded ${isNo ? "border-danger" : ""}`}
+                      >
                         <div className="sanitation-checklist-item__row">
                           <button
                             type="button"
@@ -3333,6 +3353,25 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                                     {hasNotes ? "Notes added" : ""}
                                     {hasNotes && photoCount > 0 ? " · " : ""}
                                     {photoCount > 0 ? `${photoCount} photo(s)` : ""}
+                                  </span>
+                                ) : null}
+                                {!expanded && photoCount > 0 ? (
+                                  <span className="d-flex flex-wrap gap-1 mt-1">
+                                    {(entry?.photos ?? []).slice(0, 4).map((p) => (
+                                      // Plain <img>: static export, so next/image optimization is unavailable.
+                                      <img
+                                        key={p.id}
+                                        src={p.dataUrl}
+                                        alt={p.fileName}
+                                        style={{ width: 40, height: 40, objectFit: "cover" }}
+                                        className="rounded border"
+                                      />
+                                    ))}
+                                    {photoCount > 4 ? (
+                                      <span className="small text-muted align-self-center">
+                                        +{photoCount - 4}
+                                      </span>
+                                    ) : null}
                                   </span>
                                 ) : null}
                                 {!expanded && !isNo ? (
@@ -3592,6 +3631,12 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                 <span className="small text-body-secondary align-self-center" aria-live="polite">
                   {sanitationAutosaveLabel(autosave, unsavedPhotoIds.size)}
                 </span>
+                {/* The page-level banner is off screen down here, so repeat the error by the buttons. */}
+                {error ? (
+                  <div className="w-100 small text-danger" role="alert">
+                    {error}
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </>

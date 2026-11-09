@@ -1114,3 +1114,18 @@ export function clearSanitationDraft(inspectionId: string): void {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(`${SANITATION_DRAFT_PREFIX}${inspectionId}`);
 }
+
+const ANSWERED_RESULTS = new Set(["PASS", "FAIL", "NA", "YES", "NO"]);
+
+/** True when a checklist answer is Yes, No or N/A. */
+export function isSanitationAnswered(result: unknown): boolean {
+  return ANSWERED_RESULTS.has(String(result ?? "").toUpperCase());
+}
+
+/** Questions with no Yes/No/N/A answer, in checklist order. */
+export function unansweredSanitationQuestions<Q extends { id: string }>(
+  questions: Q[],
+  responses: Record<string, { result?: unknown } | undefined>,
+): Q[] {
+  return questions.filter((q) => !isSanitationAnswered(responses[q.id]?.result));
+}
