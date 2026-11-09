@@ -26,7 +26,7 @@
     "@forge/ai-redaction": "workspace:*"
   },
   "devDependencies": {
-    "rimraf": "^6.0.1",
+    "rimraf": "^6.1.4",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
   }
