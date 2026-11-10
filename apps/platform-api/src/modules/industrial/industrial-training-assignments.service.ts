@@ -893,6 +893,8 @@ export class IndustrialTrainingAssignmentsService {
           status: a.status,
           bestPercent: a.bestPercent,
           dueAt: assignment.dueAt,
+          /** When this person was added to the assignment. */
+          assignedAt: a.createdAt ?? assignment.createdAt,
           completedAt: a.completedAt,
           updatedAt: a.updatedAt,
         };

@@ -31,6 +31,7 @@ import { TrainingAssignmentsHierarchy } from "@/components/training-assignments-
 import { TrainingCourseBuilder } from "@/components/training-course-builder";
 import { TrainingRecentActivityByCourse } from "@/components/training-recent-activity-by-course";
 import { TrainingTeamProgressRoster } from "@/components/training-team-progress-roster";
+import { TrainingMissedReport } from "@/components/training-missed-report";
 import type { DirectoryUser } from "@/lib/user-management";
 
 const emptyAssignmentForm = () => ({
@@ -63,6 +64,7 @@ export type AgencySection =
   | "assignments"
   | "paper"
   | "stats"
+  | "missed"
   | "records"
   | "sources"
   | "materials"
@@ -340,6 +342,7 @@ export function TrainingAgencyPanel({
       section === "assignments" ||
       section === "paper" ||
       section === "stats" ||
+      section === "missed" ||
       section === "sources"
     ) {
       void refreshAgency();
@@ -1811,6 +1814,16 @@ export function TrainingAgencyPanel({
           </div>
         ) : null}
       </>
+    );
+  }
+
+  if (section === "missed") {
+    return (
+      <TrainingMissedReport
+        roster={teamSummary?.roster ?? null}
+        canManage={canManage}
+        onRefresh={() => void refreshAgency()}
+      />
     );
   }
 
