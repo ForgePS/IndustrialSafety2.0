@@ -243,6 +243,7 @@ export class OpenAiForgeProvider implements ForgeAiProvider {
 //   [[forge-test:fail:<kind>]]          throw a ForgeAiProviderError of that kind
 //   [[forge-test:tool:<name> <json>]]   call a tool with raw JSON arguments (may be invalid on purpose)
 //   [[forge-test:json <raw>]]           return raw text as the structured output (may be invalid)
+//   [[forge-test:say <text>]]           append text to the answer, '~' read as '-' (exercises response checks)
 // ---------------------------------------------------------------------------
 
 const sampleFromSchema = (schema: any): unknown => {
@@ -317,6 +318,11 @@ export class TestForgeProvider implements ForgeAiProvider {
       text = raw ? raw[1] : JSON.stringify(sampleFromSchema(request.responseFormat.schema))
     } else {
       text = outputs.length ? 'Forge test provider tool results:\n' + outputs.join('\n') : 'Forge test provider reply.'
+
+      const say = last.match(/\[\[forge-test:say (.*?)\]\]/)
+
+      // '~' becomes '-', so a test can make the answer cite a reference the user never typed.
+      if (say) text += '\n' + say[1].replace(/~/g, '-')
     }
 
     return {

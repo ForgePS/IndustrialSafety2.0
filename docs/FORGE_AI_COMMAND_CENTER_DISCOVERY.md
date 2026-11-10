@@ -101,9 +101,42 @@ New feature registry keys (`forge_ai.command_center`, `forge_ai.risk_intelligenc
 | Stage | Status |
 |---|---|
 | 1 Foundation: provider interface, timeouts and retries, tool allowlisting and argument validation, structured output, prompt versions, agent runs, model registry, unified AI audit, retention, rollout flag | Done on `feat/forge-ai-command-center` |
-| 2 Orchestrator, 8 agents, knowledge engine | Next |
-| 3 Risk intelligence and proactive monitoring | Pending |
+| 2 Orchestrator, 8 agents, knowledge engine | Done on `feat/forge-ai-agents` |
+| 3 Risk intelligence and proactive monitoring | Next |
 | 4 Recommendations and approvals | Pending |
 | 5 Command Center UI, security suite, docs, completion report | Pending |
 
 Stage 1 tests: `tests/forge-ai-foundation.test.cjs` (19 unit tests), `tests/forge-ai-foundation-db.cjs` (21 database checks, including cross-tenant retention), `tests/forge-ai-pipeline.spec.cjs` (4 end-to-end checks through `/api/forge-ai/chat` with the guarded test provider). All three run in CI.
+
+Stage 2 adds:
+
+- **Orchestrator and agents** (`src/lib/forgeAiAgents.ts`):
+  - Eight agents: Knowledge, Incident, Inspection, Compliance, Risk, Reporting, Monitoring and Workflow. Each has a tool allowlist and call limits.
+  - A turn is routed by the user's explicit choice, then the record being viewed, then keyword intent. Unclear or mixed questions go to the general assistant.
+  - An agent only narrows the tools the user already has. Only the Workflow agent can prepare actions.
+  - Each agent has its own versioned prompt, and the route is recorded on the agent run.
+- **Answer checks** (`src/lib/forgeAiResponseCheck.ts`):
+  - Records that the tools returned and the answer cites are linked as sources.
+  - A record reference is flagged in the answer when no tool returned it and the user never typed it.
+  - Internal ids are replaced with `[internal id]`.
+  - Knowledge and help-article text reaches the model fenced as untrusted data. Text that reads like instructions is flagged and audited.
+- **Knowledge engine:**
+  - Upload PDF, Word, Markdown or text files (up to 10 MB). Files are typed by content, not by name.
+  - Every change is a numbered version with its checksum.
+  - Chunks keep page numbers and the version they came from.
+  - Retrieval is hybrid: Postgres full-text always, plus embeddings when an embedding key is set, fused by rank. Knowledge search therefore works without an OpenAI key.
+  - Sources indexed before can be re-indexed when they fall behind their latest version.
+  - Seeded or imported sources become version 1 on first index.
+- **Security fix:**
+  - `match_forge_ai_knowledge` could be called by anonymous and signed-in clients with any organization id. That exposed other tenants' knowledge, including restricted sources.
+  - It and the new full-text search function now run for the service role only.
+
+Stage 2 tests:
+
+| Suite | Coverage |
+|---|---|
+| `tests/forge-ai-agents.test.cjs` | 19 unit tests: routing, allowlists, limits, prompt pins, answer checks, injection scanning, PDF and DOCX extraction, ranking |
+| `tests/forge-ai-agents-knowledge-db.cjs` | 12 database checks: search functions closed to clients, tenant isolation, restricted and draft filtering, lexical-only chunks, capability coverage |
+| `tests/forge-ai-agents.spec.cjs` | 8 end-to-end checks: routing and citations, allowlist refusal, unverified references and id redaction, text and PDF upload with versions, restricted filtering, injection flagging and audit, upload refusals and cross-tenant refusal, the workspace agent picker |
+
+All three run in CI.

@@ -1,7 +1,7 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
-import { TbArchive, TbBook2, TbPlus, TbSearch, TbSparkles } from 'react-icons/tb'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { TbArchive, TbBook2, TbFileUpload, TbPlus, TbRefresh, TbSearch, TbSparkles } from 'react-icons/tb'
 import { Badge } from '@repo/ui/components/ui/badge'
 import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
@@ -12,6 +12,7 @@ import { toast } from '@repo/ui/utils/toast'
 import {
   archiveForgeAiKnowledgeSource,
   indexKnowledgeSource,
+  reindexStaleKnowledgeSources,
   saveForgeAiKnowledgeSource
 } from './actions'
 
@@ -28,8 +29,24 @@ type Source = {
   indexed_at: string | null
   index_error: string | null
   embedding_model: string | null
+  current_version: number
+  indexed_version: number | null
+  retrieval_mode: 'hybrid' | 'lexical' | null
   updated_at: string
 }
+
+export type KnowledgeVersion = {
+  source_id: string
+  version_number: number
+  origin: 'manual' | 'upload'
+  file_name: string | null
+  extractor: string | null
+  page_count: number | null
+  change_note: string | null
+  created_at: string
+}
+
+const UPLOAD_ACCEPT = '.pdf,.docx,.md,.markdown,.txt'
 
 type KnowledgeDraft = {
   title: string
@@ -49,10 +66,19 @@ const blankDraft: KnowledgeDraft = {
   contentText: ''
 }
 
-const KnowledgeManager = ({ sources }: { sources: Source[] }) => {
+const KnowledgeManager = ({ sources, versions }: { sources: Source[]; versions: KnowledgeVersion[] }) => {
   const [pending, startTransition] = useTransition()
+  const [uploading, setUploading] = useState(false)
+  const fileInput = useRef<HTMLInputElement>(null)
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(sources[0]?.id || null)
+
+  // After an upload the page reloads with ?source=<id>; open that source.
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get('source')
+
+    if (requested && sources.some(source => source.id === requested)) setSelectedId(requested)
+  }, [sources])
   const [creating, setCreating] = useState(sources.length === 0)
   const [newDraft, setNewDraft] = useState(blankDraft)
   const [drafts, setDrafts] = useState<Record<string, KnowledgeDraft>>(
@@ -114,6 +140,58 @@ const KnowledgeManager = ({ sources }: { sources: Source[] }) => {
 
       if ('error' in result) {
         toast('error', result.error || 'Unable to index knowledge source.')
+        return
+      }
+
+      toast('success', result.message)
+      window.location.reload()
+    })
+  }
+
+  // Upload a file as a new source (no source) or as a new version of an existing one.
+  const upload = async (file: File, draft: KnowledgeDraft, source?: Source) => {
+    const form = new FormData()
+
+    form.set('file', file)
+    if (source) form.set('sourceId', source.id)
+    if (draft.title.trim()) form.set('title', draft.title.trim())
+    form.set('sourceType', draft.sourceType === 'url' ? 'document' : draft.sourceType)
+    form.set('sensitivity', draft.sensitivity)
+    if (draft.description.trim()) form.set('description', draft.description.trim())
+    if (draft.sourceReference.trim()) form.set('sourceReference', draft.sourceReference.trim())
+
+    setUploading(true)
+
+    try {
+      const response = await fetch('/api/forge-ai/knowledge/upload', { method: 'POST', body: form })
+      const result = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        toast('error', result.error || 'Upload failed.')
+
+        return
+      }
+
+      toast(
+        result.indexError ? 'error' : 'success',
+        result.indexError
+          ? 'Uploaded version ' + result.version + ', but indexing failed: ' + result.indexError
+          : 'Uploaded version ' + result.version + (result.index ? ' and indexed ' + result.index.chunkCount + ' chunk(s).' : '.')
+      )
+      window.location.assign('/ai/knowledge?source=' + result.sourceId)
+    } finally {
+      setUploading(false)
+      if (fileInput.current) fileInput.current.value = ''
+    }
+  }
+
+  const reindexStale = () => {
+    startTransition(async () => {
+      const result = await reindexStaleKnowledgeSources()
+
+      if ('error' in result) {
+        toast('error', result.error || 'Unable to re-index knowledge.')
+
         return
       }
 
@@ -219,17 +297,45 @@ const KnowledgeManager = ({ sources }: { sources: Source[] }) => {
             />
             <p className='text-textSecondary mt-2 text-xs'>Saving content does not automatically publish it to AI search. Index or reindex after review.</p>
           </div>
+
+          <div className='md:col-span-2 rounded-lg border border-dashed p-4'>
+            <div className='flex flex-wrap items-center justify-between gap-3'>
+              <div>
+                <div className='font-semibold'>{source ? 'Upload a new version' : 'Or upload a file'}</div>
+                <div className='text-textSecondary text-xs'>
+                  PDF, Word (.docx), Markdown or text, up to 10 MB. Forge extracts the text, keeps it as a numbered version and indexes it.
+                  Scanned PDFs need OCR first.
+                </div>
+              </div>
+              <input
+                ref={fileInput}
+                type='file'
+                accept={UPLOAD_ACCEPT}
+                className='hidden'
+                aria-label='Knowledge file'
+                onChange={event => {
+                  const file = event.target.files?.[0]
+
+                  if (file) void upload(file, draft, source)
+                }}
+              />
+              <Button variant='outline' onClick={() => fileInput.current?.click()} disabled={pending || uploading}>
+                <TbFileUpload />
+                {uploading ? 'Uploading...' : 'Choose File'}
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
       {source ? (
         <Card>
           <CardHeader>
-            <CardTitle>Semantic Index</CardTitle>
-            <CardDescription>Forge converts this approved text into tenant-isolated semantic search chunks.</CardDescription>
+            <CardTitle>Search Index</CardTitle>
+            <CardDescription>Forge splits the approved text into tenant-isolated chunks for full-text search, plus semantic search when an embedding provider is configured.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className='grid gap-4 md:grid-cols-4'>
+            <div className='grid gap-4 sm:grid-cols-2 md:grid-cols-5'>
               <div>
                 <div className='text-textSecondary text-xs uppercase'>Status</div>
                 <div className='mt-1'><Badge size='sm' variant={source.status === 'active' ? 'tonalSuccess' : source.status === 'failed' ? 'destructive' : 'secondary'}>{source.status}</Badge></div>
@@ -239,8 +345,19 @@ const KnowledgeManager = ({ sources }: { sources: Source[] }) => {
                 <div className='mt-1 font-semibold'>{source.chunk_count || 0}</div>
               </div>
               <div>
-                <div className='text-textSecondary text-xs uppercase'>Embedding Model</div>
-                <div className='mt-1 font-semibold'>{source.embedding_model || 'Not indexed'}</div>
+                <div className='text-textSecondary text-xs uppercase'>Version</div>
+                <div className='mt-1 font-semibold'>
+                  {source.current_version ? 'v' + source.current_version : 'None'}
+                  {source.current_version && source.indexed_version !== source.current_version ? (
+                    <Badge size='sm' variant='accent' className='ms-2'>Not indexed</Badge>
+                  ) : null}
+                </div>
+              </div>
+              <div>
+                <div className='text-textSecondary text-xs uppercase'>Search Mode</div>
+                <div className='mt-1 font-semibold'>
+                  {source.retrieval_mode === 'hybrid' ? 'Full-text + semantic' : source.retrieval_mode === 'lexical' ? 'Full-text' : 'Not indexed'}
+                </div>
               </div>
               <div>
                 <div className='text-textSecondary text-xs uppercase'>Last Indexed</div>
@@ -256,6 +373,31 @@ const KnowledgeManager = ({ sources }: { sources: Source[] }) => {
               <Button onClick={() => reindex(source)} disabled={pending}><TbSparkles />{source.indexed_at ? 'Reindex Knowledge' : 'Index Knowledge'}</Button>
               <Button variant='destructive' onClick={() => archive(source)} disabled={pending}><TbArchive />Archive</Button>
             </div>
+
+            {versions.some(version => version.source_id === source.id) ? (
+              <div className='mt-6'>
+                <div className='text-textSecondary mb-2 text-xs uppercase'>Version History</div>
+                <div className='flex flex-col divide-y rounded-lg border'>
+                  {versions
+                    .filter(version => version.source_id === source.id)
+                    .map(version => (
+                      <div key={version.version_number} className='flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm'>
+                        <div className='min-is-0'>
+                          <span className='font-semibold'>v{version.version_number}</span>{' '}
+                          <span className='text-textSecondary'>
+                            {version.origin === 'upload' ? (version.file_name || 'Uploaded file') + (version.page_count ? ' · ' + version.page_count + ' pages' : '') : 'Edited in Forge'}
+                            {version.change_note ? ' · ' + version.change_note : ''}
+                          </span>
+                        </div>
+                        <div className='text-textSecondary flex items-center gap-2 text-xs'>
+                          {source.indexed_version === version.version_number ? <Badge size='sm' variant='tonalSuccess'>Indexed</Badge> : null}
+                          {new Date(version.created_at).toLocaleString()}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       ) : null}
@@ -272,6 +414,7 @@ const KnowledgeManager = ({ sources }: { sources: Source[] }) => {
               <Input value={search} onChange={event => setSearch(event.target.value)} placeholder='Search knowledge...' className='pl-10' />
             </div>
             <Button className='mt-3 w-full' variant='outline' onClick={() => setCreating(true)}><TbPlus />New Source</Button>
+            <Button className='mt-2 w-full' variant='outline' onClick={reindexStale} disabled={pending}><TbRefresh />Re-index Out-of-Date Sources</Button>
           </CardContent>
         </Card>
 
@@ -292,7 +435,10 @@ const KnowledgeManager = ({ sources }: { sources: Source[] }) => {
                   <Badge size='sm' variant={source.status === 'active' ? 'tonalSuccess' : source.status === 'failed' ? 'destructive' : 'secondary'}>{source.status}</Badge>
                 </div>
                 <div className='text-textSecondary mt-1 text-xs'>{source.source_type} · {source.sensitivity}</div>
-                <div className='text-textSecondary mt-1 text-xs'>{source.chunk_count || 0} indexed chunk(s)</div>
+                <div className='text-textSecondary mt-1 text-xs'>
+                  {source.current_version ? 'v' + source.current_version + ' · ' : ''}{source.chunk_count || 0} indexed chunk(s)
+                  {source.current_version && source.indexed_version !== source.current_version ? ' · needs indexing' : ''}
+                </div>
               </button>
             ))}
 
