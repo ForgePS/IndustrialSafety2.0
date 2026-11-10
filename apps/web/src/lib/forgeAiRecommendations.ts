@@ -451,6 +451,7 @@ export const getScopedForgeAiRecommendations = async ({
   ])
 
   const approvalById = new Map<string, any>((approvals || []).map((row: any) => [row.id, row]))
+
   // Module records (incidents, training, inspections, tasks, risks, observations) must be in the
   // viewer's own scoped list for that module. The other types are the source alert and its target,
   // which the viewer can already open because the source alert passed the AI Watch scope checks.
@@ -460,6 +461,7 @@ export const getScopedForgeAiRecommendations = async ({
     permissionByKey,
     types: scoped.flatMap(row => (row.evidence || []).map((item: any) => item.type))
   })
+
   const canSee = (item: { type: string; id: string; reference: string | null }) =>
     item.type in EVIDENCE_PERMISSIONS
       ? recordVisible(item)

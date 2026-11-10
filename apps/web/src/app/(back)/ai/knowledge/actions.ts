@@ -62,6 +62,7 @@ export const saveForgeAiKnowledgeSource = async (
     description: data.description || null,
     sensitivity: data.sensitivity,
     source_reference: data.sourceReference || null,
+
     // Changed text on an existing source is written with its new version, in one locked step.
     ...(before && contentChanged ? {} : { content_text: data.contentText }),
     content_hash: contentChanged ? null : before?.content_hash || contentHash,
