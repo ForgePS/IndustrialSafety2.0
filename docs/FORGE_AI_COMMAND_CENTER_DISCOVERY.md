@@ -87,7 +87,7 @@ New columns: `forge_ai_watch_alerts.acknowledged_by` and `notified_at`, plus a l
 
 ### Rollout
 
-New feature registry keys (`forge_ai.command_center`, `forge_ai.risk_intelligence`, `forge_ai.recommendations`), each a Creator toggle, default off for existing tenants and on for the Cypress Bend demo tenant. Existing `/ai` behaviour stays the same until the flag is on.
+As built, one feature key, `forge_ai_command_center`, gates all of it, rather than the three keys first planned. It requires an entitlement: a tenant gets it from its plan or a Creator override, and it is on for the Cypress Bend demo tenant. Existing `/ai` chat behaviour is unchanged when it is off. See the Stage 5 section for what the flag controls.
 
 ## 4. Constraints and open decisions
 
@@ -104,7 +104,7 @@ New feature registry keys (`forge_ai.command_center`, `forge_ai.risk_intelligenc
 | 2 Orchestrator, 8 agents, knowledge engine | Done on `feat/forge-ai-agents` |
 | 3 Risk intelligence and proactive monitoring | Done on `feat/forge-ai-risk-monitoring` |
 | 4 Recommendations and approvals | Done on `feat/forge-ai-recommendations` |
-| 5 Command Center UI, security suite, docs, completion report | Next |
+| 5 Command Center UI, security suite, docs, completion report | Done on `feat/forge-ai-command-center-ui` |
 
 Stage 1 tests: `tests/forge-ai-foundation.test.cjs` (19 unit tests), `tests/forge-ai-foundation-db.cjs` (21 database checks, including cross-tenant retention), `tests/forge-ai-pipeline.spec.cjs` (4 end-to-end checks through `/api/forge-ai/chat` with the guarded test provider). All three run in CI.
 
@@ -234,3 +234,60 @@ Stage 4 tests:
 | `tests/forge-ai-recommendations.spec.cjs` | 8 end-to-end checks covering: <ul><li>generation from the seeded alerts and Main Plant's elevated indicator, with no duplicates on a second run;</li><li>sending a corrective action for approval, approving it and the record it creates;</li><li>automatic verification only once the corrective action and alert show it worked;</li><li>an advisory recommendation accepted, done and verified by a person;</li><li>dismiss with a reason and no immediate return;</li><li>a rejected action;</li><li>the monitoring agent tool;</li><li>access for unpermitted and other-tenant users.</li></ul> |
 
 All three run in CI.
+
+Stage 5 adds:
+
+- **Command Center** (`/ai/command-center`)
+  - Tiles:
+    - open high and critical alerts;
+    - facilities and divisions at Elevated or High;
+    - recommendations to review;
+    - recommendations awaiting verification;
+    - AI actions pending approval, shown only with `forge_ai.approve_actions`.
+  - An alert center: high and critical Watch alerts, acknowledged through the normal Watch action.
+  - The five highest risk indicators.
+  - The newest open recommendations, with the same approve, reject and follow-up controls as the full page.
+  - The user's own recent assistant activity: agent, status, tool calls and time.
+  - A 30-day tenant usage summary, shown only with `forge_ai.view_usage`.
+  - Every section reads through the same scoped helper as its own page, so it never shows more than those pages do.
+  - Linked first in the Forge AI sidebar.
+- **Header assistant** (`src/components/forge-ai/ForgeAiGlobalAssistant.tsx`)
+  - A Forge AI button in the header on every page, also opened with Ctrl+J (Cmd+J on a Mac).
+  - On a record page (incident, inspection, asset, person, training course, QR code, LOTO procedure, task) it sends that record as context, and the server re-checks access before loading it.
+  - Elsewhere it offers prompts for the area the user is in.
+  - Hidden on `/ai`, which already is the assistant. Hidden for users without `forge_ai.use`, and when the tenant has switched the assistant off.
+  - The record-page Ask Forge AI button and the header use one shared chat panel (`ForgeAiAssistantPanel.tsx`).
+- **Rollout flag** (migration `20261109140000_forge_ai_command_center_rollout.sql`)
+  - `forge_ai.view_risk`, `forge_ai.view_recommendations` and `forge_ai.review_recommendations` now belong to the `forge_ai_command_center` feature. Without it they resolve as unavailable, so their pages, agent tools and actions are refused by the normal permission checks.
+  - The Command Center, Risk Indicators and Recommendations pages also redirect when the feature is off.
+  - The monitoring cycle skips risk scoring, recommendation generation and verification for that tenant. Watch rules still run, because AI Watch belongs to the base `forge_ai` feature. The scheduler output reports `commandCenter` per tenant.
+
+### Environment configuration
+
+All server-only. None may carry a `NEXT_PUBLIC_` prefix.
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `OPENAI_API_KEY` | For live answers | The model provider key. Without it, chat returns a configuration error; deterministic features (Watch, risk, recommendations, approvals) still work |
+| `FORGE_AI_MODEL` | No | Default model when the tenant and model registry name none |
+| `FORGE_AI_EMBEDDING_MODEL` | No | Knowledge embeddings. Defaults to `text-embedding-3-small` |
+| `FORGE_AI_CRON_SECRET` | For the scheduler | Bearer secret for `/api/forge-ai/watch/cron`. Without it the endpoint refuses every call |
+| `FORGE_AI_TEST_PROVIDER`, `FORGE_AI_PROVIDER_OVERRIDE` | Tests only | The scripted test provider used in CI. It is refused when `VERCEL_ENV` or `FORGE_DEPLOY_ENV` is `production`. Never set these in a hosted environment |
+
+### Deployment
+
+1. Apply the migrations in order: `20261109100000` to `20261109140000`.
+2. Set the variables above. Use a long random `FORGE_AI_CRON_SECRET`.
+3. In Creator, give the `forge_ai` and `forge_ai_command_center` features to the tenants that should have them. Existing tenants get nothing new until then.
+4. Schedule the two cron calls (see Scheduler above), for example with Vercel cron, a GitHub Actions schedule or an AWS EventBridge rule sending the bearer header.
+5. Check one tenant end to end: the Command Center loads, the daily call returns `success: true` for it, and a test question in the header assistant gets a cited answer.
+
+Stage 5 tests:
+
+| Suite | Coverage |
+|---|---|
+| `tests/forge-ai-command-center.test.cjs` | 3 unit tests: record context for each record page, non-record and malformed paths, area prompts |
+| `tests/forge-ai-security-db.cjs` | Every `forge_ai` table and function, found from the catalog so new ones are covered automatically: RLS on with no client policies; anon and a signed-in owner cannot read, insert, update or delete; no function callable by clients; the service role still reads |
+| `tests/forge-ai-security.spec.cjs` | 5 end-to-end checks covering: <ul><li>a location supervisor sees an alert at their facility on the Command Center and through the agent, and loses it once it belongs to another facility, while the owner keeps it;</li><li>approvals and usage hidden without their permissions;</li><li>acknowledging from the alert center;</li><li>the feature turned off: pages closed, agent tool refused, risk and recommendations skipped by the cycle, then restored;</li><li>the header assistant opening by click and Ctrl+J, carrying an asset as context, and hidden on `/ai`;</li><li>a viewer with company-wide AI access but location-limited incident and review rights seeing no incident evidence from another facility and unable to dismiss a recommendation there;</li><li>a member without `forge_ai.use` getting neither the assistant nor the Command Center.</li></ul> |
+
+All three run in CI. The completion report is `docs/FORGE_AI_COMMAND_CENTER_COMPLETION_REPORT.md`.

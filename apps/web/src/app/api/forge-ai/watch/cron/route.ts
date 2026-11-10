@@ -109,6 +109,7 @@ const runScheduledWatch = async (request: Request) => {
         organizationId,
         success: true,
         ...cycle.watch,
+        commandCenter: cycle.commandCenter,
         riskScopes: cycle.risk.scopes.length,
         recommendations: cycle.recommendations.created,
         verified: cycle.verification.verified,

@@ -2,6 +2,7 @@ import { createServiceRoleClient } from '@repo/supabase/server'
 
 import { recordForgeAiAudit } from '@/lib/forgeAiExecution'
 import { generateForgeAiRecommendations, verifyForgeAiRecommendations } from '@/lib/forgeAiRecommendations'
+import { COMMAND_CENTER_FEATURE, isTenantFeatureAvailable } from '@/lib/forgeFeatureAvailability'
 import { runForgeAiRiskAssessments } from '@/lib/forgeAiRisk'
 import { runForgeAiWatch } from '@/lib/forgeAiWatch'
 import { getScopedForgeAiWatchAlerts } from '@/lib/forgeAiWatchAccess'
@@ -229,7 +230,8 @@ export const notifyForgeAiWatchAlerts = async ({ organizationId }: { organizatio
 
 // One full monitoring cycle for a tenant: refresh risk indicators (so the elevated-risk rule
 // sees current scores), evaluate every Watch rule, turn the results into recommendations and
-// verify finished ones, then notify.
+// verify finished ones, then notify. Risk scoring and recommendations are Command Center
+// features: a tenant without the Command Center gets the Watch rules and notifications only.
 export const runForgeAiMonitoringCycle = async ({
   organizationId,
   triggerType,
@@ -239,7 +241,11 @@ export const runForgeAiMonitoringCycle = async ({
   triggerType: 'manual' | 'scheduled' | 'event'
   actorUserId?: string | null
 }) => {
-  const risk = await runForgeAiRiskAssessments({ organizationId, triggerType, actorUserId })
+  const commandCenter = await isTenantFeatureAvailable({ organizationId, featureKey: COMMAND_CENTER_FEATURE })
+
+  const risk = commandCenter
+    ? await runForgeAiRiskAssessments({ organizationId, triggerType, actorUserId })
+    : { modelVersion: null, scopes: [] as Awaited<ReturnType<typeof runForgeAiRiskAssessments>>['scopes'] }
 
   const watch = await runForgeAiWatch({
     organizationId,
@@ -247,11 +253,17 @@ export const runForgeAiMonitoringCycle = async ({
     startedBy: actorUserId
   })
 
-  const recommendations = await generateForgeAiRecommendations({ organizationId, actorUserId })
-  const verification = await verifyForgeAiRecommendations({ organizationId })
+  const recommendations = commandCenter
+    ? await generateForgeAiRecommendations({ organizationId, actorUserId })
+    : { candidates: 0, created: 0, superseded: 0 }
+
+  const verification = commandCenter
+    ? await verifyForgeAiRecommendations({ organizationId })
+    : { checked: 0, verified: 0, failed: 0, overdue: 0 }
+
   const notified = await notifyForgeAiWatchAlerts({ organizationId })
 
-  return { risk, watch, recommendations, verification, notified }
+  return { commandCenter, risk, watch, recommendations, verification, notified }
 }
 
 // Event-driven monitoring: run a cycle for each tenant that has new domain events (incident

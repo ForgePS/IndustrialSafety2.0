@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { TbGauge } from 'react-icons/tb'
 import { Button } from '@repo/ui/components/ui/button'
@@ -6,12 +7,16 @@ import { Button } from '@repo/ui/components/ui/button'
 import ForgeAiRiskPanel from './ForgeAiRiskPanel'
 import { getScopedForgeAiRiskAssessments } from '@/lib/forgeAiRisk'
 import { getEffectiveTenantAccess } from '@/lib/forgeEffectiveAccess'
+import { commandCenterAvailable } from '@/lib/forgeFeatureAvailability'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 
 export const metadata: Metadata = { title: 'Forge AI Risk Indicators' }
 
 const ForgeAiRiskPage = async () => {
   const context = await requireTenantPermission('forge_ai.view_risk')
+
+  if (!commandCenterAvailable(context.access.effective)) redirect('/ai')
+
   const organizationId = context.activeOrganization.id
   const access = await getEffectiveTenantAccess({ organizationId, userId: context.user.id })
   const permissionByKey = new Map(access.effective.map(item => [item.permissionKey, item]))
