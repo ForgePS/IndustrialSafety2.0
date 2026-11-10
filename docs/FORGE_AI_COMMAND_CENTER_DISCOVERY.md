@@ -103,8 +103,8 @@ New feature registry keys (`forge_ai.command_center`, `forge_ai.risk_intelligenc
 | 1 Foundation: provider interface, timeouts and retries, tool allowlisting and argument validation, structured output, prompt versions, agent runs, model registry, unified AI audit, retention, rollout flag | Done on `feat/forge-ai-command-center` |
 | 2 Orchestrator, 8 agents, knowledge engine | Done on `feat/forge-ai-agents` |
 | 3 Risk intelligence and proactive monitoring | Done on `feat/forge-ai-risk-monitoring` |
-| 4 Recommendations and approvals | Next |
-| 5 Command Center UI, security suite, docs, completion report | Pending |
+| 4 Recommendations and approvals | Done on `feat/forge-ai-recommendations` |
+| 5 Command Center UI, security suite, docs, completion report | Next |
 
 Stage 1 tests: `tests/forge-ai-foundation.test.cjs` (19 unit tests), `tests/forge-ai-foundation-db.cjs` (21 database checks, including cross-tenant retention), `tests/forge-ai-pipeline.spec.cjs` (4 end-to-end checks through `/api/forge-ai/chat` with the guarded test provider). All three run in CI.
 
@@ -185,7 +185,7 @@ Stage 3 adds:
 
 | Call | What it does | Suggested schedule |
 |---|---|---|
-| `POST /api/forge-ai/watch/cron` | Full cycle for every entitled tenant: risk indicators, then every Watch rule, then notifications | Daily |
+| `POST /api/forge-ai/watch/cron` | Full cycle for every entitled tenant: risk indicators, every Watch rule, recommendations and their verification, then notifications | Daily |
 | `POST /api/forge-ai/watch/cron?mode=events` | A cycle only for tenants with new domain events | Every 5–15 minutes |
 
 No hosted scheduler is configured yet. Point a Vercel cron, GitHub Actions schedule or AWS EventBridge rule at these URLs once the 2.0 deployment exists.
@@ -197,5 +197,40 @@ Stage 3 tests:
 | `tests/forge-ai-risk-monitoring.test.cjs` | 14 unit tests: scoring, re-weighting, insufficient data, bands, evidence caps, injury rate and trend maths, recurring/trend/training-gap detection, routing thresholds, agent tool allowlist |
 | `tests/forge-ai-risk-monitoring-db.cjs` | 23 database checks: new tables closed to clients, model, rules, permission and capability registered, incident outbox trigger, route constraints |
 | `tests/forge-ai-risk-monitoring.spec.cjs` | 7 end-to-end checks covering: <ul><li>scheduler auth;</li><li>scoring on the seeded plant, including an empty site left unscored;</li><li>new-rule alerts and notification dedupe;</li><li>an event-driven run after an incident is submitted, with a route to a role that cannot see alerts receiving nothing;</li><li>the Risk Indicators page for permitted, unpermitted and other-tenant users;</li><li>the risk agent tool;</li><li>acknowledging an alert.</li></ul> |
+
+All three run in CI.
+
+Stage 4 adds:
+
+- **Recommendations** (`src/lib/forgeAiRecommendationRules.ts`, `src/lib/forgeAiRecommendations.ts`, `/ai/recommendations`)
+  - Built on each monitoring cycle, or with Refresh Recommendations, from two sources only:
+    - open Watch alerts whose rule has a mapping (failed inspection, serious or recurring incidents, high-risk observation, critical or overdue findings, training gap, overdue risk or LOTO review, asset condition);
+    - the top three factors driving an Elevated or High risk indicator, when a factor is at least half way to saturation.
+  - Each one keeps its rationale (the alert summary, or the score and the factor's own detail), the records behind it, its source alert or assessment, and how it will be verified.
+  - Kinds: corrective action, review, training, maintenance, escalation. Priority comes from the alert severity or the risk band.
+  - Only one live recommendation exists per condition. A dismissed or rejected one is not proposed again for 30 days. A proposal nobody acted on is marked cleared when its condition goes away.
+- **Lifecycle** (`forge_ai_recommendations`, with every change in the append-only `forge_ai_recommendation_events`)
+  - proposed → in review (action queued) → executing → executed → verified, or rejected, failed, dismissed or cleared.
+  - Advisory recommendations (no proposed action) are accepted, then marked done by a person with a note.
+  - A proposed action never runs directly. It is queued in the existing approval engine (`forge_ai_action_approvals`) and shows in Forge AI Actions too. Approval re-checks the requester's and the approver's module permission and location scope at execution.
+  - A database trigger moves the recommendation with its approval (executing, executed, failed, rejected; an expired approval returns it to proposed), so approving from either page gives the same result.
+- **New approved action:** `corrective_action.create` creates an open corrective action and its linked task through the Corrective Actions module, as the approver. It never assigns, completes or verifies one. Requests from recommendations wait 7 days for approval.
+- **Verification**
+  - Checked automatically on each cycle against the same facts: the corrective action is verified or closed (and not found ineffective), the source alert has resolved, or the factor's value fell on a recalculation after the work was done.
+  - All checks met → verified. A corrective action verified as ineffective → failed. Otherwise it waits, and is flagged once 14 days pass.
+  - A reviewer can confirm a result as effective or not effective, with a note. The automatic checks are kept beside it.
+- **Access**
+  - `forge_ai.view_recommendations` to see them; `forge_ai.review_recommendations` to accept, dismiss, mark done and verify. Sending an action for approval also needs `forge_ai.run_actions`, and approving or rejecting it needs `forge_ai.approve_actions`, as in the action queue.
+  - A viewer sees a recommendation only when their scope covers its location or division and they can see its source alert in AI Watch or its scope in Risk Indicators. Evidence from modules they cannot open is hidden.
+  - Supervisors and location administrators get both permissions at location scope; owners and administrators at organization scope.
+- **Agent tool:** `get_recommendations` (read-only) for the Risk, Monitoring and Reporting agents. "Recommend" routes to the Monitoring agent.
+
+Stage 4 tests:
+
+| Suite | Coverage |
+|---|---|
+| `tests/forge-ai-recommendations.test.cjs` | 15 unit tests: alert and factor mappings, evidence and rationale, thresholds and the top-three limit, division targeting, duplicate and cool-down rules, every verification check, agent allowlist and routing |
+| `tests/forge-ai-recommendations-db.cjs` | 25 database checks: tables and functions closed to clients, permissions, tool, action and tenant enablement registered, the approval trigger for each status, append-only history, one live recommendation per condition |
+| `tests/forge-ai-recommendations.spec.cjs` | 8 end-to-end checks covering: <ul><li>generation from the seeded alerts and Main Plant's elevated indicator, with no duplicates on a second run;</li><li>sending a corrective action for approval, approving it and the record it creates;</li><li>automatic verification only once the corrective action and alert show it worked;</li><li>an advisory recommendation accepted, done and verified by a person;</li><li>dismiss with a reason and no immediate return;</li><li>a rejected action;</li><li>the monitoring agent tool;</li><li>access for unpermitted and other-tenant users.</li></ul> |
 
 All three run in CI.

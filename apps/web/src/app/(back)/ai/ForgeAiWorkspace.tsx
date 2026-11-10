@@ -12,6 +12,7 @@ import {
   TbPin,
   TbPinned,
   TbGauge,
+  TbBulb,
   TbRadar,
   TbReportAnalytics,
   TbShieldCheck,
@@ -100,6 +101,7 @@ const ForgeAiWorkspace = ({
   canUseActions,
   canViewWatch,
   canViewRisk = false,
+  canViewRecommendations = false,
   canViewAnalytics
 }: {
   assistantName: string
@@ -115,6 +117,7 @@ const ForgeAiWorkspace = ({
   canUseActions: boolean
   canViewWatch: boolean
   canViewRisk?: boolean
+  canViewRecommendations?: boolean
   canViewAnalytics: boolean
 }) => {
   const router = useRouter()
@@ -345,6 +348,15 @@ const ForgeAiWorkspace = ({
                 <Link href='/ai/risk'>
                   <TbGauge />
                   Risk Indicators
+                </Link>
+              </Button>
+            ) : null}
+
+            {canViewRecommendations ? (
+              <Button className='mt-2 w-full' variant='outline' asChild>
+                <Link href='/ai/recommendations'>
+                  <TbBulb />
+                  Recommendations
                 </Link>
               </Button>
             ) : null}

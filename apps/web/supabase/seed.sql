@@ -1618,7 +1618,7 @@ select
   false,
   '{"local_demo":true}'::jsonb
 from public.forge_ai_action_registry a
-where a.action_key in ('inspection.create_finding','asset.add_maintenance')
+where a.action_key in ('inspection.create_finding','asset.add_maintenance','corrective_action.create')
 on conflict (organization_id, action_id) do update
 set enabled=true,
     tenant_can_configure=false,

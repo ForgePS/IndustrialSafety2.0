@@ -63,7 +63,9 @@ export const runForgeAiWatchNow = async () => {
         result.alertsResolved +
         ' resolved, ' +
         cycle.notified.deliveries +
-        ' notification(s) sent.'
+        ' notification(s) sent, ' +
+        cycle.recommendations.created +
+        ' new recommendation(s).'
     }
   } catch (error) {
     return {

@@ -9,6 +9,8 @@ import {
   resolveRequesterJsaCreateScope
 } from '@/lib/forgeJsaAssignment'
 import { getEffectiveLookup } from '@/lib/forgeLookups'
+import { correctiveActionWithinScope } from '@/lib/forgeCorrectiveActions'
+import { createCorrectiveAction } from '@/app/(back)/corrective-actions/actions'
 
 export type ForgeAiBoundRecordContext = {
   type: 'incident' | 'inspection' | 'asset' | 'personnel' | 'training_course' | 'qr' | 'loto' | 'task'
@@ -365,6 +367,175 @@ export const prepareForgeAiAction = async ({
   }
 }
 
+export const validateCorrectiveActionAiPayload = async ({
+  organizationId,
+  payload
+}: {
+  organizationId: string
+  payload: Record<string, unknown>
+}): Promise<{ payload: Record<string, string | boolean | null> } | { error: string }> => {
+  const title = cleanText(payload.title)
+  const description = cleanText(payload.description)
+  const actionType = cleanText(payload.action_type) || 'corrective'
+  const severity = cleanText(payload.severity) || 'moderate'
+  const sourceType = cleanText(payload.source_type) || 'other'
+
+  if (!title) return { error: 'Corrective action title is required.' }
+  if (!description) return { error: 'Corrective action description is required.' }
+
+  const [types, severities, sources] = await Promise.all([
+    getEffectiveLookup({ organizationId, lookupKey: 'corrective_actions.type' }),
+    getEffectiveLookup({ organizationId, lookupKey: 'corrective_actions.severity' }),
+    getEffectiveLookup({ organizationId, lookupKey: 'corrective_actions.source_type' })
+  ])
+
+  if (!types.options.some(option => option.key === actionType)) return { error: 'Corrective action type is not valid for this tenant.' }
+  if (!severities.options.some(option => option.key === severity)) return { error: 'Corrective action severity is not valid for this tenant.' }
+
+  return {
+    payload: {
+      title: title.slice(0, 200),
+      description: description.slice(0, 4000),
+      action_type: actionType,
+      severity,
+      source_type: sources.options.some(option => option.key === sourceType) ? sourceType : 'manual',
+      source_reference: cleanText(payload.source_reference),
+      location_id: cleanText(payload.location_id),
+      division_id: cleanText(payload.division_id),
+      immediate_containment: cleanText(payload.immediate_containment),
+      root_cause_required: payload.root_cause_required === true,
+      preventive_action: cleanText(payload.preventive_action)
+    }
+  }
+}
+
+const correctiveActionPayloadWithinScope = async ({
+  organizationId,
+  userId,
+  scope,
+  payload
+}: {
+  organizationId: string
+  userId: string
+  scope: string | null
+  payload: Record<string, unknown>
+}) =>
+  correctiveActionWithinScope({
+    organizationId,
+    userId,
+    scope,
+    action: {
+      organization_id: organizationId,
+      assigned_user_id: null,
+      created_by: null,
+      location_id: cleanText(payload.location_id),
+      division_id: cleanText(payload.division_id)
+    }
+  })
+
+// Recommendation approvals wait longer than chat approvals: they are reviewed from a queue.
+export const RECOMMENDATION_APPROVAL_HOURS = 24 * 7
+
+/**
+ * Queue an action proposed by a Forge AI recommendation for human approval. Nothing is written
+ * to the target module until an authorized user approves it in the approval engine.
+ */
+export const prepareRecommendationAction = async ({
+  organizationId,
+  userId,
+  permissionByKey,
+  actionKey,
+  rawPayload,
+  recommendationId,
+  recommendationTitle
+}: {
+  organizationId: string
+  userId: string
+  permissionByKey: Map<string, EffectivePermission>
+  actionKey: string
+  rawPayload: Record<string, unknown>
+  recommendationId: string
+  recommendationTitle: string
+}): Promise<{ approvalId: string; payload: Record<string, unknown> } | { error: string }> => {
+  if (actionKey !== 'corrective_action.create') return { error: 'This recommendation action does not have an executor.' }
+
+  const supabase = createServiceRoleClient() as any
+
+  const { data: action } = await supabase
+    .from('forge_ai_action_registry')
+    .select('*')
+    .eq('action_key', actionKey)
+    .eq('platform_enabled', true)
+    .maybeSingle()
+
+  if (!action) return { error: 'The proposed action is not available.' }
+
+  const { data: tenantAction } = await supabase
+    .from('forge_ai_tenant_actions')
+    .select('enabled')
+    .eq('organization_id', organizationId)
+    .eq('action_id', action.id)
+    .maybeSingle()
+
+  if (!tenantAction?.enabled) return { error: 'Your organization has not enabled the ' + action.name + ' AI action.' }
+
+  const permission = permissionFor(permissionByKey, action.required_permission_key)
+
+  if (!permission) return { error: 'You do not have the ' + action.required_permission_key + ' permission this action needs.' }
+
+  const validated = await validateCorrectiveActionAiPayload({ organizationId, payload: rawPayload })
+
+  if ('error' in validated) return validated
+
+  const inScope = await correctiveActionPayloadWithinScope({
+    organizationId,
+    userId,
+    scope: permission.scope,
+    payload: validated.payload
+  })
+
+  if (!inScope) return { error: 'The corrective action location is outside your permission scope.' }
+
+  const expiresAt = new Date(Date.now() + RECOMMENDATION_APPROVAL_HOURS * 3_600_000).toISOString()
+  const riskSummary = 'This will create an open corrective action and its linked task after human approval. It does not assign, complete or verify it.'
+
+  const { data: approval, error } = await supabase
+    .from('forge_ai_action_approvals')
+    .insert({
+      organization_id: organizationId,
+      requested_by: userId,
+      action_key: action.action_key,
+      target_type: 'organization',
+      target_id: organizationId,
+      request_payload: { ...validated.payload, recommendation_id: recommendationId },
+      risk_summary: riskSummary,
+      status: 'pending',
+      approval_expires_at: expiresAt
+    })
+    .select('id')
+    .single()
+
+  if (error || !approval) return { error: error?.message || 'Unable to queue the action for approval.' }
+
+  await supabase.from('forge_creator_audit_log').insert({
+    actor_user_id: userId,
+    organization_id: organizationId,
+    action: 'forge_ai.action_requested',
+    entity_type: 'forge_ai_action_approval',
+    entity_id: approval.id,
+    after_value: {
+      action_key: action.action_key,
+      action_name: action.name,
+      recommendation_id: recommendationId,
+      recommendation_title: recommendationTitle,
+      request_payload: validated.payload,
+      approval_expires_at: expiresAt
+    }
+  })
+
+  return { approvalId: approval.id, payload: validated.payload }
+}
+
 const validateDraftJsaPayload = (payload: Record<string, unknown>) => {
   const title = cleanText(payload.title)
   if (!title) return { error: 'JSA title is required.' }
@@ -532,12 +703,14 @@ const validatePermissionAtExecution = async ({
   organizationId,
   userId,
   action,
-  target
+  target,
+  approval
 }: {
   organizationId: string
   userId: string
   action: ForgeAiAvailableAction
   target: any
+  approval: any
 }) => {
   const access = await getEffectiveTenantAccess({ organizationId, userId })
   const permission = access.effective.find(
@@ -545,6 +718,17 @@ const validatePermissionAtExecution = async ({
   )
 
   if (!permission) return false
+
+  if (action.action_key === 'corrective_action.create') {
+    if (target?.id !== organizationId) return false
+
+    return correctiveActionPayloadWithinScope({
+      organizationId,
+      userId,
+      scope: permission.scope,
+      payload: approval.request_payload || {}
+    })
+  }
 
   if (action.target_type === 'inspection') {
     return inspectionWithinScope({
@@ -759,6 +943,46 @@ const executeDraftJsa = async ({
   }
 }
 
+// Runs inside the approver's request: the Corrective Actions module checks the approver's own
+// create permission and scope again, and records the approver as the creator.
+const executeCorrectiveAction = async ({
+  organizationId,
+  approval
+}: {
+  organizationId: string
+  approval: any
+}) => {
+  const validated = await validateCorrectiveActionAiPayload({ organizationId, payload: approval.request_payload || {} })
+
+  if ('error' in validated) throw new Error(validated.error)
+
+  const values = Object.fromEntries(
+    Object.entries(validated.payload).map(([key, value]) => [key, typeof value === 'boolean' ? value : value || ''])
+  )
+
+  const created: any = await createCorrectiveAction(values)
+
+  if (!created || 'error' in created || !created.id) {
+    throw new Error(created?.error || 'Unable to create the corrective action.')
+  }
+
+  const supabase = createServiceRoleClient() as any
+
+  const { data: record } = await supabase
+    .from('forge_corrective_actions')
+    .select('id, action_number')
+    .eq('organization_id', organizationId)
+    .eq('id', created.id)
+    .maybeSingle()
+
+  return {
+    entity_type: 'corrective_action',
+    entity_id: created.id,
+    action_number: record?.action_number || null,
+    message: 'Corrective action ' + (record?.action_number || '') + ' created. It is open and still needs an owner, a root cause and verification.'
+  }
+}
+
 export const approveAndExecuteForgeAiAction = async ({
   organizationId,
   approverUserId,
@@ -820,13 +1044,15 @@ export const approveAndExecuteForgeAiAction = async ({
       organizationId,
       userId: approval.requested_by,
       action,
-      target
+      target,
+      approval
     }),
     validatePermissionAtExecution({
       organizationId,
       userId: approverUserId,
       action,
-      target
+      target,
+      approval
     })
   ])
 
@@ -874,6 +1100,11 @@ export const approveAndExecuteForgeAiAction = async ({
         organizationId,
         approval,
         actorUserId: approverUserId
+      })
+    } else if (approval.action_key === 'corrective_action.create') {
+      result = await executeCorrectiveAction({
+        organizationId,
+        approval
       })
     } else if (approval.action_key === 'jsa.create_draft') {
       result = await executeDraftJsa({
