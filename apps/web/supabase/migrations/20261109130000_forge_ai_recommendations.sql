@@ -121,7 +121,8 @@ create table if not exists public.forge_ai_recommendation_events (
 create index if not exists forge_ai_recommendation_events_rec_idx
   on public.forge_ai_recommendation_events (recommendation_id, id);
 
--- The event log is append-only. Rows go only when their tenant or recommendation is deleted.
+-- The event log is append-only. Rows go only when their tenant or recommendation is deleted. The
+-- one permitted update is the foreign key clearing actor_user_id when that user is deleted.
 create or replace function public.forge_ai_recommendation_events_append_only()
 returns trigger
 language plpgsql
@@ -129,7 +130,12 @@ set search_path = public
 as $$
 begin
   if tg_op = 'UPDATE' then
-    raise exception 'forge_ai_recommendation_events is append-only';
+    if (to_jsonb(new) - 'actor_user_id') is distinct from (to_jsonb(old) - 'actor_user_id')
+       or new.actor_user_id is not null then
+      raise exception 'forge_ai_recommendation_events is append-only';
+    end if;
+
+    return new;
   end if;
   if tg_op = 'DELETE' and pg_trigger_depth() < 2 then
     raise exception 'forge_ai_recommendation_events is append-only';
