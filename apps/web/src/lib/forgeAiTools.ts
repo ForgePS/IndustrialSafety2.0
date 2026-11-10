@@ -1499,14 +1499,18 @@ const executeToolValue = async ({
 export const executeForgeAiTool = async ({
   context,
   conversationId,
+  agentRunId = null,
   call
 }: {
   context: RuntimeContext
   conversationId: string
-  call: ForgeAiToolCall
+  agentRunId?: string | null
+  call: ForgeAiToolCall & { args?: Record<string, unknown> }
 }) => {
   const capability = context.capabilities.find(item => item.capability_key === call.name)
-  const args = parseArguments(call.arguments)
+
+  // The provider layer has already validated these arguments against the tool's strict schema.
+  const args: any = call.args ?? parseArguments(call.arguments)
   const supabase = createServiceRoleClient() as any
 
   if (!capability) {
@@ -1521,6 +1525,7 @@ export const executeForgeAiTool = async ({
     .insert({
       organization_id: context.activeOrganization.id,
       conversation_id: conversationId,
+      agent_run_id: agentRunId,
       user_id: context.user.id,
       capability_id: capability.id,
       capability_key: capability.capability_key,
