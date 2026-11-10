@@ -46,6 +46,7 @@ const NAV: Array<{ id: AgencySection; label: string; icon: string }> = [
   { id: "assignments", label: "Assignments", icon: "bx-send" },
   { id: "paper", label: "Paper quiz", icon: "bx-printer" },
   { id: "stats", label: "Team progress", icon: "bx-bar-chart-alt-2" },
+  { id: "missed", label: "Missed trainings", icon: "bx-error-circle" },
   { id: "records", label: "Records search", icon: "bx-search-alt" },
   { id: "sources", label: "Courses", icon: "bx-book-open" },
   { id: "materials", label: "Materials", icon: "bx-folder-open" },

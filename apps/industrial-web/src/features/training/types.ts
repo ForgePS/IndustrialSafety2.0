@@ -252,6 +252,9 @@ export type TrainingTeamSummary = {
 
     dueAt?: string | null;
 
+    /** When this person was added to the assignment. */
+    assignedAt?: string | null;
+
     completedAt?: string | null;
 
     updatedAt?: string | null;
