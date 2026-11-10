@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   SANITATION_MAX_QUESTION_PHOTOS,
   addSanitationResponsePhoto,
+  decodeSanitationPhoto,
+  sanitationPhotoObjectKey,
+  sanitationStoredPhotoKeys,
+  stripSanitationPhotoUrls,
   mergeSanitationResponses,
   parseSanitationPhoto,
   removeSanitationResponsePhoto,
@@ -66,5 +70,34 @@ describe("photo add/remove", () => {
   it("rejects non-image uploads", () => {
     expect(() => parseSanitationPhoto({ id: "x", dataUrl: "data:text/html;base64,AA" })).toThrow();
     expect(parseSanitationPhoto(photo("p1")).id).toBe("p1");
+  });
+});
+
+describe("S3 photo storage helpers", () => {
+  it("builds a tenant-scoped key and strips unsafe characters from the id", () => {
+    expect(sanitationPhotoObjectKey("t1", "i1", "ab/../c d", "image/jpeg")).toBe(
+      "tenants/t1/sanitation/inspections/i1/photos/ab_c_d.jpg",
+    );
+    expect(sanitationPhotoObjectKey("t1", "i1", "p", "image/png")).toMatch(/p\.png$/);
+  });
+
+  it("decodes the image bytes and type", () => {
+    const { body, contentType } = decodeSanitationPhoto(photo("p1"));
+    expect(contentType).toBe("image/jpeg");
+    expect(body.length).toBe(3);
+  });
+
+  it("never stores signed links and lists stored keys", () => {
+    const stored = { id: "p2", objectKey: "tenants/t/x.jpg", url: "https://signed" };
+    const r = { q1: { result: "FAIL", photos: [photo("p1"), stored] }, q2: { result: "PASS" } };
+    const clean = stripSanitationPhotoUrls(r);
+    expect((clean.q1 as { photos: unknown[] }).photos[1]).toEqual({
+      id: "p2",
+      objectKey: "tenants/t/x.jpg",
+    });
+    expect(stripSanitationPhotoUrls({ q2: { result: "PASS" } })).toEqual({
+      q2: { result: "PASS" },
+    });
+    expect(sanitationStoredPhotoKeys(r)).toEqual(["tenants/t/x.jpg"]);
   });
 });

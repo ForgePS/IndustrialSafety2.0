@@ -8,8 +8,8 @@
 
 import { ForgeError } from "@forge/errors";
 
-/** Same cap as the web checklist. */
-export const SANITATION_MAX_QUESTION_PHOTOS = 10;
+/** Same cap as the web checklist. Photos are stored in S3, so the inspection row stays small. */
+export const SANITATION_MAX_QUESTION_PHOTOS = 50;
 /** One compressed photo is ~1.2 MB as a data URL; leave headroom without allowing raw camera files. */
 export const SANITATION_MAX_PHOTO_DATA_URL_LENGTH = 4_000_000;
 
@@ -76,7 +76,7 @@ function photoId(photo: unknown): string {
 export function addSanitationResponsePhoto(
   responses: Record<string, unknown>,
   questionKey: string,
-  photo: SanitationResponsePhoto,
+  photo: SanitationResponsePhoto | SanitationStoredPhoto,
   answerFields: Record<string, unknown> = {},
 ): Record<string, unknown> {
   const entry = responses[questionKey];
@@ -104,4 +104,81 @@ export function removeSanitationResponsePhoto(
   const kept = photos.filter((p) => photoId(p) !== id);
   if (kept.length === photos.length) return responses;
   return { ...responses, [questionKey]: { ...entry, photos: kept } };
+}
+
+/** A photo stored in S3; the inspection keeps only this reference. */
+export type SanitationStoredPhoto = {
+  id: string;
+  fileName: string;
+  contentType: string;
+  objectKey: string;
+  sizeBytes: number;
+};
+
+/** Tenant-scoped S3 key for one checklist photo. */
+export function sanitationPhotoObjectKey(
+  tenantId: string,
+  inspectionId: string,
+  photoId: string,
+  contentType: string,
+): string {
+  const safeId = photoId.replace(/[^a-zA-Z0-9_-]+/g, "_").slice(0, 120) || "photo";
+  const ext = /png/i.test(contentType) ? "png" : /webp/i.test(contentType) ? "webp" : "jpg";
+  return `tenants/${tenantId}/sanitation/inspections/${inspectionId}/photos/${safeId}.${ext}`;
+}
+
+/** Decode an uploaded photo's data URL. */
+export function decodeSanitationPhoto(photo: SanitationResponsePhoto): {
+  body: Buffer;
+  contentType: string;
+} {
+  const match = /^data:(image\/[a-z0-9.+-]+);base64,(.*)$/is.exec(photo.dataUrl);
+  if (!match) throw new ForgeError("VALIDATION_FAILED", "photo.dataUrl must be an image data URL");
+  const body = Buffer.from(match[2]!, "base64");
+  if (!body.length) throw new ForgeError("VALIDATION_FAILED", "Photo is empty");
+  return { body, contentType: match[1]!.toLowerCase() };
+}
+
+/** Apply `change` to every photo object in the answers. Returns the same object if nothing changed. */
+export function mapSanitationPhotos(
+  responses: Record<string, unknown>,
+  change: (photo: Record<string, unknown>) => Record<string, unknown>,
+): Record<string, unknown> {
+  let changed = false;
+  const out: Record<string, unknown> = {};
+  for (const [key, entry] of Object.entries(responses)) {
+    if (!isObject(entry) || !Array.isArray(entry.photos)) {
+      out[key] = entry;
+      continue;
+    }
+    const photos = entry.photos.map((p) => {
+      if (!isObject(p)) return p;
+      const next = change(p);
+      if (next !== p) changed = true;
+      return next;
+    });
+    out[key] = { ...entry, photos };
+  }
+  return changed ? out : responses;
+}
+
+/** Signed links are added when an inspection is read; never store them. */
+export function stripSanitationPhotoUrls(
+  responses: Record<string, unknown>,
+): Record<string, unknown> {
+  return mapSanitationPhotos(responses, (photo) => {
+    if (!("url" in photo) || typeof photo.objectKey !== "string") return photo;
+    const { url: _url, ...rest } = photo;
+    return rest;
+  });
+}
+
+/** Photos stored in S3 (not inline) that still need a signed link or bytes. */
+export function sanitationStoredPhotoKeys(responses: Record<string, unknown>): string[] {
+  const keys = new Set<string>();
+  mapSanitationPhotos(responses, (photo) => {
+    if (typeof photo.objectKey === "string" && photo.objectKey) keys.add(photo.objectKey);
+    return photo;
+  });
+  return [...keys];
 }

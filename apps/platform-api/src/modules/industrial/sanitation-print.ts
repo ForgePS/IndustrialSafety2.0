@@ -128,7 +128,8 @@ export function buildSanitationInspectionPrintableHtml(
     const sources: PhotoSource[] = [];
     for (const p of photos) {
       const row = (p ?? {}) as Record<string, unknown>;
-      const dataUrl = plain(row.dataUrl);
+      // Photos stored in S3 carry a signed link instead of inline data.
+      const dataUrl = plain(row.dataUrl) || plain(row.url);
       if (!dataUrl) continue;
       const item: PhotoSource = {
         dataUrl,
