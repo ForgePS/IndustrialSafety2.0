@@ -4,7 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { createServiceRoleClient } from '@repo/supabase/server'
 import { getEffectiveTenantAccess } from '@/lib/forgeEffectiveAccess'
-import { runForgeAiWatch } from '@/lib/forgeAiWatch'
+import { recordForgeAiAudit } from '@/lib/forgeAiExecution'
+import { runForgeAiMonitoringCycle } from '@/lib/forgeAiWatchNotify'
 import { getScopedForgeAiWatchAlerts } from '@/lib/forgeAiWatchAccess'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 
@@ -12,7 +13,7 @@ const ruleSchema = z.object({
   ruleId: z.string().uuid(),
   enabled: z.boolean(),
   severityOverride: z.enum(['info','warning','high','critical']).nullable(),
-  config: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])),
+  config: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null(), z.array(z.string().max(40)).max(20)])),
   notificationMode: z.enum(['in_app','none'])
 })
 
@@ -44,11 +45,12 @@ export const runForgeAiWatchNow = async () => {
   const context = await requireTenantPermission('forge_ai.manage_watchers')
 
   try {
-    const result = await runForgeAiWatch({
+    const cycle = await runForgeAiMonitoringCycle({
       organizationId: context.activeOrganization.id,
       triggerType: 'manual',
-      startedBy: context.user.id
+      actorUserId: context.user.id
     })
+    const result = cycle.watch
 
     revalidatePath('/ai/watch')
     return {
@@ -59,7 +61,9 @@ export const runForgeAiWatchNow = async () => {
         result.alertsRefreshed +
         ' refreshed, ' +
         result.alertsResolved +
-        ' resolved.'
+        ' resolved, ' +
+        cycle.notified.deliveries +
+        ' notification(s) sent.'
     }
   } catch (error) {
     return {
@@ -205,4 +209,109 @@ export const dismissForgeAiWatchAlert = async (alertId: string) => {
 
   revalidatePath('/ai/watch')
   return { message: 'Alert dismissed.' }
+}
+
+const routeSchema = z.object({
+  ruleKey: z.string().regex(/^[a-z_.]+$/).nullable(),
+  minSeverity: z.enum(['info', 'warning', 'high', 'critical']),
+  recipientType: z.enum(['tenant_role', 'user']),
+  recipientId: z.string().uuid(),
+  channel: z.enum(['in_app', 'email'])
+})
+
+// Add an alert route. Recipients must belong to this tenant; they still only receive alerts
+// they are allowed to open.
+export const saveForgeAiAlertRoute = async (input: z.infer<typeof routeSchema>) => {
+  const context = await requireTenantPermission('forge_ai.manage_watchers')
+  const parsed = routeSchema.safeParse(input)
+
+  if (!parsed.success) return { error: 'Invalid alert route.' }
+
+  const organizationId = context.activeOrganization.id
+  const supabase = createServiceRoleClient() as any
+  const data = parsed.data
+
+  if (data.recipientType === 'tenant_role') {
+    const { data: role } = await supabase.from('forge_tenant_roles').select('id').eq('organization_id', organizationId).eq('id', data.recipientId).maybeSingle()
+
+    if (!role) return { error: 'Role not found in this company.' }
+  } else {
+    const { data: member } = await supabase
+      .from('organization_memberships')
+      .select('user_id')
+      .eq('organization_id', organizationId)
+      .eq('user_id', data.recipientId)
+      .eq('is_active', true)
+      .maybeSingle()
+
+    if (!member) return { error: 'User is not an active member of this company.' }
+  }
+
+  if (data.ruleKey) {
+    const { data: template } = await supabase.from('forge_ai_watch_rule_templates').select('id').eq('rule_key', data.ruleKey).maybeSingle()
+
+    if (!template) return { error: 'Unknown Watch rule.' }
+  }
+
+  const { data: route, error } = await supabase
+    .from('forge_ai_alert_routes')
+    .insert({
+      organization_id: organizationId,
+      rule_key: data.ruleKey,
+      min_severity: data.minSeverity,
+      recipient_type: data.recipientType,
+      tenant_role_id: data.recipientType === 'tenant_role' ? data.recipientId : null,
+      user_id: data.recipientType === 'user' ? data.recipientId : null,
+      channel: data.channel,
+      created_by: context.user.id,
+      updated_by: context.user.id
+    })
+    .select('id')
+    .single()
+
+  if (error || !route) return { error: error?.message || 'Unable to save the alert route.' }
+
+  await recordForgeAiAudit({
+    organizationId,
+    actorUserId: context.user.id,
+    eventType: 'watch.route_created',
+    resourceType: 'forge_ai_alert_route',
+    resourceId: route.id,
+    detail: data
+  })
+
+  revalidatePath('/ai/watch')
+
+  return { message: 'Alert route added.' }
+}
+
+export const deleteForgeAiAlertRoute = async (routeId: string) => {
+  const context = await requireTenantPermission('forge_ai.manage_watchers')
+
+  if (!z.string().uuid().safeParse(routeId).success) return { error: 'Invalid alert route.' }
+
+  const organizationId = context.activeOrganization.id
+  const supabase = createServiceRoleClient() as any
+  const { data: removed, error } = await supabase
+    .from('forge_ai_alert_routes')
+    .delete()
+    .eq('organization_id', organizationId)
+    .eq('id', routeId)
+    .select('id, rule_key, min_severity, recipient_type, tenant_role_id, user_id, channel')
+
+  if (error) return { error: error.message }
+  if (!removed?.length) return { error: 'Alert route not found.' }
+
+  await recordForgeAiAudit({
+    organizationId,
+    actorUserId: context.user.id,
+    eventType: 'watch.route_deleted',
+    resourceType: 'forge_ai_alert_route',
+    resourceId: routeId,
+    detail: removed[0]
+  })
+
+  revalidatePath('/ai/watch')
+
+  return { message: 'Alert route removed.' }
 }

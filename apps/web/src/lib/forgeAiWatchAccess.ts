@@ -7,6 +7,9 @@ import { getScopedInspections } from '@/lib/forgeInspections'
 import { getScopedAssets } from '@/lib/forgeAssets'
 import { getScopedLotoProcedures } from '@/lib/forgeLoto'
 import { getScopedTasks } from '@/lib/forgeTasks'
+import { listObservations } from '@/lib/forgeObservations'
+import { listRisks } from '@/lib/forgeRiskRegister'
+import { getScopedForgeAiRiskAssessments } from '@/lib/forgeAiRisk'
 
 type AccessContext = {
   organizationId: string
@@ -62,8 +65,12 @@ export const getScopedForgeAiWatchAlerts = async ({
   const assetPermission = permissionFor(permissionByKey, 'assets_equipment.view')
   const lotoPermission = permissionFor(permissionByKey, 'loto.view')
   const taskPermission = permissionFor(permissionByKey, 'tasks.view')
+  const observationPermission = permissionFor(permissionByKey, 'observations.view')
+  const riskPermission = permissionFor(permissionByKey, 'risk_register.view')
+  const riskIndicatorPermission = permissionFor(permissionByKey, 'forge_ai.view_risk')
+  const needs = (type: string) => scopeFiltered.some((alert: any) => alert.target_type === type)
 
-  const [training, incidents, inspections, assets, lotoProcedures, tasks] = await Promise.all([
+  const [training, incidents, inspections, assets, lotoProcedures, tasks, observations, risks, riskAssessments] = await Promise.all([
     trainingPermission
       ? getTrainingOverview({ organizationId, userId, permission: trainingPermission })
       : Promise.resolve({ assignments: [], courses: [], completions: [] }),
@@ -81,6 +88,15 @@ export const getScopedForgeAiWatchAlerts = async ({
       : Promise.resolve([]),
     taskPermission
       ? getScopedTasks({ organizationId, userId, permission: taskPermission, includeArchived: true })
+      : Promise.resolve([]),
+    observationPermission && needs('observation')
+      ? listObservations({ organizationId, userId, permission: observationPermission })
+      : Promise.resolve([]),
+    riskPermission && needs('risk')
+      ? listRisks({ organizationId, userId, permission: riskPermission })
+      : Promise.resolve([]),
+    riskIndicatorPermission && needs('risk_assessment')
+      ? getScopedForgeAiRiskAssessments({ organizationId, userId, permission: riskIndicatorPermission, permissionByKey, includeIndicators: false })
       : Promise.resolve([])
   ])
 
@@ -90,6 +106,11 @@ export const getScopedForgeAiWatchAlerts = async ({
   const allowedAssetIds = new Set((assets || []).map((item: any) => item.id))
   const allowedLotoProcedureIds = new Set((lotoProcedures || []).map((item: any) => item.id))
   const allowedTaskIds = new Set((tasks || []).map((item: any) => item.id))
+  const allowedObservationIds = new Set((observations || []).map((item: any) => item.id))
+  const allowedRiskIds = new Set((risks || []).map((item: any) => item.id))
+  const allowedRiskScopes = new Set((riskAssessments || []).map((item: any) => item.scope_type + ':' + item.scope_id))
+  // Pattern alerts summarise several records: the viewer must be able to open every one.
+  const allVisible = (ids: unknown, allowed: Set<unknown>) => Array.isArray(ids) && ids.length > 0 && ids.every(id => allowed.has(String(id)))
 
   return scopeFiltered.filter((alert: any) => {
     const requiredPermission = alert.forge_ai_watch_rules?.forge_ai_watch_rule_templates?.required_permission_key
@@ -121,6 +142,30 @@ export const getScopedForgeAiWatchAlerts = async ({
 
     if (alert.target_type === 'task') {
       return allowedTaskIds.has(alert.target_id)
+    }
+
+    if (alert.target_type === 'inspection') {
+      return allowedInspectionIds.has(alert.target_id)
+    }
+
+    if (alert.target_type === 'incident_pattern' || alert.target_type === 'incident_trend') {
+      return allVisible(alert.data?.incident_ids, allowedIncidentIds)
+    }
+
+    if (alert.target_type === 'training_gap') {
+      return allVisible(alert.data?.assignment_ids, allowedAssignmentIds)
+    }
+
+    if (alert.target_type === 'observation') {
+      return allowedObservationIds.has(alert.target_id)
+    }
+
+    if (alert.target_type === 'risk') {
+      return allowedRiskIds.has(alert.target_id)
+    }
+
+    if (alert.target_type === 'risk_assessment') {
+      return allowedRiskScopes.has(alert.target_id)
     }
 
     return false

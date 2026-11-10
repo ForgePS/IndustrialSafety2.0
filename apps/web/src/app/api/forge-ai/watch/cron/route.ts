@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServiceRoleClient } from '@repo/supabase/server'
-import { runForgeAiWatch } from '@/lib/forgeAiWatch'
+import { processForgeAiWatchEvents, runForgeAiMonitoringCycle } from '@/lib/forgeAiWatchNotify'
 
 export const dynamic = 'force-dynamic'
 
@@ -77,7 +77,11 @@ const runScheduledWatch = async (request: Request) => {
     return NextResponse.json({ error: 'Forge AI feature is not configured.' }, { status: 500 })
   }
 
+  // ?mode=events reacts only to tenants with new domain events (run every few minutes);
+  // the default runs a full cycle for every tenant (run daily).
+  const eventsOnly = new URL(request.url).searchParams.get('mode') === 'events'
   const results: Array<Record<string, unknown>> = []
+  const eligible: string[] = []
 
   for (const row of settingsRows || []) {
     const organizationId = row.organization_id
@@ -94,15 +98,19 @@ const runScheduledWatch = async (request: Request) => {
         continue
       }
 
-      const result = await runForgeAiWatch({
-        organizationId,
-        triggerType: 'scheduled'
-      })
+      if (eventsOnly) {
+        eligible.push(organizationId)
+        continue
+      }
+
+      const cycle = await runForgeAiMonitoringCycle({ organizationId, triggerType: 'scheduled' })
 
       results.push({
         organizationId,
         success: true,
-        ...result
+        ...cycle.watch,
+        riskScopes: cycle.risk.scopes.length,
+        deliveries: cycle.notified.deliveries
       })
     } catch (error) {
       results.push({
@@ -113,7 +121,10 @@ const runScheduledWatch = async (request: Request) => {
     }
   }
 
+  if (eventsOnly) results.push(...(await processForgeAiWatchEvents({ organizationIds: eligible })))
+
   return NextResponse.json({
+    mode: eventsOnly ? 'events' : 'scheduled',
     processed: results.length,
     results
   })
