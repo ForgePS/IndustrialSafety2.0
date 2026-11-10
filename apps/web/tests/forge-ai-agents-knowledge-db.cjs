@@ -163,6 +163,41 @@ async function main() {
 
     assert(!semantic.some(row => created.includes(row.source_id)), 'semantic search skips chunks that have no embedding')
 
+    // Concurrent saves of one source each get their own version, and the source ends on the
+    // text of whichever version is current.
+    const [fresh] = await must('/rest/v1/forge_ai_knowledge_sources', {
+      method: 'POST',
+      body: { organization_id: CYPRESS, source_type: 'sop', title: 'Concurrent save ' + MARKER, status: 'draft', sensitivity: 'internal', content_text: 'start' }
+    })
+
+    created.push(fresh.id)
+    const saves = await Promise.all(
+      [1, 2, 3, 4, 5, 6].map(n =>
+        call('/rest/v1/rpc/forge_ai_save_knowledge_version', {
+          method: 'POST',
+          body: { p_organization_id: CYPRESS, p_source_id: fresh.id, p_actor_user_id: null, p_content_text: 'Text ' + n, p_content_hash: 'hash-' + n, p_origin: 'manual' }
+        })
+      )
+    )
+
+    assert(saves.every(result => result.ok), 'six concurrent knowledge saves all succeed')
+    const numbers = saves.map(result => result.data[0].version_number).sort((x, y) => x - y)
+
+    assert(numbers.join(',') === '1,2,3,4,5,6', 'concurrent saves take distinct version numbers')
+    const [after] = await must(`/rest/v1/forge_ai_knowledge_sources?id=eq.${fresh.id}&select=current_version,content_text`)
+    const [currentVersion] = await must(
+      `/rest/v1/forge_ai_knowledge_source_versions?source_id=eq.${fresh.id}&version_number=eq.${after.current_version}&select=content_text`
+    )
+
+    assert(after.current_version === 6 && after.content_text === currentVersion.content_text, 'the source text matches its current version')
+
+    const wrongTenant = await call('/rest/v1/rpc/forge_ai_save_knowledge_version', {
+      method: 'POST',
+      body: { p_organization_id: NORTHSTAR, p_source_id: fresh.id, p_actor_user_id: null, p_content_text: 'x', p_content_hash: 'x', p_origin: 'manual' }
+    })
+
+    assert(!wrongTenant.ok, 'a save naming another tenant is refused')
+
     const capabilities = (await must('/rest/v1/forge_ai_capabilities?select=capability_key,required_permission_key')).map(row => row.capability_key)
     assert(capabilities.includes('search_watch_alerts'), 'search_watch_alerts capability is registered')
 

@@ -164,6 +164,29 @@ test('new rules raise alerts, each alert is notified once, and only to people wh
   expect(await forgeAiDeliveries(ADMIN)).toHaveLength(adminDeliveries.length)
 })
 
+test('overlapping cycles notify a reopened alert once', async () => {
+  const startedAt = new Date().toISOString()
+  const [alert] = await rest(
+    `/rest/v1/forge_ai_watch_alerts?organization_id=eq.${CYPRESS}&rule_key=eq.inspection.failed&status=eq.open&select=id&limit=1`
+  )
+
+  await rest(`/rest/v1/forge_ai_watch_alerts?id=eq.${alert.id}`, {
+    method: 'PATCH',
+    body: { notified_at: null, notification_event_id: null },
+    prefer: 'return=minimal'
+  })
+
+  const responses = await Promise.all([cron(null), cron(null), cron('events'), cron(null)])
+
+  expect(responses.map(response => response.status)).toEqual([200, 200, 200, 200])
+
+  const events = await rest(
+    `/rest/v1/forge_notification_events?resource_id=eq.${alert.id}&created_at=gte.${encodeURIComponent(startedAt)}&select=id`
+  )
+
+  expect(events).toHaveLength(1)
+})
+
 test('a submitted incident triggers an event-driven run; routing never reaches people without access', async ({ page }) => {
   await signIn(page, 'admin@forge2.local')
   await page.goto(baseURL + '/ai/watch')

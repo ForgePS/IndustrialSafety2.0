@@ -3,6 +3,12 @@ import { createServiceRoleClient } from '@repo/supabase/server'
 import type { EffectivePermission } from '@/lib/forgeEffectiveAccess'
 import { recordForgeAiAudit } from '@/lib/forgeAiExecution'
 import { getTenantScopeAssignments } from '@/lib/forgeScope'
+import { getScopedIncidents } from '@/lib/forgeIncidents'
+import { getScopedInspections } from '@/lib/forgeInspections'
+import { getScopedTasks } from '@/lib/forgeTasks'
+import { getTrainingOverview } from '@/lib/forgeTraining'
+import { listObservations } from '@/lib/forgeObservations'
+import { listRisks } from '@/lib/forgeRiskRegister'
 import {
   HIGH_RISK_BANDS,
   INCIDENT_SEVERITY_WEIGHTS,
@@ -41,6 +47,24 @@ export const resolveForgeAiRiskModel = async (organizationId: string, modelKey =
   return { ...model, min_available_weight: Number(model.min_available_weight) }
 }
 
+// The API returns at most 1,000 rows per request, so every input is read page by page in id order.
+// A factor computed from a partial read would understate the tenant's risk.
+const PAGE_SIZE = 1000
+
+const readAllPages = async (build: () => any): Promise<{ data: any[] | null; error: any }> => {
+  const rows: any[] = []
+
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await build()
+      .order('id')
+      .range(from, from + PAGE_SIZE - 1)
+
+    if (error) return { data: null, error }
+    rows.push(...(data || []))
+    if (!data || data.length < PAGE_SIZE) return { data: rows, error: null }
+  }
+}
+
 // Load every record the factors need once per tenant, then slice it per scope.
 const loadTenantData = async (organizationId: string, windowDays: number, now: Date) => {
   const supabase = createServiceRoleClient() as any
@@ -48,55 +72,55 @@ const loadTenantData = async (organizationId: string, windowDays: number, now: D
   const year = now.getUTCFullYear()
 
   const results = await Promise.all([
-    supabase.from('locations').select('id, name, division_id, is_active').eq('organization_id', organizationId),
-    supabase.from('divisions').select('id, name, is_active').eq('organization_id', organizationId),
-    supabase
+    () => supabase.from('locations').select('id, name, division_id, is_active').eq('organization_id', organizationId),
+    () => supabase.from('divisions').select('id, name, is_active').eq('organization_id', organizationId),
+    () => supabase
       .from('forge_incidents')
       .select('id, incident_number, severity, involves_injury, status, occurred_at, location_id')
       .eq('organization_id', organizationId)
       .gte('occurred_at', since)
       .neq('status', 'draft'),
-    supabase
+    () => supabase
       .from('forge_inspections')
       .select('id, inspection_number, location_id, inspection_date')
       .eq('organization_id', organizationId)
       .gte('inspection_date', since.slice(0, 10)),
-    supabase
+    () => supabase
       .from('forge_inspection_findings')
       .select('id, title, severity, status, inspection_id, forge_inspections(inspection_number, location_id)')
       .eq('organization_id', organizationId)
       .in('severity', ['high', 'critical'])
       .not('status', 'in', '(closed,canceled)'),
-    supabase
+    () => supabase
       .from('forge_tasks')
       .select('id, task_number, due_at, status, location_id')
       .eq('organization_id', organizationId)
       .eq('corrective_action', true)
       .is('archived_at', null)
       .not('status', 'in', '(completed,canceled)'),
-    supabase
+    () => supabase
       .from('forge_training_assignments')
       .select('id, due_date, status, forge_personnel(location_id, archived_at), forge_training_courses(course_code)')
       .eq('organization_id', organizationId)
       .not('status', 'in', '(completed,canceled)'),
-    supabase
+    () => supabase
       .from('forge_risks')
       .select('id, risk_number, residual_band_key, inherent_band_key, status, location_id')
       .eq('organization_id', organizationId)
       .is('archived_at', null)
       .not('status', 'in', '(closed,draft)'),
-    supabase
+    () => supabase
       .from('forge_observations')
       .select('id, observation_number, initial_risk_band_key, status, location_id')
       .eq('organization_id', organizationId)
       .is('archived_at', null)
       .not('status', 'in', '(closed,no_action,draft)'),
-    supabase
+    () => supabase
       .from('forge_osha_establishment_years')
-      .select('location_id, year, total_hours_worked')
+      .select('id, location_id, year, total_hours_worked')
       .eq('organization_id', organizationId)
       .in('year', [year, year - 1])
-  ])
+  ].map(readAllPages))
 
   const failed = results.find(result => result.error)
 
@@ -355,6 +379,48 @@ export const riskScopeVisibility = async ({
   }
 }
 
+// Which evidence records a viewer may see. A module permission alone is not enough: the record
+// must be in that module's own scoped list for the viewer (for example, a location-scoped
+// incidents.view shows only incidents at those locations). Only the record types present are loaded.
+export const evidenceVisibility = async ({
+  organizationId,
+  userId,
+  permissionByKey,
+  types
+}: {
+  organizationId: string
+  userId: string
+  permissionByKey: Map<string, EffectivePermission>
+  types: Iterable<string>
+}) => {
+  const wanted = new Set(types)
+  const permission = (type: string) => {
+    const item = permissionByKey.get(EVIDENCE_PERMISSIONS[type] || '')
+
+    return wanted.has(type) && item?.allowed ? item : null
+  }
+
+  const ids = (rows: any[] | null | undefined) => new Set((rows || []).map((row: any) => String(row.id)))
+  const load = async (type: string, read: (item: EffectivePermission) => Promise<any[]>) => {
+    const item = permission(type)
+
+    return [type, item ? ids(await read(item)) : new Set<string>()] as const
+  }
+
+  const visible = new Map(
+    await Promise.all([
+      load('incident', item => getScopedIncidents({ organizationId, userId, permission: item })),
+      load('inspection', item => getScopedInspections({ organizationId, userId, permission: item })),
+      load('task', item => getScopedTasks({ organizationId, userId, permission: item, includeArchived: true })),
+      load('training_assignment', async item => (await getTrainingOverview({ organizationId, userId, permission: item })).assignments),
+      load('risk', item => listRisks({ organizationId, userId, permission: item })),
+      load('observation', item => listObservations({ organizationId, userId, permission: item }))
+    ])
+  )
+
+  return (entry: RiskEvidence) => Boolean(visible.get(entry.type)?.has(String(entry.id)))
+}
+
 // Latest assessment per scope the viewer may see. A location-scoped viewer sees only their
 // locations; a division-scoped viewer sees their divisions and the locations in them. Evidence
 // references from modules the viewer cannot open are removed (the counts stay).
@@ -405,7 +471,12 @@ export const getScopedForgeAiRiskAssessments = async ({
     .in('assessment_id', visible.map(row => row.id))
     .order('id')
 
-  const canSee = (type: string) => Boolean(permissionByKey.get(EVIDENCE_PERMISSIONS[type] || '')?.allowed)
+  const canSee = await evidenceVisibility({
+    organizationId,
+    userId,
+    permissionByKey,
+    types: (indicators || []).flatMap((item: any) => (item.evidence || []).map((entry: RiskEvidence) => entry.type))
+  })
 
   return visible.map(row => ({
     ...row,
@@ -413,7 +484,7 @@ export const getScopedForgeAiRiskAssessments = async ({
       .filter((item: any) => item.assessment_id === row.id)
       .map((item: any) => {
         const evidence = (item.evidence || []) as RiskEvidence[]
-        const shown = evidence.filter(entry => canSee(entry.type))
+        const shown = evidence.filter(canSee)
 
         return { ...item, evidence: shown, hidden_evidence: evidence.length - shown.length }
       })
