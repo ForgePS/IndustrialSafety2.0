@@ -202,6 +202,26 @@ async function main() {
     events = await getEvents(first.rec.id)
     assert(events[0].event_type === 'approval.executing', 'the history is unchanged')
 
+    // Deleting a user who appears in the history clears their id; nothing else may change.
+    const actor = await must('/auth/v1/admin/users', {
+      method: 'POST',
+      body: { email: `rec-history-${RUN}@forge2.local`, password: 'ForgeDev2!' + RUN, email_confirm: true }
+    })
+    const [actorEvent] = await must('/rest/v1/forge_ai_recommendation_events', {
+      method: 'POST',
+      body: { organization_id: CYPRESS, recommendation_id: first.rec.id, event_type: 'reviewed', actor_type: 'user', actor_user_id: actor.id }
+    })
+    const reassigned = await call(`/rest/v1/forge_ai_recommendation_events?id=eq.${actorEvent.id}`, { method: 'PATCH', body: { actor_user_id: ADMIN } })
+
+    assert(!reassigned.ok, 'an event cannot be re-attributed to another user')
+
+    const removed = await call('/auth/v1/admin/users/' + actor.id, { method: 'DELETE' })
+
+    assert(removed.ok, 'a user named in recommendation history can still be deleted')
+    const [cleared] = await must(`/rest/v1/forge_ai_recommendation_events?id=eq.${actorEvent.id}&select=actor_user_id,event_type`)
+
+    assert(cleared.actor_user_id === null && cleared.event_type === 'reviewed', 'the deleted user is cleared from the event and the event is kept')
+
     // Rejection.
     const second = await linked('reject')
     created.push(second.rec.id)

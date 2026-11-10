@@ -124,9 +124,12 @@ export const postJsonWithRetry = async (
 
       let payload: any = null
 
+      // Only a body that is not JSON counts as an empty payload. A timeout or dropped connection
+      // while the body streams goes to the outer handler, so it is retried and logged as such.
       try {
         payload = await response.json()
-      } catch {
+      } catch (error) {
+        if (!(error instanceof SyntaxError)) throw error
         payload = null
       }
 

@@ -13,7 +13,7 @@ import {
   selectNewRecommendations
 } from '@/lib/forgeAiRecommendationRules'
 import type { AlertInput, AssessmentInput, RecommendationCandidate, VerificationCriterion } from '@/lib/forgeAiRecommendationRules'
-import { EVIDENCE_PERMISSIONS, riskScopeVisibility } from '@/lib/forgeAiRisk'
+import { EVIDENCE_PERMISSIONS, evidenceVisibility, riskScopeVisibility } from '@/lib/forgeAiRisk'
 import { getScopedForgeAiWatchAlerts } from '@/lib/forgeAiWatchAccess'
 import type { EffectivePermission } from '@/lib/forgeEffectiveAccess'
 import { getTenantScopeAssignments } from '@/lib/forgeScope'
@@ -33,6 +33,34 @@ const RECOMMENDATION_EVIDENCE_PERMISSIONS: Record<string, string> = {
 }
 
 const db = () => createServiceRoleClient() as any
+
+// Whether a recommendation's location or division is inside a permission's scope. Used for
+// viewing and, separately, for reviewing: each permission is checked against its own scope.
+const permissionScopeFilter = async ({
+  organizationId,
+  userId,
+  permission
+}: {
+  organizationId: string
+  userId: string
+  permission: EffectivePermission
+}): Promise<(row: { location_id: string | null; division_id: string | null }) => boolean> => {
+  if (!permission.allowed) return () => false
+  if (permission.scope === 'organization') return () => true
+  if (permission.scope !== 'location' && permission.scope !== 'division') return () => false
+
+  const assignments = await getTenantScopeAssignments({ organizationId, userId })
+  const { data: locations } = await db().from('locations').select('id, division_id').eq('organization_id', organizationId)
+  const divisionOf = new Map<string, string | null>((locations || []).map((row: any) => [row.id, row.division_id]))
+
+  return row =>
+    permission.scope === 'location'
+      ? Boolean(row.location_id && assignments.locationIds.includes(row.location_id))
+      : Boolean(
+          (row.division_id && assignments.divisionIds.includes(row.division_id)) ||
+            (row.location_id && assignments.divisionIds.includes(divisionOf.get(row.location_id) || ''))
+        )
+}
 
 type Actor = { userId: string | null; type: 'user' | 'system' }
 
@@ -377,24 +405,8 @@ export const getScopedForgeAiRecommendations = async ({
   if (error) throw new Error('Unable to load recommendations: ' + error.message)
   if (!rows?.length) return []
 
-  let scoped = rows as any[]
-
-  if (viewPermission.scope === 'location' || viewPermission.scope === 'division') {
-    const assignments = await getTenantScopeAssignments({ organizationId, userId })
-    const { data: locations } = await supabase.from('locations').select('id, division_id').eq('organization_id', organizationId)
-    const divisionOf = new Map<string, string | null>((locations || []).map((row: any) => [row.id, row.division_id]))
-
-    scoped = scoped.filter(row =>
-      viewPermission.scope === 'location'
-        ? Boolean(row.location_id && assignments.locationIds.includes(row.location_id))
-        : Boolean(
-            (row.division_id && assignments.divisionIds.includes(row.division_id)) ||
-              (row.location_id && assignments.divisionIds.includes(divisionOf.get(row.location_id) || ''))
-          )
-    )
-  } else if (viewPermission.scope !== 'organization') {
-    return []
-  }
+  const inViewScope = await permissionScopeFilter({ organizationId, userId, permission: viewPermission })
+  let scoped = (rows as any[]).filter(inViewScope)
 
   const alertPermission = permissionFor(permissionByKey, 'forge_ai.view_alerts')
   const riskPermission = permissionFor(permissionByKey, 'forge_ai.view_risk')
@@ -439,11 +451,23 @@ export const getScopedForgeAiRecommendations = async ({
   ])
 
   const approvalById = new Map<string, any>((approvals || []).map((row: any) => [row.id, row]))
-  const canSee = (type: string) => Boolean(permissionFor(permissionByKey, RECOMMENDATION_EVIDENCE_PERMISSIONS[type] || ''))
+  // Module records (incidents, training, inspections, tasks, risks, observations) must be in the
+  // viewer's own scoped list for that module. The other types are the source alert and its target,
+  // which the viewer can already open because the source alert passed the AI Watch scope checks.
+  const recordVisible = await evidenceVisibility({
+    organizationId,
+    userId,
+    permissionByKey,
+    types: scoped.flatMap(row => (row.evidence || []).map((item: any) => item.type))
+  })
+  const canSee = (item: { type: string; id: string; reference: string | null }) =>
+    item.type in EVIDENCE_PERMISSIONS
+      ? recordVisible(item)
+      : Boolean(permissionFor(permissionByKey, RECOMMENDATION_EVIDENCE_PERMISSIONS[item.type] || ''))
 
   return scoped.map(row => {
     const evidence = (row.evidence || []) as Array<{ type: string; id: string; reference: string | null }>
-    const shown = evidence.filter(item => canSee(item.type))
+    const shown = evidence.filter(canSee)
 
     return {
       ...row,
@@ -462,15 +486,25 @@ type ReviewContext = {
   recommendationId: string
 }
 
-// A reviewer needs the review permission and must be able to see the recommendation.
+// A reviewer needs the review permission, must be able to see the recommendation, and its
+// location or division must be inside the review permission's own scope (which can be narrower
+// than the view permission's).
 const loadForReview = async ({ organizationId, userId, permissionByKey, recommendationId }: ReviewContext) => {
-  if (!permissionFor(permissionByKey, 'forge_ai.review_recommendations')) {
+  const reviewPermission = permissionFor(permissionByKey, 'forge_ai.review_recommendations')
+
+  if (!reviewPermission) {
     return { error: 'You do not have permission to review AI recommendations.' } as const
   }
 
   const [recommendation] = await getScopedForgeAiRecommendations({ organizationId, userId, permissionByKey, recommendationId })
 
   if (!recommendation) return { error: 'Recommendation not found.' } as const
+
+  const inReviewScope = await permissionScopeFilter({ organizationId, userId, permission: reviewPermission })
+
+  if (!inReviewScope(recommendation)) {
+    return { error: 'This recommendation is outside the locations you can review.' } as const
+  }
 
   return { recommendation }
 }
