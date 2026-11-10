@@ -20,7 +20,7 @@ const response = (status, payload, headers = {}) => ({
   status,
   headers: { get: name => headers[name.toLowerCase()] ?? null },
   json: async () => {
-    if (payload === undefined) throw new Error('no body')
+    if (payload === undefined) throw new SyntaxError('Unexpected end of JSON input')
 
     return payload
   }
@@ -162,6 +162,32 @@ test('network failures become unavailable; non-JSON success is invalid_response'
       { timeoutMs: 100, maxAttempts: 2, fetchImpl: garbage.fetchImpl, sleep: noSleep }
     ),
     error => error.kind === 'invalid_response'
+  )
+})
+
+test('a timeout or dropped connection while the body streams is retried, not treated as invalid', async () => {
+  const stalled = {
+    ok: true,
+    status: 200,
+    headers: { get: () => null },
+    json: () => Promise.reject(Object.assign(new Error('aborted'), { name: 'AbortError' }))
+  }
+  const dropped = { ...stalled, json: () => Promise.reject(new TypeError('terminated')) }
+  const { fetchImpl, calls } = scriptedFetch([stalled, dropped, response(200, { ok: true })])
+  const result = await reliability.postJsonWithRetry(
+    'u',
+    { headers: {}, body: '{}' },
+    { timeoutMs: 1000, maxAttempts: 3, fetchImpl, sleep: noSleep }
+  )
+
+  assert.equal(result.attempts, 3)
+  assert.equal(calls.length, 3)
+
+  const always = scriptedFetch([stalled])
+
+  await assert.rejects(
+    reliability.postJsonWithRetry('u', { headers: {}, body: '{}' }, { timeoutMs: 1000, maxAttempts: 2, fetchImpl: always.fetchImpl, sleep: noSleep }),
+    error => error.kind === 'timeout' && error.attempts === 2
   )
 })
 
