@@ -14,6 +14,8 @@ import {
 import { OrgLocationCascade } from "@/components/org-location-cascade";
 import { LotoAnnotatedImage } from "@/components/loto-annotated-image";
 import { LotoPhotoAnnotatorModal } from "@/components/loto-photo-annotator-modal";
+import { ImageCropModal } from "@/components/image-crop-modal";
+import { cropLotoImageArrows, type LotoCropFraction } from "@/lib/loto-image-annotations";
 import {
   LOTO_DEFAULT_PRECAUTIONS,
   LOTO_DEFAULT_PRINT_ENFORCEMENT,
@@ -143,6 +145,12 @@ export function LotoProcedureForm({
     | { slot: "step"; stepIndex: number; photoIndex: number }
     | null
   >(null);
+  /** Photo being cropped: equipment photo, or a step (by index) photo. */
+  const [cropTarget, setCropTarget] = useState<{
+    slot: "equipment" | number;
+    photoIndex: number;
+    file: File;
+  } | null>(null);
   /** Last photo zone the user focused / clicked — used when Ctrl+V happens elsewhere on the form. */
   const [activePhotoTarget, setActivePhotoTarget] = useState<"equipment" | number>(0);
   const activePhotoTargetRef = useRef<"equipment" | number>(0);
@@ -445,6 +453,74 @@ export function LotoProcedureForm({
       await appendPhotos(target, files);
     } catch (err) {
       setPhotoNotice(err instanceof Error ? err.message : "Paste failed.");
+    } finally {
+      setPhotoBusy(false);
+    }
+  }
+
+  async function startCrop(slot: "equipment" | number, photoIndex: number, src: string) {
+    setPhotoBusy(true);
+    setPhotoNotice(null);
+    try {
+      const response = await fetch(src);
+      if (!response.ok) throw new Error("Could not load the photo to crop.");
+      const blob = await response.blob();
+      const photos =
+        slot === "equipment" ? (form.equipmentImages ?? []) : (form.steps[slot]?.stepImages ?? []);
+      const name = photos[photoIndex]?.fileName || `loto-photo-${photoIndex + 1}.jpg`;
+      setCropTarget({
+        slot,
+        photoIndex,
+        file: new File([blob], name, { type: blob.type || "image/jpeg" }),
+      });
+    } catch (err) {
+      setPhotoNotice(err instanceof Error ? err.message : "Could not load the photo to crop.");
+    } finally {
+      setPhotoBusy(false);
+    }
+  }
+
+  async function applyCrop(cropped: File, area: LotoCropFraction) {
+    const target = cropTarget;
+    if (!target) return;
+    setCropTarget(null);
+    setPhotoBusy(true);
+    try {
+      const { dataUrl } = await compressLotoImageFile(cropped);
+      const update = (photo: LotoPhotoForm): LotoPhotoForm => ({
+        ...photo,
+        imageUrl: dataUrl,
+        previewUrl: "",
+        annotations: cropLotoImageArrows(photo.annotations, area),
+      });
+      if (target.slot === "equipment") {
+        setForm((prev) => {
+          const photos = [...(prev.equipmentImages ?? [])];
+          const current = photos[target.photoIndex];
+          if (!current) return prev;
+          photos[target.photoIndex] = update(current);
+          return {
+            ...prev,
+            ...syncEquipmentLegacyPhotoFields({ ...prev, equipmentImages: photos }),
+          };
+        });
+        setPhotoNotice(`Cropped equipment photo ${target.photoIndex + 1}.`);
+      } else {
+        const stepIndex = target.slot;
+        setSteps((prev) =>
+          prev.map((step, i) => {
+            if (i !== stepIndex) return step;
+            const photos = [...(step.stepImages ?? [])];
+            const current = photos[target.photoIndex];
+            if (!current) return step;
+            photos[target.photoIndex] = update(current);
+            return syncStepLegacyPhotoFields({ ...step, stepImages: photos });
+          }),
+        );
+        setPhotoNotice(`Cropped step ${stepIndex + 1} photo ${target.photoIndex + 1}.`);
+      }
+    } catch {
+      setPhotoNotice("Could not crop that photo.");
     } finally {
       setPhotoBusy(false);
     }
@@ -992,6 +1068,14 @@ export function LotoProcedureForm({
                                 type="button"
                                 className="btn btn-sm btn-outline-dark"
                                 disabled={photoBusy || !preview}
+                                onClick={() => void startCrop(idx, photoIndex, preview)}
+                              >
+                                Crop
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-dark"
+                                disabled={photoBusy || !preview}
                                 onClick={() =>
                                   setAnnotatorTarget({
                                     slot: "step",
@@ -1133,6 +1217,14 @@ export function LotoProcedureForm({
                         onClick={() => void copyPhoto(preview)}
                       >
                         Copy
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-dark"
+                        disabled={photoBusy || !preview}
+                        onClick={() => void startCrop("equipment", photoIndex, preview)}
+                      >
+                        Crop
                       </button>
                       <button
                         type="button"
@@ -1410,6 +1502,19 @@ export function LotoProcedureForm({
                 : `Cleared arrows on step ${stepIndex + 1} photo ${photoIndex + 1}.`,
             );
           }}
+        />
+      ) : null}
+
+      {cropTarget ? (
+        <ImageCropModal
+          file={cropTarget.file}
+          title={
+            cropTarget.slot === "equipment"
+              ? `Crop equipment photo ${cropTarget.photoIndex + 1}`
+              : `Crop step ${cropTarget.slot + 1} photo ${cropTarget.photoIndex + 1}`
+          }
+          onCancel={() => setCropTarget(null)}
+          onConfirm={(cropped, area) => void applyCrop(cropped, area)}
         />
       ) : null}
     </form>

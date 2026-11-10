@@ -24,7 +24,8 @@ type Props = {
   /** Preferred starting aspect — license uploads default to card shape. */
   initialAspect?: ImageCropAspect;
   onCancel: () => void;
-  onConfirm: (cropped: File) => void;
+  /** `area` is the kept part as fractions (0–1) of the original width and height. */
+  onConfirm: (cropped: File, area: ImageCropRect) => void;
 };
 
 type DragMode =
@@ -264,7 +265,18 @@ export function ImageCropModal({
     setError(null);
     try {
       const cropped = await cropImageFile(file, crop, { fileName: file.name });
-      onConfirm(cropped);
+      const safe = natural ? clampCropRect(crop, natural.width, natural.height) : crop;
+      onConfirm(
+        cropped,
+        natural
+          ? {
+              x: safe.x / natural.width,
+              y: safe.y / natural.height,
+              width: safe.width / natural.width,
+              height: safe.height / natural.height,
+            }
+          : { x: 0, y: 0, width: 1, height: 1 },
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to crop that image.");
       setBusy(false);
@@ -282,7 +294,7 @@ export function ImageCropModal({
         natural.height,
       );
       const cropped = await cropImageFile(file, full, { fileName: file.name });
-      onConfirm(cropped);
+      onConfirm(cropped, { x: 0, y: 0, width: 1, height: 1 });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to prepare that image.");
       setBusy(false);

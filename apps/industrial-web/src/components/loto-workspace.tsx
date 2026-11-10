@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { ApiError, apiGet, apiSend, useAuth } from "@forge/web-kit";
 import { useIndustrialFacility } from "@/hooks/use-industrial-facility";
 import { useIndustrialModuleGate } from "@/hooks/use-industrial-module-gate";
@@ -181,6 +181,14 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
   const [detail, setDetail] = useState<Record<string, unknown> | null>(null);
   const [printHtml, setPrintHtml] = useState<string | null>(null);
   const [q, setQ] = useState("");
+  // Search after typing pauses, so each keystroke doesn't start its own reload.
+  const [searchQuery, setSearchQuery] = useState("");
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSearchQuery(q.trim()), 300);
+    return () => window.clearTimeout(timer);
+  }, [q]);
+  // Only the latest list request may update the page; older replies can arrive late.
+  const listRequestSeq = useRef(0);
   const [statusFilter, setStatusFilter] = useState("");
   const [procedurePage, setProcedurePage] = useState(1);
   const [procedurePageSize, setProcedurePageSize] = useState<ProcedurePageSize>(
@@ -226,13 +234,15 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
 
   const loadList = useCallback(
     async (nextProcedurePage: number) => {
+      const requestId = ++listRequestSeq.current;
+      const isStale = () => requestId !== listRequestSeq.current;
       setLoading(true);
       setError(null);
       try {
         const [loto, activeLoto, equip, siteRows, deptRows, people, records] = await Promise.all([
           apiGet<ListResponse>("/api/v1/industrial/loto", {
             query: {
-              q: q || undefined,
+              q: searchQuery || undefined,
               status: statusFilter || undefined,
               page: String(nextProcedurePage),
               pageSize: String(procedurePageSize),
@@ -244,7 +254,7 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
             ? Promise.resolve(null)
             : apiGet<ListResponse>("/api/v1/industrial/loto", {
                 query: {
-                  q: q || undefined,
+                  q: searchQuery || undefined,
                   status: "ACTIVE",
                   page: "1",
                   pageSize: "1",
@@ -267,6 +277,7 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
             query: { page: "1", pageSize: "50" },
           }).catch(() => ({ items: [] as Array<Record<string, unknown>>, page: 1, pageSize: 50 })),
         ]);
+        if (isStale()) return;
         setItems(loto.items ?? []);
         setProcedurePage(loto.page ?? nextProcedurePage);
         const nextProcedureTotal = loto.total ?? loto.items?.length ?? 0;
@@ -280,12 +291,13 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
         setPersonnel(people.items ?? []);
         setLockouts(records.items ?? []);
       } catch (e) {
+        if (isStale()) return;
         setError(e instanceof ApiError ? e.message : "Failed to load LOTO");
       } finally {
-        setLoading(false);
+        if (!isStale()) setLoading(false);
       }
     },
-    [q, statusFilter, procedurePageSize, scopeQuery],
+    [searchQuery, statusFilter, procedurePageSize, scopeQuery],
   );
 
   useEffect(() => {
@@ -294,7 +306,7 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
       return;
     }
     void loadList(1);
-  }, [awsReady, q, statusFilter, procedurePageSize, scopeQuery, loadList]);
+  }, [awsReady, searchQuery, statusFilter, procedurePageSize, scopeQuery, loadList]);
 
   async function openDetail(id: string) {
     setSelectedId(id);
@@ -1208,7 +1220,12 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
                   setScopeDepartmentId(ALL_DEPARTMENTS_ID);
                   setAreaFilter("");
                 }}
-                onSubmit={() => void loadList(1)}
+                onSubmit={() => {
+                  // Enter searches now; a changed query reloads through the effect.
+                  const next = q.trim();
+                  if (next === searchQuery) void loadList(1);
+                  else setSearchQuery(next);
+                }}
               />
 
               {batchPrintError ? (
