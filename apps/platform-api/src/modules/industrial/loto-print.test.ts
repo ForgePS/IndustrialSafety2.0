@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildLotoBatchPrintableHtml,
   buildLotoPrintableHtml,
   plainLotoPrintText,
   resolveLotoSheetBackgroundUrl,
@@ -178,5 +179,34 @@ describe("loto-print", () => {
     expect(html).toContain("data:image/jpeg;base64,stepB");
     expect(html).toContain("Equipment photo 1");
     expect(html).toContain("Equipment photo 2");
+  });
+
+  it("prints the completed date and leaves no blank page after the last sheet", () => {
+    const html = buildLotoPrintableHtml({
+      detail: { equipmentName: "Press", approvedAt: "2026-03-05T15:00:00.000Z", steps: [] },
+      qrImageDataUrl: null,
+    });
+    expect(html).toContain("Completed:");
+    expect(html).toMatch(/Completed:<\/span><span class="value">[^<]*2026/);
+    // Breaks go before each sheet after the first, never after the last one.
+    expect(html).toContain(".sheet + .sheet");
+    expect(html).not.toMatch(/\.sheet\s*\{[^}]*break-after:\s*page/);
+  });
+
+  it("shows a dash when a procedure has no completed date", () => {
+    const html = buildLotoPrintableHtml({ detail: { equipmentName: "Press", steps: [] } });
+    expect(html).toMatch(/Completed:<\/span><span class="value">—</);
+  });
+
+  it("puts several procedures into one printable document", () => {
+    const html = buildLotoBatchPrintableHtml([
+      { detail: { equipmentName: "Press A", steps: [] } },
+      { detail: { equipmentName: "Press B", steps: [] } },
+    ]);
+    expect(html.match(/<!doctype html>/gi)?.length).toBe(1);
+    expect(html).toContain("Press A");
+    expect(html).toContain("Press B");
+    expect(html).toContain("<title>2 LOTO procedures</title>");
+    expect(html.match(/class="sheet[ "]/g)?.length).toBe(4);
   });
 });

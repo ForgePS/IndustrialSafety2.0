@@ -36,6 +36,8 @@ export function LotoProcedureDetailSections({ display }: LotoProcedureDetailSect
         <dd className="col-sm-9 mb-2">{display.areaName !== "—" ? display.areaName : "—"}</dd>
         <dt className="col-sm-3 text-muted">Revision</dt>
         <dd className="col-sm-9 mb-2">{display.revision || "1"}</dd>
+        <dt className="col-sm-3 text-muted">Completed</dt>
+        <dd className="col-sm-9 mb-2">{display.completedDate || "—"}</dd>
       </dl>
 
       {display.scope ? <p className="mb-3">{display.scope}</p> : null}
