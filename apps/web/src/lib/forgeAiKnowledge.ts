@@ -152,63 +152,25 @@ export const createForgeAiKnowledgeVersion = async ({
   const content = normalizeKnowledgeText(contentText)
   const contentHash = hashText(content)
 
-  const { data: source } = await supabase
-    .from('forge_ai_knowledge_sources')
-    .select('id, current_version, content_hash')
-    .eq('organization_id', organizationId)
-    .eq('id', sourceId)
-    .maybeSingle()
-
-  if (!source) throw new Error('Knowledge source not found.')
-
-  const { data: latest } = await supabase
-    .from('forge_ai_knowledge_source_versions')
-    .select('version_number, content_hash')
-    .eq('source_id', sourceId)
-    .order('version_number', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  if (latest && latest.content_hash === contentHash && !file) {
-    return { versionNumber: latest.version_number as number, created: false }
-  }
-
-  const versionNumber = Number(latest?.version_number || 0) + 1
-
-  const { error: versionError } = await supabase.from('forge_ai_knowledge_source_versions').insert({
-    organization_id: organizationId,
-    source_id: sourceId,
-    version_number: versionNumber,
-    content_text: content,
-    content_hash: contentHash,
-    origin,
-    file_name: file?.name ?? null,
-    file_mime: file?.mime ?? null,
-    file_size_bytes: file?.sizeBytes ?? null,
-    file_sha256: file?.sha256 ?? null,
-    extractor: file?.extractor ?? (origin === 'manual' ? 'text' : null),
-    page_count: file?.pageCount ?? null,
-    change_note: changeNote || null,
-    created_by: actorUserId
+  // One locked transaction: the next number, the version row and the source's current text.
+  const { data, error } = await supabase.rpc('forge_ai_save_knowledge_version', {
+    p_organization_id: organizationId,
+    p_source_id: sourceId,
+    p_actor_user_id: actorUserId,
+    p_content_text: content,
+    p_content_hash: contentHash,
+    p_origin: origin,
+    p_file: file
+      ? { name: file.name, mime: file.mime, sizeBytes: file.sizeBytes, sha256: file.sha256, extractor: file.extractor, pageCount: file.pageCount }
+      : null,
+    p_change_note: changeNote || null
   })
 
-  if (versionError) throw new Error(versionError.message)
+  if (error) throw new Error(error.code === 'P0002' ? 'Knowledge source not found.' : error.message)
 
-  const { error: sourceError } = await supabase
-    .from('forge_ai_knowledge_sources')
-    .update({
-      content_text: content,
-      current_version: versionNumber,
-      status: 'draft',
-      index_error: null,
-      updated_by: actorUserId,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', sourceId)
+  const row = Array.isArray(data) ? data[0] : data
 
-  if (sourceError) throw new Error(sourceError.message)
-
-  return { versionNumber, created: true }
+  return { versionNumber: Number(row.version_number), created: Boolean(row.created) }
 }
 
 export const indexForgeAiKnowledgeSource = async ({
