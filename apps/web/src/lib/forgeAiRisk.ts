@@ -364,6 +364,7 @@ export const evidenceVisibility = async ({
   types: Iterable<string>
 }) => {
   const wanted = new Set(types)
+
   const permission = (type: string) => {
     const item = permissionByKey.get(EVIDENCE_PERMISSIONS[type] || '')
 
@@ -371,6 +372,7 @@ export const evidenceVisibility = async ({
   }
 
   const ids = (rows: any[] | null | undefined) => new Set((rows || []).map((row: any) => String(row.id)))
+
   const load = async (type: string, read: (item: EffectivePermission) => Promise<any[]>) => {
     const item = permission(type)
 
