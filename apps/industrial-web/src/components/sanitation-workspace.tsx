@@ -119,7 +119,14 @@ type TemplateRow = Row & {
   templateJson?: { sections?: SanitationTemplateSection[] } | null;
 };
 
-type ResponsePhoto = { id: string; fileName: string; contentType: string; dataUrl: string };
+/** Photos are inline (`dataUrl`, e.g. not uploaded yet) or stored in S3 with a signed `url`. */
+type ResponsePhoto = {
+  id: string;
+  fileName: string;
+  contentType: string;
+  dataUrl: string;
+  url?: string;
+};
 
 type ResponseEntry = {
   result: InspectionAnswer;
@@ -132,7 +139,7 @@ type ResponseEntry = {
   photos?: ResponsePhoto[] | undefined;
 };
 
-const MAX_QUESTION_PHOTOS = 10;
+const MAX_QUESTION_PHOTOS = 50;
 
 function absoluteAssetUrl(src: string): string {
   if (/^https?:\/\//i.test(src) || src.startsWith("data:")) return src;
@@ -1109,12 +1116,14 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                 if (!p || typeof p !== "object") return null;
                 const photo = p as Record<string, unknown>;
                 const dataUrl = String(photo.dataUrl ?? "");
-                if (!dataUrl.startsWith("data:")) return null;
+                const url = typeof photo.url === "string" ? photo.url : "";
+                if (!dataUrl.startsWith("data:") && !url.startsWith("https:")) return null;
                 return {
                   id: String(photo.id ?? crypto.randomUUID()),
                   fileName: String(photo.fileName ?? "photo.jpg"),
                   contentType: String(photo.contentType ?? "image/jpeg"),
-                  dataUrl,
+                  dataUrl: dataUrl.startsWith("data:") ? dataUrl : "",
+                  ...(url ? { url } : {}),
                 } satisfies ResponsePhoto;
               })
               .filter((p): p is ResponsePhoto => Boolean(p));
@@ -3370,7 +3379,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                                       // Plain <img>: static export, so next/image optimization is unavailable.
                                       <img
                                         key={p.id}
-                                        src={p.dataUrl}
+                                        src={p.dataUrl || p.url}
                                         alt={p.fileName}
                                         style={{ width: 40, height: 40, objectFit: "cover" }}
                                         className="rounded border"
@@ -3541,7 +3550,7 @@ export function SanitationWorkspace({ moduleName }: { moduleName: string }) {
                                   <div key={p.id} className="position-relative">
                                     {/* Plain <img> on purpose: static export, so next/image optimization is unavailable. */}
                                     <img
-                                      src={p.dataUrl}
+                                      src={p.dataUrl || p.url}
                                       alt={p.fileName}
                                       style={{ width: 72, height: 72, objectFit: "cover" }}
                                       className="rounded border"

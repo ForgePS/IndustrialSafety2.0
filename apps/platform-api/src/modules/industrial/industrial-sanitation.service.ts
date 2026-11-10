@@ -34,12 +34,22 @@ import type { ForgePrincipal } from "@forge/tenant-context";
 import { and, count, desc, eq, gte, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import { DATABASE } from "../../tokens.js";
 import { NotificationsService } from "../notifications/notifications.service.js";
+import { DocumentStorageService } from "../documents/document-storage.service.js";
 import {
   addSanitationResponsePhoto,
+  decodeSanitationPhoto,
+  mapSanitationPhotos,
   mergeSanitationResponses,
   parseSanitationPhoto,
   removeSanitationResponsePhoto,
+  sanitationPhotoObjectKey,
+  sanitationStoredPhotoKeys,
+  stripSanitationPhotoUrls,
+  type SanitationStoredPhoto,
 } from "./sanitation-responses.js";
+
+/** Signed photo links last an hour, long enough for one inspection session. */
+const SANITATION_PHOTO_URL_SECONDS = 60 * 60;
 import {
   buildSanitationAuditPackageHtml,
   buildSanitationInspectionPrintableHtml,
@@ -1676,7 +1686,62 @@ export class IndustrialSanitationService {
   constructor(
     @Inject(DATABASE) private readonly db: Database,
     @Inject(NotificationsService) private readonly notifications: NotificationsService,
+    @Inject(DocumentStorageService) private readonly storage: DocumentStorageService,
   ) {}
+
+  /** Add short-lived signed links to photos stored in S3 so the browser can show them. */
+  private async withPhotoUrls(responsesRaw: unknown): Promise<unknown> {
+    const responses = asJsonObject(responsesRaw);
+    const keys = sanitationStoredPhotoKeys(responses);
+    if (!keys.length) return responsesRaw;
+    const urls = new Map<string, string>();
+    await Promise.all(
+      keys.map(async (key) => {
+        try {
+          const { downloadUrl } = await this.storage.createPresignedDownloadUrl({
+            objectKey: key,
+            inline: true,
+            expiresInSeconds: SANITATION_PHOTO_URL_SECONDS,
+          });
+          urls.set(key, downloadUrl);
+        } catch (e) {
+          this.logger.warn(`Could not sign sanitation photo ${key}: ${String(e)}`);
+        }
+      }),
+    );
+    return mapSanitationPhotos(responses, (photo) => {
+      const url = typeof photo.objectKey === "string" ? urls.get(photo.objectKey) : undefined;
+      return url ? { ...photo, url } : photo;
+    });
+  }
+
+  /** The PDF embeds photo bytes, so load S3 photos back into data URLs. */
+  private async withPhotoDataUrls(responsesRaw: unknown): Promise<unknown> {
+    const responses = asJsonObject(responsesRaw);
+    const keys = sanitationStoredPhotoKeys(responses);
+    if (!keys.length) return responsesRaw;
+    const dataUrls = new Map<string, string>();
+    for (let i = 0; i < keys.length; i += 8) {
+      await Promise.all(
+        keys.slice(i, i + 8).map(async (key) => {
+          try {
+            const { body, contentType } = await this.storage.getObjectStream(key);
+            const chunks: Buffer[] = [];
+            for await (const chunk of body) chunks.push(Buffer.from(chunk as Uint8Array));
+            const type = contentType?.startsWith("image/") ? contentType : "image/jpeg";
+            dataUrls.set(key, `data:${type};base64,${Buffer.concat(chunks).toString("base64")}`);
+          } catch (e) {
+            this.logger.warn(`Could not load sanitation photo ${key}: ${String(e)}`);
+          }
+        }),
+      );
+    }
+    return mapSanitationPhotos(responses, (photo) => {
+      const dataUrl =
+        typeof photo.objectKey === "string" ? dataUrls.get(photo.objectKey) : undefined;
+      return dataUrl ? { ...photo, dataUrl } : photo;
+    });
+  }
 
   private tenant(principal: ForgePrincipal): string {
     const id = principal.tenantId?.trim();
@@ -2997,7 +3062,7 @@ export class IndustrialSanitationService {
   async getInspection(principal: ForgePrincipal, id: string) {
     const tenantId = this.tenant(principal);
     const inspectionId = asRequiredUuid(id, "id");
-    return withTenantTransaction(this.db, tenantId, async (tx) => {
+    const detail = await withTenantTransaction(this.db, tenantId, async (tx) => {
       const [row] = await tx
         .select()
         .from(industrialSanitationInspections)
@@ -3025,6 +3090,7 @@ export class IndustrialSanitationService {
 
       return { ...mapInspection(row), findings: findings.map(mapFinding) };
     });
+    return { ...detail, responsesJson: await this.withPhotoUrls(detail.responsesJson) };
   }
 
   async startInspection(principal: ForgePrincipal, body: Record<string, unknown>) {
@@ -3130,7 +3196,7 @@ export class IndustrialSanitationService {
 
       // merge: autosave sends answers without photos; keep stored answers and photos.
       const merge = body.merge === true;
-      const incoming = asJsonObject(body.responsesJson ?? body.responses);
+      const incoming = stripSanitationPhotoUrls(asJsonObject(body.responsesJson ?? body.responses));
       const patch: Partial<typeof industrialSanitationInspections.$inferInsert> = {
         responsesJson: merge
           ? mergeSanitationResponses(asJsonObject(existing.responsesJson), incoming)
@@ -3162,8 +3228,21 @@ export class IndustrialSanitationService {
     const answerFields: Record<string, unknown> = {};
     if (typeof body.label === "string") answerFields.label = body.label.slice(0, 500);
     if (typeof body.severity === "string") answerFields.severity = body.severity.slice(0, 64);
+    // Store the image in S3 and keep only a reference in the inspection row.
+    const tenantId = this.tenant(principal);
+    const inspectionId = asRequiredUuid(id, "id");
+    const { body: bytes, contentType } = decodeSanitationPhoto(photo);
+    const objectKey = sanitationPhotoObjectKey(tenantId, inspectionId, photo.id, contentType);
+    await this.storage.putObject({ objectKey, body: bytes, mimeType: contentType });
+    const stored: SanitationStoredPhoto = {
+      id: photo.id,
+      fileName: photo.fileName,
+      contentType,
+      objectKey,
+      sizeBytes: bytes.length,
+    };
     await this.updateInspectionResponses(principal, id, (responses) =>
-      addSanitationResponsePhoto(responses, questionKey, photo, answerFields),
+      addSanitationResponsePhoto(responses, questionKey, stored, answerFields),
     );
     return { inspectionId: id, questionKey, photoId: photo.id };
   }
@@ -3250,7 +3329,7 @@ export class IndustrialSanitationService {
       const stored = asJsonObject(existing.responsesJson);
       const sent =
         body.responsesJson != null || body.responses != null
-          ? asJsonObject(body.responsesJson ?? body.responses)
+          ? stripSanitationPhotoUrls(asJsonObject(body.responsesJson ?? body.responses))
           : null;
       // merge: the web app uploads photos separately and sends answers without them.
       const responses = !sent
@@ -5805,6 +5884,7 @@ export class IndustrialSanitationService {
     if (String(detail.status ?? "").toUpperCase() !== "COMPLETED") {
       throw new ForgeError("VALIDATION_FAILED", "Only completed inspections can be emailed");
     }
+    detail.responsesJson = await this.withPhotoDataUrls(detail.responsesJson);
 
     const lookups = await withTenantTransaction(this.db, tenantId, async (tx) => {
       const people = await tx

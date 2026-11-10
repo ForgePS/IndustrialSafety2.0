@@ -183,13 +183,16 @@ export class DocumentStorageService {
     mimeType?: string;
     filename?: string;
     inline?: boolean;
+    /** Defaults to 15 minutes. */
+    expiresInSeconds?: number;
   }): Promise<{
     downloadUrl: string;
     expiresInSeconds: number;
     expiresAt: string;
     mode: "S3_PRESIGNED";
   }> {
-    const expiresAt = new Date(Date.now() + PRESIGN_EXPIRES_SECONDS * 1000);
+    const expiresIn = input.expiresInSeconds ?? PRESIGN_EXPIRES_SECONDS;
+    const expiresAt = new Date(Date.now() + expiresIn * 1000);
     const disposition = input.inline
       ? "inline"
       : `attachment; filename="${sanitizeDownloadFilename(input.filename)}"`;
@@ -199,12 +202,10 @@ export class DocumentStorageService {
       ...(input.mimeType ? { ResponseContentType: input.mimeType } : {}),
       ResponseContentDisposition: disposition,
     });
-    const downloadUrl = await getSignedUrl(this.client, command, {
-      expiresIn: PRESIGN_EXPIRES_SECONDS,
-    });
+    const downloadUrl = await getSignedUrl(this.client, command, { expiresIn });
     return {
       downloadUrl,
-      expiresInSeconds: PRESIGN_EXPIRES_SECONDS,
+      expiresInSeconds: expiresIn,
       expiresAt: expiresAt.toISOString(),
       mode: "S3_PRESIGNED",
     };
