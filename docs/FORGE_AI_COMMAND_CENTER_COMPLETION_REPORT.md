@@ -21,7 +21,7 @@ The work landed in five stacked pull requests. Each stage extends the existing F
 | Guarantee | Enforcement |
 |---|---|
 | Tenant isolation | Every read is scoped to the active organization on the server. All `forge_ai` tables have RLS on with no client policies, and every `forge_ai` function is service-role only. `tests/forge-ai-security-db.cjs` checks this against the live catalog, so new tables are covered automatically |
-| Facility and division scope | Alerts, risk indicators and recommendations are filtered by the viewer's location and division assignments, and by the record modules they can open. The Command Center reuses the same helpers as the individual pages |
+| Facility and division scope | Alerts, risk indicators and recommendations are filtered by the viewer's location and division assignments. Evidence is shown only for records in the viewer's own scoped list for that module, and reviewing a recommendation needs its location inside the review permission's own scope. The Command Center reuses the same helpers as the individual pages |
 | No invented data | Risk indicators, alerts, recommendations and verification are deterministic over stored records, and each keeps its evidence. Scopes without enough data are not scored. Indicators are labelled as rankings, never as probabilities. The answer check flags record references that no tool returned |
 | Human approval | Nothing an agent or recommendation proposes changes a record directly. Actions queue in `forge_ai_action_approvals`, and permission and scope are re-checked when they execute |
 | Rollout control | `forge_ai` gates the assistant; `forge_ai_command_center` gates risk, recommendations and the Command Center, through the feature registry and tenant entitlements |
@@ -38,7 +38,7 @@ All of these pass locally on a fresh `supabase db reset`, and all run in CI (`.g
 | 2 | `forge-ai-agents.test.cjs` (19) | `forge-ai-agents-knowledge-db.cjs` (12) | `forge-ai-agents.spec.cjs` (8) |
 | 3 | `forge-ai-risk-monitoring.test.cjs` (14) | `forge-ai-risk-monitoring-db.cjs` (23) | `forge-ai-risk-monitoring.spec.cjs` (7) |
 | 4 | `forge-ai-recommendations.test.cjs` (15) | `forge-ai-recommendations-db.cjs` (25) | `forge-ai-recommendations.spec.cjs` (8) |
-| 5 | `forge-ai-command-center.test.cjs` (3) | `forge-ai-security-db.cjs` (catalog-driven, 288 checks locally) | `forge-ai-security.spec.cjs` (4) |
+| 5 | `forge-ai-command-center.test.cjs` (3) | `forge-ai-security-db.cjs` (catalog-driven, 288 checks locally) | `forge-ai-security.spec.cjs` (5) |
 
 ### Live model vs test provider
 

@@ -80,13 +80,10 @@ const ForgeAiCommandCenterPage = async () => {
       .eq('user_id', userId)
       .order('started_at', { ascending: false })
       .limit(8),
+
+    // Totals are aggregated in the database, so they cover every event in the window.
     allowed('forge_ai.view_usage')
-      ? supabase
-          .from('forge_ai_usage_events')
-          .select('total_tokens, tool_calls, metadata')
-          .eq('organization_id', organizationId)
-          .gte('created_at', usageSince)
-          .limit(5000)
+      ? supabase.rpc('forge_ai_usage_summary', { p_organization_id: organizationId, p_since: usageSince })
       : Promise.resolve({ data: null })
   ])
 
@@ -95,7 +92,10 @@ const ForgeAiCommandCenterPage = async () => {
     .sort((a, b) => (a.severity === b.severity ? 0 : a.severity === 'critical' ? -1 : 1))
 
   const scored = (assessments as any[]).filter(row => row.score !== null && row.band !== 'insufficient_data')
-  const attention = scored.filter(row => ['elevated', 'high'].includes(row.band))
+
+  // Facilities only: a division's indicator rolls up its own locations, so counting it too would
+  // count the same site twice.
+  const attention = scored.filter(row => row.scope_type === 'location' && ['elevated', 'high'].includes(row.band))
   const recs = recommendations as any[]
   const toReview = recs.filter(row => ['proposed', 'in_review'].includes(row.status))
   const awaitingVerification = recs.filter(row => row.status === 'executed')
@@ -103,12 +103,12 @@ const ForgeAiCommandCenterPage = async () => {
 
   const agentName = new Map(FORGE_AI_AGENTS.map(agent => [agent.key, agent.name]))
 
-  const requestRows = (usage || []).filter((row: any) => row.metadata?.usage_type !== 'knowledge_embedding')
+  const usageRow = Array.isArray(usage) ? usage[0] : usage
 
   const usageTotals = {
-    requests: requestRows.length,
-    tokens: (usage || []).reduce((sum: number, row: any) => sum + Number(row.total_tokens || 0), 0),
-    toolCalls: requestRows.reduce((sum: number, row: any) => sum + Number(row.tool_calls || 0), 0)
+    requests: Number(usageRow?.requests || 0),
+    tokens: Number(usageRow?.tokens || 0),
+    toolCalls: Number(usageRow?.tool_calls || 0)
   }
 
   return (

@@ -34,7 +34,7 @@ const PASSWORD = 'ForgeDev2!'
 const RUN = Date.now().toString(36).toUpperCase()
 const SUPERVISOR_EMAIL = `ai-sec-supervisor-${RUN.toLowerCase()}@forge2.local`
 const MEMBER_EMAIL = `ai-sec-member-${RUN.toLowerCase()}@forge2.local`
-const created = { users: [], locationId: null, alert: null }
+const created = { users: [], roles: [], restore: [], locationId: null, alert: null }
 
 test.describe.configure({ mode: 'serial' })
 test.setTimeout(180000)
@@ -154,10 +154,14 @@ test.afterAll(async () => {
     })
   }
 
+  for (const undo of created.restore.reverse()) await undo().catch(() => null)
+
   for (const id of created.users) {
     await rest(`/rest/v1/organization_memberships?user_id=eq.${id}`, { method: 'DELETE', prefer: 'return=minimal' })
     await rest('/auth/v1/admin/users/' + id, { method: 'DELETE' }).catch(() => null)
   }
+
+  for (const id of created.roles) await rest(`/rest/v1/forge_tenant_roles?id=eq.${id}`, { method: 'DELETE', prefer: 'return=minimal' }).catch(() => null)
 
   if (created.locationId) await rest(`/rest/v1/locations?id=eq.${created.locationId}`, { method: 'DELETE', prefer: 'return=minimal' })
 })
@@ -280,6 +284,110 @@ test('the header assistant opens anywhere and carries the record being viewed', 
   // The full workspace is the assistant, so the header button is not shown there.
   await page.goto(baseURL + '/ai')
   await expect(page.getByRole('button', { name: 'Open Forge AI' })).toHaveCount(0)
+})
+
+test('a viewer with company-wide AI access but location-limited module and review rights stays inside those limits', async ({ page, browser }) => {
+  // A custom role: organization-wide risk and recommendation viewing, but incidents and
+  // recommendation review only at the user's own facility.
+  const [role] = await rest('/rest/v1/forge_tenant_roles', { method: 'POST', body: { organization_id: CYPRESS, name: 'AI Security Mixed ' + RUN } })
+
+  created.roles.push(role.id)
+  const grants = {
+    'forge_ai.use': 'organization',
+    'forge_ai.view_risk': 'organization',
+    'forge_ai.view_recommendations': 'organization',
+    'forge_ai.review_recommendations': 'location',
+    'incidents.view': 'location'
+  }
+  const permissions = await rest(`/rest/v1/forge_permission_registry?permission_key=in.(${Object.keys(grants).join(',')})&select=id,permission_key`)
+
+  await rest('/rest/v1/forge_tenant_role_permissions', {
+    method: 'POST',
+    body: permissions.map(item => ({ role_id: role.id, permission_id: item.id, allowed: true, scope: grants[item.permission_key] })),
+    prefer: 'return=minimal'
+  })
+
+  const mixedEmail = `ai-sec-mixed-${RUN.toLowerCase()}@forge2.local`
+  const mixedId = await createMember(mixedEmail, null)
+
+  await rest('/rest/v1/forge_tenant_user_roles', {
+    method: 'POST',
+    body: { organization_id: CYPRESS, user_id: mixedId, role_id: role.id },
+    prefer: 'return=minimal'
+  })
+
+  // Score the plant and build recommendations, then take one incident cited as Main Plant risk
+  // evidence and one Main Plant recommendation, and move both to the other facility.
+  const cycle = await fetch(baseURL + '/api/forge-ai/watch/cron', { method: 'POST', headers: { authorization: 'Bearer ' + CRON_SECRET } })
+
+  expect(cycle.status).toBe(200)
+
+  const [assessment] = await rest(
+    `/rest/v1/forge_ai_risk_assessments?organization_id=eq.${CYPRESS}&scope_type=eq.location&scope_id=eq.${MAIN_PLANT}&select=id&order=computed_at.desc&limit=1`
+  )
+  const indicators = await rest(`/rest/v1/forge_ai_risk_indicators?assessment_id=eq.${assessment.id}&select=evidence`)
+  const incident = indicators.flatMap(item => item.evidence || []).find(entry => entry.type === 'incident')
+
+  expect(incident, 'Main Plant risk cites an incident').toBeTruthy()
+  const [before] = await rest(`/rest/v1/forge_incidents?id=eq.${incident.id}&select=location_id`)
+
+  created.restore.push(() =>
+    rest(`/rest/v1/forge_incidents?id=eq.${incident.id}`, { method: 'PATCH', body: { location_id: before.location_id }, prefer: 'return=minimal' })
+  )
+  await rest(`/rest/v1/forge_incidents?id=eq.${incident.id}`, { method: 'PATCH', body: { location_id: created.locationId }, prefer: 'return=minimal' })
+
+  const [rec] = await rest(
+    `/rest/v1/forge_ai_recommendations?organization_id=eq.${CYPRESS}&source_type=eq.risk_assessment&scope_type=eq.location&scope_id=eq.${MAIN_PLANT}&status=eq.proposed&select=id,title,location_id&limit=1`
+  )
+
+  expect(rec, 'a proposed Main Plant risk recommendation exists').toBeTruthy()
+  created.restore.push(() =>
+    rest(`/rest/v1/forge_ai_recommendations?id=eq.${rec.id}`, { method: 'PATCH', body: { location_id: rec.location_id }, prefer: 'return=minimal' })
+  )
+  await rest(`/rest/v1/forge_ai_recommendations?id=eq.${rec.id}`, { method: 'PATCH', body: { location_id: created.locationId }, prefer: 'return=minimal' })
+
+  const openPlant = async viewer => {
+    await viewer.goto(baseURL + '/ai/risk')
+    await expect(viewer.getByTestId('risk-assessment').first()).toBeVisible()
+    const plant = viewer.getByTestId('risk-assessment').filter({ hasText: 'Cypress Bend Main Plant' }).first()
+
+    // Clicking before hydration does nothing, so retry until the factors are shown.
+    await expect(async () => {
+      if (!(await plant.getByText(/^weight /).count())) await plant.getByRole('heading').first().click()
+      await expect(plant.getByText(/^weight /).first()).toBeVisible({ timeout: 2000 })
+    }).toPass({ timeout: 30000 })
+
+    return plant.locator(`a[href="/incidents/${incident.id}"]`)
+  }
+
+  // Risk evidence: the incident now sits outside the mixed user's incident scope.
+  await signIn(page, mixedEmail)
+  await expect(await openPlant(page)).toHaveCount(0)
+  await expect(page.getByText(/record\(s\) outside your access/).first()).toBeVisible()
+
+  const admin = await browser.newPage()
+
+  await signIn(admin, 'admin@forge2.local')
+  await expect(await openPlant(admin)).not.toHaveCount(0)
+  await admin.close()
+
+  // Review: the recommendation is visible company-wide but its facility is outside review scope.
+  await page.goto(baseURL + '/ai/recommendations')
+  const card = page.getByTestId('recommendation').filter({ hasText: rec.title }).first()
+
+  await expect(card).toBeVisible()
+  await expect(async () => {
+    if (!(await card.getByRole('button', { name: 'Dismiss' }).count())) await card.getByTestId('recommendation-title').click()
+    await expect(card.getByRole('button', { name: 'Dismiss' })).toBeVisible({ timeout: 2000 })
+  }).toPass({ timeout: 30000 })
+  await card.getByRole('button', { name: 'Dismiss' }).click()
+  await card.getByLabel('Why is no action needed?').fill('Out of scope attempt ' + RUN)
+  await card.getByTestId('recommendation-form').getByRole('button', { name: 'Dismiss' }).click()
+  await expect(page.getByText('This recommendation is outside the locations you can review.')).toBeVisible({ timeout: 30000 })
+
+  const [after] = await rest(`/rest/v1/forge_ai_recommendations?id=eq.${rec.id}&select=status`)
+
+  expect(after.status).toBe('proposed')
 })
 
 test('a member without forge_ai.use gets no header assistant and no Command Center', async ({ page }) => {
