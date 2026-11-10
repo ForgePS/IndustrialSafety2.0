@@ -139,6 +139,20 @@ export const notifyForgeAiWatchAlerts = async ({ organizationId }: { organizatio
     const recipients = recipientsByAlert.get(alert.id) || []
     let eventId: string | null = null
 
+    // Claim the alert before notifying: when two cycles overlap, only the one whose update
+    // still finds notified_at empty sends anything.
+    const { data: claimed, error: claimError } = await supabase
+      .from('forge_ai_watch_alerts')
+      .update({ notified_at: now })
+      .eq('id', alert.id)
+      .is('notified_at', null)
+      .select('id')
+
+    if (claimError) throw new Error(claimError.message)
+    if (!claimed?.length) continue
+
+    const release = () => supabase.from('forge_ai_watch_alerts').update({ notified_at: null }).eq('id', alert.id)
+
     if (recipients.length) {
       const { data: event, error: eventError } = await supabase
         .from('forge_notification_events')
@@ -156,7 +170,10 @@ export const notifyForgeAiWatchAlerts = async ({ organizationId }: { organizatio
         .select('id')
         .single()
 
-      if (eventError || !event) throw new Error(eventError?.message || 'Unable to record the notification.')
+      if (eventError || !event) {
+        await release()
+        throw new Error(eventError?.message || 'Unable to record the notification.')
+      }
       eventId = event.id
 
       const { error: deliveryError } = await supabase.from('forge_notification_deliveries').upsert(
@@ -175,13 +192,18 @@ export const notifyForgeAiWatchAlerts = async ({ organizationId }: { organizatio
         { onConflict: 'event_id,recipient_user_id,channel', ignoreDuplicates: true }
       )
 
-      if (deliveryError) throw new Error(deliveryError.message)
+      if (deliveryError) {
+        await supabase.from('forge_notification_events').delete().eq('id', event.id)
+        await release()
+        throw new Error(deliveryError.message)
+      }
+
       deliveries += recipients.length
     }
 
     await supabase
       .from('forge_ai_watch_alerts')
-      .update({ notified_at: now, notification_event_id: eventId, notified_recipients: new Set(recipients.map(item => item.userId)).size })
+      .update({ notification_event_id: eventId, notified_recipients: new Set(recipients.map(item => item.userId)).size })
       .eq('id', alert.id)
   }
 
@@ -190,6 +212,7 @@ export const notifyForgeAiWatchAlerts = async ({ organizationId }: { organizatio
       .from('forge_ai_watch_alerts')
       .update({ notified_at: now, notified_recipients: 0 })
       .in('id', quiet.map((alert: any) => alert.id))
+      .is('notified_at', null)
   }
 
   await recordForgeAiAudit({
