@@ -14,6 +14,7 @@ import {
   lotoListHref,
   lotoLockoutHref,
   lotoProcedureAreaName,
+  lotoProcedureCompletedDate,
   lotoProcedureDescription,
   lotoProcedureEquipmentName,
   lotoProcedureFormFromDetail,
@@ -446,5 +447,20 @@ describe("loto workspace helpers", () => {
     expect(
       Array.isArray(payload.restoreSequence) && payload.restoreSequence.length,
     ).toBeGreaterThan(0);
+  });
+});
+
+describe("lotoProcedureCompletedDate", () => {
+  it("uses the approved date, falling back to the payload", () => {
+    expect(lotoProcedureCompletedDate({ completedAt: "2026-03-05" })).toBe(
+      new Date(2026, 2, 5).toLocaleDateString(),
+    );
+    expect(lotoProcedureCompletedDate({ sourcePayload: { approvedAt: "2026-04-01" } })).toBe(
+      new Date(2026, 3, 1).toLocaleDateString(),
+    );
+  });
+
+  it("is empty when the procedure was never completed", () => {
+    expect(lotoProcedureCompletedDate({ status: "DRAFT" })).toBe("");
   });
 });

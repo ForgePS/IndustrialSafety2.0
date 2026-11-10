@@ -400,8 +400,10 @@ function isolationStepsOnly(steps: unknown[]): Record<string, unknown>[] {
   return isolation.length > 0 ? isolation : mapped;
 }
 
-/** Build letter-size printable HTML matching the Producers LOTO example sheet. */
-export function buildLotoPrintableHtml(input: LotoPrintableInput): string {
+type LotoPrintableParts = { title: string; styles: string; sheetsHtml: string };
+
+/** Pages and styles for one procedure, matching the Producers LOTO example sheet. */
+function buildLotoPrintableParts(input: LotoPrintableInput): LotoPrintableParts {
   const detail = input.detail;
   const procedure = asRecord(detail.procedure);
   const equipmentName =
@@ -428,6 +430,12 @@ export function buildLotoPrintableHtml(input: LotoPrintableInput): string {
     formatDate(detail.effectiveAt) ||
     "";
   const revised = formatDate(detail.updatedAt) || formatDate(procedure.updatedAt) || created;
+  const completed =
+    formatDate(detail.completedAt) ||
+    formatDate(detail.approvedAt) ||
+    formatDate(procedure.completedAt) ||
+    formatDate(procedure.approvedAt) ||
+    "";
   const noteText =
     normalizeNotes(detail.notes) ||
     normalizeNotes(procedure.notes) ||
@@ -598,6 +606,7 @@ export function buildLotoPrintableHtml(input: LotoPrintableInput): string {
               <div class="meta-row"><span class="label">ID#:</span><span class="value">${escapeLotoHtml(procedureNumber || "")}</span></div>
               <div class="meta-row"><span class="label">Created:</span><span class="value">${escapeLotoHtml(created || "—")}</span></div>
               <div class="meta-row"><span class="label">Revised:</span><span class="value">${escapeLotoHtml(revised || "—")}</span></div>
+              <div class="meta-row"><span class="label">Completed:</span><span class="value">${escapeLotoHtml(completed || "—")}</span></div>
             </td>
             <td>
               <span class="label-block">Facility:</span>
@@ -660,12 +669,45 @@ export function buildLotoPrintableHtml(input: LotoPrintableInput): string {
     )
     .join("");
 
-  return `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>${escapeLotoHtml(equipmentName)} — LOTO</title>
-  <style>
+  const page2Html = `  <div class="sheet">
+    <div class="page-body">
+      <div class="page-main">
+        <div class="page2-intro">
+          <p><strong>Purpose:</strong> ${escapeLotoHtml(printPurpose)}</p>
+          <p><strong>Scope:</strong> ${escapeLotoHtml(printScopeStatement)}</p>
+          <p class="enf"><strong>Enforcement:</strong> ${escapeLotoHtml(printEnforcement)}</p>
+        </div>
+
+        <div class="seq-wrap">
+          <div class="section-bar shutdown">SHUTDOWN, LOCK, TAG &amp; TEST SEQUENCE</div>
+          <table class="seq-table">
+            <thead>
+              <tr><th>#</th><th>STEP</th><th>DESCRIPTION</th></tr>
+            </thead>
+            <tbody>${shutdownRows}</tbody>
+          </table>
+        </div>
+
+        <div class="seq-wrap">
+          <div class="section-bar restore">RESTORE TO SERVICE SEQUENCE</div>
+          <table class="seq-table">
+            <thead>
+              <tr><th>#</th><th>STEP</th><th>DESCRIPTION</th></tr>
+            </thead>
+            <tbody>${restoreRows}</tbody>
+          </table>
+        </div>
+      </div>
+      <div class="page-spacer"></div>
+      <div class="osha-box">
+        Reference: OSHA 29 CFR 1910.147, Appendix A, "Typical minimal lockout procedures - 29 CFR 1910.147 App A"
+      </div>
+    </div>
+  </div>`;
+
+  return {
+    title: equipmentName,
+    styles: `
     @page { size: letter; margin: 0; }
     * { box-sizing: border-box; }
     html, body {
@@ -716,14 +758,13 @@ export function buildLotoPrintableHtml(input: LotoPrintableInput): string {
       background-repeat: no-repeat;
       background-position: top left;
       background-size: 8.5in 11in;
-      page-break-after: always;
-      break-after: page;
       overflow: hidden;
       position: relative;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
-    .sheet:last-of-type { page-break-after: auto; break-after: auto; }
+    /* Break before each later sheet (not after each one) so no blank page sneaks in. */
+    .sheet + .sheet { page-break-before: always; break-before: page; }
     .page-body {
       display: flex;
       flex-direction: column;
@@ -1015,52 +1056,43 @@ export function buildLotoPrintableHtml(input: LotoPrintableInput): string {
     @media print {
       html, body { background: #fff !important; }
       .print-toolbar { display: none !important; }
-      .sheet { margin: 0; box-shadow: none; }
+      /* A hair under 11in: an exact 11in sheet can round over and push a blank page. */
+      .sheet { margin: 0; box-shadow: none; height: 10.98in; }
     }
-  </style>
+`,
+    sheetsHtml: `${isolationSheetsHtml}
+${page2Html}`,
+  };
+}
+
+function wrapLotoPrintableDocument(parts: LotoPrintableParts[], title: string): string {
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>${escapeLotoHtml(title)}</title>
+  <style>${parts[0]?.styles ?? ""}  </style>
 </head>
 <body>
   <div class="print-toolbar no-print">
-    <p>LOTO printable — ${escapeLotoHtml(equipmentName)}</p>
+    <p>LOTO printable — ${escapeLotoHtml(title)}</p>
     <button type="button" onclick="window.print()">Print / Save as PDF</button>
   </div>
-  ${isolationSheetsHtml}
-
-  <div class="sheet">
-    <div class="page-body">
-      <div class="page-main">
-        <div class="page2-intro">
-          <p><strong>Purpose:</strong> ${escapeLotoHtml(printPurpose)}</p>
-          <p><strong>Scope:</strong> ${escapeLotoHtml(printScopeStatement)}</p>
-          <p class="enf"><strong>Enforcement:</strong> ${escapeLotoHtml(printEnforcement)}</p>
-        </div>
-
-        <div class="seq-wrap">
-          <div class="section-bar shutdown">SHUTDOWN, LOCK, TAG &amp; TEST SEQUENCE</div>
-          <table class="seq-table">
-            <thead>
-              <tr><th>#</th><th>STEP</th><th>DESCRIPTION</th></tr>
-            </thead>
-            <tbody>${shutdownRows}</tbody>
-          </table>
-        </div>
-
-        <div class="seq-wrap">
-          <div class="section-bar restore">RESTORE TO SERVICE SEQUENCE</div>
-          <table class="seq-table">
-            <thead>
-              <tr><th>#</th><th>STEP</th><th>DESCRIPTION</th></tr>
-            </thead>
-            <tbody>${restoreRows}</tbody>
-          </table>
-        </div>
-      </div>
-      <div class="page-spacer"></div>
-      <div class="osha-box">
-        Reference: OSHA 29 CFR 1910.147, Appendix A, "Typical minimal lockout procedures - 29 CFR 1910.147 App A"
-      </div>
-    </div>
-  </div>
+  ${parts.map((part) => part.sheetsHtml).join("\n")}
 </body>
 </html>`;
+}
+
+/** Build letter-size printable HTML for one procedure (2 pages: front and back). */
+export function buildLotoPrintableHtml(input: LotoPrintableInput): string {
+  const parts = buildLotoPrintableParts(input);
+  return wrapLotoPrintableDocument([parts], `${parts.title} — LOTO`);
+}
+
+/** One document with every procedure; each takes exactly 2 pages, so duplex keeps them paired. */
+export function buildLotoBatchPrintableHtml(inputs: LotoPrintableInput[]): string {
+  const parts = inputs.map((input) => buildLotoPrintableParts(input));
+  const title =
+    parts.length === 1 ? `${parts[0]!.title} — LOTO` : `${parts.length} LOTO procedures`;
+  return wrapLotoPrintableDocument(parts, title);
 }

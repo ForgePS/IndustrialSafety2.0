@@ -32,6 +32,7 @@ import {
   lockoutEquipmentName,
   lotoLockoutHref,
   lotoProcedureAreaName,
+  lotoProcedureCompletedDate,
   lotoProcedureDepartmentName,
   lotoProcedureEquipmentName,
   lotoProcedureEquipmentType,
@@ -52,6 +53,9 @@ import {
   type QrLinkRow,
 } from "@/lib/qr-links-module";
 import { composeQrLinkStickerBlob, printQrLinkSticker } from "@/lib/qr-link-sticker";
+
+/** Matches the API limit for one batch print. */
+const LOTO_PRINT_BATCH_MAX = 100;
 
 type ListResponse = {
   items: Array<Record<string, unknown>>;
@@ -138,6 +142,8 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
     permissions.has("industrial.admin");
   const canPrintLabel =
     permissions.has("industrial.printer.print") || permissions.has("industrial.admin");
+  // Select procedures to print their pages or labels together.
+  const canSelectProcedures = canPrint || canPrintLabel;
   const canQrView = canViewQrLinks(permissions);
   const canQrGenerate = canGenerateQr(permissions);
   const canQrPrint = canPrintQr(permissions);
@@ -861,6 +867,47 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
     setSelectedProcedureCache({});
   }
 
+  async function onBatchPrintProcedures() {
+    if (!canPrint || selectedProcedureIds.length < 1) return;
+    if (selectedProcedureIds.length > LOTO_PRINT_BATCH_MAX) {
+      setBatchPrintError(`Select up to ${LOTO_PRINT_BATCH_MAX} procedures to print at once.`);
+      return;
+    }
+    setBatchPrintBusy(true);
+    setBatchPrintError(null);
+    setNotice(null);
+    try {
+      const data = await apiSend<{ html?: string } | string>(
+        "/api/v1/industrial/loto/printable-batch",
+        "POST",
+        { ids: selectedProcedureIds },
+      );
+      const html =
+        typeof data === "string" ? data : typeof data?.html === "string" ? data.html : "";
+      if (!html.trim()) throw new Error("Printable pages were empty for these procedures.");
+      const blocked = openPrintableHtmlPopup(html, true);
+      if (blocked) {
+        setBatchPrintError(blocked);
+      } else {
+        setNotice(
+          selectedProcedureIds.length === 1
+            ? "Print dialog opened for this LOTO procedure."
+            : `Print dialog opened for ${selectedProcedureIds.length} LOTO procedures.`,
+        );
+      }
+    } catch (err) {
+      setBatchPrintError(
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Could not prepare procedures for print",
+      );
+    } finally {
+      setBatchPrintBusy(false);
+    }
+  }
+
   async function onBatchPrintLabels() {
     if (!canPrintLabel || selectedProcedureIds.length < 1) return;
     setBatchPrintBusy(true);
@@ -1170,21 +1217,37 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
                 </div>
               ) : null}
 
-              {canPrintLabel && selectedProcedureIds.length > 0 ? (
+              {canSelectProcedures && selectedProcedureIds.length > 0 ? (
                 <div className="d-flex flex-wrap gap-2 align-items-center mb-3">
                   <span className="small text-muted">{selectedProcedureIds.length} selected</span>
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-primary"
-                    disabled={batchPrintBusy || selectedProcedureIds.length < 1}
-                    onClick={() => void onBatchPrintLabels()}
-                  >
-                    {batchPrintBusy
-                      ? "Preparing…"
-                      : selectedProcedureIds.length === 1
-                        ? "Print Label"
-                        : `Print ${selectedProcedureIds.length} Labels`}
-                  </button>
+                  {canPrint ? (
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-primary"
+                      disabled={batchPrintBusy || selectedProcedureIds.length < 1}
+                      onClick={() => void onBatchPrintProcedures()}
+                    >
+                      {batchPrintBusy
+                        ? "Preparing…"
+                        : selectedProcedureIds.length === 1
+                          ? "Print Procedure"
+                          : `Print ${selectedProcedureIds.length} Procedures`}
+                    </button>
+                  ) : null}
+                  {canPrintLabel ? (
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-primary"
+                      disabled={batchPrintBusy || selectedProcedureIds.length < 1}
+                      onClick={() => void onBatchPrintLabels()}
+                    >
+                      {batchPrintBusy
+                        ? "Preparing…"
+                        : selectedProcedureIds.length === 1
+                          ? "Print Label"
+                          : `Print ${selectedProcedureIds.length} Labels`}
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     className="btn btn-sm btn-outline-secondary"
@@ -1201,7 +1264,7 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
                   <table className="table table-hover mb-0">
                     <thead>
                       <tr>
-                        {canPrintLabel ? (
+                        {canSelectProcedures ? (
                           <th scope="col" style={{ width: 42 }}>
                             <input
                               type="checkbox"
@@ -1245,19 +1308,20 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
                         </th>
                         <th>Status</th>
                         <th>Rev</th>
+                        <th>Completed</th>
                         <th className="text-end">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {loading ? (
                         <tr>
-                          <td colSpan={canPrintLabel ? 7 : 6} className="text-muted">
+                          <td colSpan={canSelectProcedures ? 8 : 7} className="text-muted">
                             Loading procedures…
                           </td>
                         </tr>
                       ) : sortedItems.length === 0 ? (
                         <tr>
-                          <td colSpan={canPrintLabel ? 7 : 6} className="text-muted">
+                          <td colSpan={canSelectProcedures ? 8 : 7} className="text-muted">
                             No LOTO procedures yet.
                           </td>
                         </tr>
@@ -1267,7 +1331,7 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
                           const rowBusy = actionBusyId === id;
                           return (
                             <tr key={id} className={selectedId === id ? "table-active" : undefined}>
-                              {canPrintLabel ? (
+                              {canSelectProcedures ? (
                                 <td>
                                   <input
                                     type="checkbox"
@@ -1297,6 +1361,7 @@ export function LotoWorkspace({ moduleName }: { moduleName: string }) {
                                 </span>
                               </td>
                               <td>{str(item.revision) || "1"}</td>
+                              <td>{lotoProcedureCompletedDate(item) || "—"}</td>
                               <td className="text-end">
                                 <div className="d-inline-flex flex-column align-items-stretch gap-1">
                                   <div className="d-flex flex-wrap gap-1 justify-content-end">

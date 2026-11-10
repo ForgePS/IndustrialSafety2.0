@@ -3186,6 +3186,18 @@ export class IndustrialFlatController {
     );
   }
 
+  @Post("loto/printable-batch")
+  @RequireAnyPermission([...LOTO_VIEW], {
+    requiresEntitlement: ENTITLEMENT,
+  })
+  async lotoPrintableBatch(
+    @Principal() principal: ForgePrincipal,
+    @Body() body: Record<string, unknown>,
+    @Req() req: RequestWithIds,
+  ) {
+    return ok(await this.domain.lotoPrintableBatch(principal, body ?? {}), getRequestIds(req));
+  }
+
   @Get("loto/:id/printable")
   @RequireAnyPermission([...LOTO_VIEW], {
     requiresEntitlement: ENTITLEMENT,

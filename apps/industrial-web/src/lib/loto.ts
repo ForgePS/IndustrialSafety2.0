@@ -251,6 +251,24 @@ export function lotoProcedureSiteName(row: Record<string, unknown>): string {
  * Area label for LOTO list rows.
  * Prefer area snapshots; processLine is a weaker location fallback only.
  */
+/** Date the procedure was completed (approved), as a local date, or "" if unknown. */
+export function lotoProcedureCompletedDate(row: Record<string, unknown>): string {
+  const payload = asRecord(row.source_payload ?? row.sourcePayload);
+  const raw =
+    text(row.completedAt) ||
+    text(row.approvedAt) ||
+    text(payload.approvedAt) ||
+    text(payload.activatedAt) ||
+    text(payload.completedAt);
+  if (!raw) return "";
+  // Date-only values are calendar dates; don't shift them by time zone.
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  const parsed = dateOnly
+    ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]))
+    : new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? raw : parsed.toLocaleDateString();
+}
+
 export function lotoProcedureAreaName(row: Record<string, unknown>): string {
   const type =
     text(row.equipmentTypeName) || text(row.equipmentTypeNameSnapshot) || text(row.equipmentType);
@@ -1271,6 +1289,8 @@ export type LotoProcedureDisplay = {
   areaName: string;
   procedureNumber: string;
   revision: string;
+  /** Date the procedure was completed (approved), or "". */
+  completedDate: string;
   scope: string;
   status: string;
   title: string;
@@ -1696,6 +1716,7 @@ export function extractProcedureDisplay(
     areaName: lotoProcedureAreaName(procedure) || lotoProcedureAreaName(source),
     procedureNumber: text(procedure.procedureNumber) || text(source.procedureNumber),
     revision: text(procedure.revision) || text(source.revision) || "1",
+    completedDate: lotoProcedureCompletedDate(procedure) || lotoProcedureCompletedDate(source),
     scope:
       plainText(source.scope) ||
       plainText(procedure.scope) ||

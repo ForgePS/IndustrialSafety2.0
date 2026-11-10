@@ -156,7 +156,7 @@ import {
 import { buildDvirDayPrintableHtml, buildDvirPrintableHtml } from "./dvir-print.js";
 import { buildIncidentPrintableHtml } from "./incident-print.js";
 import { buildRcaPrintableHtml, normalizeRcaForPrint } from "./rca-print.js";
-import { buildLotoPrintableHtml } from "./loto-print.js";
+import { buildLotoBatchPrintableHtml, buildLotoPrintableHtml } from "./loto-print.js";
 import { buildWorkersCompPrintableHtml, workersCompPrintTitle } from "./workers-comp-print.js";
 import { ensureCompanyDriverRosterEntry } from "./company-driver-roster.js";
 import { normalizePersonnelStatus, personnelStatusMatches } from "./personnel-status.js";
@@ -465,6 +465,9 @@ const PERSONNEL_DATE_FIELDS = [
   "cprCertificationExpiresDate",
   "firstAidCertificationExpiresDate",
 ] as const;
+
+/** Most LOTO procedures one batch print may include. */
+const LOTO_PRINT_BATCH_MAX = 100;
 
 /**
  * Flat `/api/v1/industrial/*` domain operations against Model A (normalized tables).
@@ -11215,6 +11218,8 @@ export class IndustrialDomainService {
         : [],
       equipmentImages: Array.isArray(payload.equipmentImages) ? payload.equipmentImages : undefined,
       approvedAt: payload.approvedAt ?? null,
+      /** When the procedure was completed (approved and activated). */
+      completedAt: payload.approvedAt ?? payload.activatedAt ?? payload.completedAt ?? null,
       effectiveAt: payload.effectiveAt ?? null,
       reviewDueAt: payload.reviewDueAt ?? payload.reviewDue ?? null,
     };
@@ -12295,6 +12300,32 @@ export class IndustrialDomainService {
   }
 
   async lotoPrintable(principal: ForgePrincipal, id: string) {
+    return { html: buildLotoPrintableHtml(await this.lotoPrintableInput(principal, id)) };
+  }
+
+  /** One printable document for several procedures, in the order given (2 pages each). */
+  async lotoPrintableBatch(principal: ForgePrincipal, body: Record<string, unknown>) {
+    const raw = Array.isArray(body.ids)
+      ? body.ids
+      : Array.isArray(body.procedureIds)
+        ? body.procedureIds
+        : [];
+    const ids = [...new Set(raw.map((id) => String(id ?? "").trim()).filter(Boolean))];
+    if (ids.length === 0) {
+      throw new ForgeError("VALIDATION_FAILED", "Select at least one LOTO procedure to print.");
+    }
+    if (ids.length > LOTO_PRINT_BATCH_MAX) {
+      throw new ForgeError(
+        "VALIDATION_FAILED",
+        `Print up to ${LOTO_PRINT_BATCH_MAX} LOTO procedures at a time.`,
+      );
+    }
+    const inputs = [];
+    for (const id of ids) inputs.push(await this.lotoPrintableInput(principal, id));
+    return { html: buildLotoBatchPrintableHtml(inputs), count: inputs.length };
+  }
+
+  private async lotoPrintableInput(principal: ForgePrincipal, id: string) {
     const detail = await this.getLotoDetail(principal, id);
     const procedure = (detail as Record<string, unknown>).procedure as
       Record<string, unknown> | undefined;
@@ -12320,12 +12351,7 @@ export class IndustrialDomainService {
       }
     }
 
-    return {
-      html: buildLotoPrintableHtml({
-        detail: detail as Record<string, unknown>,
-        qrImageDataUrl,
-      }),
-    };
+    return { detail: detail as Record<string, unknown>, qrImageDataUrl };
   }
 
   async bulkTraining(principal: ForgePrincipal, body: Record<string, unknown>) {
