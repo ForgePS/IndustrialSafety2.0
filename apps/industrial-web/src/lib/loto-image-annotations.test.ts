@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   clampUnit,
+  cropLotoImageArrows,
   normalizeLotoImageArrows,
   lotoAnnotatedImageHtml,
 } from "./loto-image-annotations";
@@ -33,5 +34,28 @@ describe("loto-image-annotations", () => {
     expect(html).toContain("loto-annotated-photo");
     expect(html).toContain("loto-photo-arrows");
     expect(html).toContain("data:image/jpeg;base64,abc");
+  });
+});
+
+describe("cropLotoImageArrows", () => {
+  const arrow = { id: "a", x1: 0.2, y1: 0.2, x2: 0.6, y2: 0.6 };
+
+  it("moves arrows into the cropped frame", () => {
+    const [moved] = cropLotoImageArrows([arrow], { x: 0.2, y: 0.2, width: 0.5, height: 0.5 });
+    expect(moved?.x1).toBeCloseTo(0);
+    expect(moved?.y1).toBeCloseTo(0);
+    expect(moved?.x2).toBeCloseTo(0.8);
+    expect(moved?.y2).toBeCloseTo(0.8);
+  });
+
+  it("drops arrows whose tip is cropped out and pulls in cut-off tails", () => {
+    expect(cropLotoImageArrows([arrow], { x: 0, y: 0, width: 0.5, height: 0.5 })).toEqual([]);
+    const [moved] = cropLotoImageArrows([arrow], { x: 0.4, y: 0.4, width: 0.5, height: 0.5 });
+    expect(moved?.x1).toBe(0);
+    expect(moved?.x2).toBeCloseTo(0.4);
+  });
+
+  it("keeps arrows unchanged for a full-image crop", () => {
+    expect(cropLotoImageArrows([arrow], { x: 0, y: 0, width: 1, height: 1 })).toEqual([arrow]);
   });
 });

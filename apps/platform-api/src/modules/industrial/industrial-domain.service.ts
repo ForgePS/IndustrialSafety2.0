@@ -10909,7 +10909,9 @@ export class IndustrialDomainService {
         else if (deptParts.length > 1) conditions.push(or(...deptParts)!);
       }
       if (q) {
-        const qLower = `%${q.toLowerCase()}%`;
+        // Typed % and _ match themselves, not any text (Postgres LIKE escape is \).
+        const qPattern = `%${q.replace(/[\\%_]/g, (ch) => `\\${ch}`)}%`;
+        const qLower = qPattern.toLowerCase();
         const payloadEquipmentName = sql<string>`lower(btrim(coalesce(
           case
             when jsonb_typeof(${industrialLotoProcedures.sourcePayload}) = 'string'
@@ -10928,8 +10930,8 @@ export class IndustrialDomainService {
         )))`;
         conditions.push(
           or(
-            ilike(industrialLotoProcedures.title, `%${q}%`),
-            ilike(industrialLotoProcedures.procedureNumber, `%${q}%`),
+            ilike(industrialLotoProcedures.title, qPattern),
+            ilike(industrialLotoProcedures.procedureNumber, qPattern),
             sql`${payloadEquipmentName} like ${qLower}`,
           )!,
         );

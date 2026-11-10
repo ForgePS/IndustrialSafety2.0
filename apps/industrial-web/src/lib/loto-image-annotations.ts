@@ -105,3 +105,38 @@ export function lotoAnnotatedImageHtml(
       : "";
   return `<figure class="${className} loto-annotated-photo"><img src="${url}" alt="${alt}" />${svg}</figure>`;
 }
+
+/** Part of an image kept by a crop, as fractions (0–1) of the original width and height. */
+export type LotoCropFraction = { x: number; y: number; width: number; height: number };
+
+/**
+ * Moves arrows onto a cropped photo. Arrows whose tip is cut off are dropped; a tail that
+ * is cut off is pulled to the edge of the crop.
+ */
+export function cropLotoImageArrows(
+  arrows: LotoImageArrow[],
+  crop: LotoCropFraction,
+): LotoImageArrow[] {
+  if (!(crop.width > 0) || !(crop.height > 0)) return arrows;
+  const mapX = (x: number) => (x - crop.x) / crop.width;
+  const mapY = (y: number) => (y - crop.y) / crop.height;
+  const inside = (v: number) => v >= 0 && v <= 1;
+  const result: LotoImageArrow[] = [];
+  for (const arrow of arrows) {
+    const x2 = mapX(arrow.x2);
+    const y2 = mapY(arrow.y2);
+    if (!inside(x2) || !inside(y2)) continue;
+    const next = {
+      id: arrow.id,
+      x1: clampUnit(mapX(arrow.x1)),
+      y1: clampUnit(mapY(arrow.y1)),
+      x2,
+      y2,
+    };
+    const dx = next.x2 - next.x1;
+    const dy = next.y2 - next.y1;
+    if (dx * dx + dy * dy < 0.00005) continue;
+    result.push(next);
+  }
+  return result;
+}
