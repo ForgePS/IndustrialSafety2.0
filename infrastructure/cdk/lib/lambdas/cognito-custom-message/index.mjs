@@ -12,6 +12,14 @@ const LOOKUP_TIMEOUT_MS = 1500;
 let cognitoClient;
 const clientNameCache = new Map();
 
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 function parseMap(raw) {
   try {
     return JSON.parse(raw || "{}");
@@ -74,12 +82,15 @@ export const handler = async (event) => {
   const link = `${appUrl}${RESET_PATH}?email=${encodeURIComponent(email)}`;
 
   event.response.emailSubject = "Reset your Forge password";
-  event.response.emailMessage = `Your password reset code is ${event.request.codeParameter}.
-
-Open this link to enter your code and set a new password:
-${link}
-
-If you did not request a reset, you can ignore this email. The code expires in 24 hours.`;
+  // Cognito delivers emailMessage as HTML: plain newlines collapse and bare URLs are not
+  // reliably clickable, so send real markup with an anchor.
+  const href = escapeHtml(link);
+  event.response.emailMessage = [
+    `<p>Your password reset code is <strong>${event.request.codeParameter}</strong>.</p>`,
+    `<p><a href="${href}">Set a new password</a></p>`,
+    `<p>Or copy this link into your browser:<br>${href}</p>`,
+    `<p>If you did not request a reset, you can ignore this email. The code expires in 24 hours.</p>`,
+  ].join("\n");
 
   return event;
 };

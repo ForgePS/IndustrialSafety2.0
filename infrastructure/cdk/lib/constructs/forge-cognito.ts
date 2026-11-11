@@ -122,6 +122,10 @@ export class ForgeCognito extends Construct {
       handler: "index.handler",
       code: lambda.Code.fromAsset(path.join(cdkDir, "../lambdas/cognito-custom-message")),
       timeout: cdk.Duration.seconds(10),
+      // Cognito allows CustomMessage triggers ~5s. At the 128 MB default, cold starts
+      // (SDK import + first DescribeUserPoolClient) measured ~6s and forced retries.
+      // More memory means proportionally more CPU and a much faster cold start.
+      memorySize: 512,
       environment: {
         DEFAULT_APP_URL: defaultIndustrialUrl,
         APP_URL_BY_CLIENT_NAME_JSON: JSON.stringify(appUrlByClientName),
