@@ -36,6 +36,92 @@ export class DeployGuardError extends Error {
   }
 }
 
+/**
+ * Production stacks whose deployed state matches CDK closely enough to deploy safely.
+ * Everything else has drifted from CDK: production releases for those stacks are done by
+ * the scripts in /scripts (task definitions, CloudFront aliases, hand-created queues,
+ * secrets and GuardDuty resources), so a CDK deploy would revert or collide with them.
+ * See docs/deployment/production-cdk-drift.md before changing this list.
+ */
+export const PRODUCTION_CDK_SAFE_STACKS = [
+  "ForgeNetwork",
+  "ForgeSecurity",
+  "ForgeIdentity",
+  "ForgeData",
+  "ForgeAlerting",
+  "ForgeObservability",
+] as const;
+
+/** Map "Forge-Production-Data" style names to construct IDs ("ForgeData"). */
+function toConstructId(stack: string): string {
+  const m = /^Forge-(?:Production|GovcloudProduction)-(.+)$/i.exec(stack);
+  return m ? `Forge${m[1]}` : stack;
+}
+
+/**
+ * Production-only: refuse `--all`, wildcards, implicit "all stacks", and any stack not in
+ * PRODUCTION_CDK_SAFE_STACKS. Deploys must name stacks explicitly and pass --exclusively
+ * so CDK does not also deploy drifted dependency stacks.
+ * Override for one named stack only: FORGE_ALLOW_DRIFTED_STACK=<ConstructId>.
+ */
+export function assertProductionStacksAllowed(
+  cdkArgs: string[],
+  allowDrifted: string | undefined = process.env.FORGE_ALLOW_DRIFTED_STACK,
+): string[] {
+  const args = cdkArgs.length > 0 ? cdkArgs : ["deploy", "--all"];
+  if (args[0] !== "deploy") return [];
+
+  if (args.includes("--all")) {
+    throw new DeployGuardError(
+      "Refusing production `deploy --all`: several stacks have drifted from CDK. " +
+        `Deploy named stacks with --exclusively. Safe: ${PRODUCTION_CDK_SAFE_STACKS.join(", ")}`,
+    );
+  }
+  // Values of flags that take an argument must not be mistaken for stack names.
+  const flagsWithValue = new Set([
+    "--require-approval",
+    "--profile",
+    "--region",
+    "-c",
+    "--context",
+    "--parameters",
+    "--outputs-file",
+    "--method",
+    "--change-set-name",
+    "--concurrency",
+    "--toolkit-stack-name",
+    "--role-arn",
+  ]);
+  const rest = args.slice(1);
+  const named = rest.filter((a, i) => !a.startsWith("-") && !flagsWithValue.has(rest[i - 1] ?? ""));
+  if (named.length === 0) {
+    throw new DeployGuardError(
+      "Refusing production deploy without explicit stack names. " +
+        `Safe: ${PRODUCTION_CDK_SAFE_STACKS.join(", ")}`,
+    );
+  }
+  if (!args.includes("--exclusively") && !args.includes("-e")) {
+    throw new DeployGuardError(
+      "Refusing production deploy without --exclusively (dependency stacks may have drifted).",
+    );
+  }
+  for (const raw of named) {
+    if (raw.includes("*")) {
+      throw new DeployGuardError(`Refusing wildcard stack selector in production: ${raw}`);
+    }
+    const id = toConstructId(raw);
+    const safe = (PRODUCTION_CDK_SAFE_STACKS as readonly string[]).includes(id);
+    if (!safe && allowDrifted !== id) {
+      throw new DeployGuardError(
+        `Refusing production deploy of ${id}: it has drifted from CDK (see ` +
+          "docs/deployment/production-cdk-drift.md). Run `cdk diff` first; to override for this " +
+          `stack only, set FORGE_ALLOW_DRIFTED_STACK=${id}.`,
+      );
+    }
+  }
+  return named.map(toConstructId);
+}
+
 function looksLikeExampleHost(value: string | undefined): boolean {
   if (!value) return true;
   return value.includes("example.com") || value.includes("000000000000");
@@ -186,6 +272,9 @@ function readGitPorcelain(): string {
 function main(): void {
   try {
     const result = assertDeployAllowed();
+    if (result.environmentName === "production" || result.environmentName === "govcloud-production") {
+      assertProductionStacksAllowed(process.argv.slice(2));
+    }
     console.warn(
       JSON.stringify(
         {
