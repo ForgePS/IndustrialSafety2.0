@@ -512,6 +512,71 @@ const HISTORY_SERIES: Array<{ key: InjuryHistorySeries; label: string; className
   { key: "lostTimeCases", label: "Lost-time cases", className: "is-lost-time" },
 ];
 
+const HISTORY_RANGES = [3, 5, 10] as const;
+type HistoryRange = (typeof HISTORY_RANGES)[number];
+
+/** Every year in the range, oldest first; years with no records are 0. */
+function fillHistoryYears(
+  years: readonly InjuryHistoryYear[],
+  currentYear: number,
+  range: number,
+): InjuryHistoryYear[] {
+  const byYear = new Map(years.map((y) => [y.year, y]));
+  const out: InjuryHistoryYear[] = [];
+  for (let year = currentYear - range + 1; year <= currentYear; year++) {
+    out.push(byYear.get(year) ?? { year, injuries: 0, lostTimeCases: 0, daysAway: 0 });
+  }
+  return out;
+}
+
+/**
+ * Smooth path that never overshoots the data (monotone cubic, Fritsch–Carlson),
+ * so a run of zero years stays flat on the baseline instead of dipping below it.
+ */
+function monotoneLinePath(points: Array<{ x: number; y: number }>): string {
+  const n = points.length;
+  if (n === 0) return "";
+  if (n < 3) return points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
+  const dx: number[] = [];
+  const slope: number[] = [];
+  for (let i = 0; i < n - 1; i++) {
+    dx.push(points[i + 1]!.x - points[i]!.x);
+    slope.push((points[i + 1]!.y - points[i]!.y) / dx[i]!);
+  }
+  const m: number[] = [slope[0]!];
+  for (let i = 1; i < n - 1; i++) {
+    const a = slope[i - 1]!;
+    const b = slope[i]!;
+    m.push(
+      a * b <= 0
+        ? 0
+        : (3 * (dx[i - 1]! + dx[i]!)) /
+            ((2 * dx[i]! + dx[i - 1]!) / a + (dx[i]! + 2 * dx[i - 1]!) / b),
+    );
+  }
+  m.push(slope[n - 2]!);
+  let d = `M ${points[0]!.x} ${points[0]!.y}`;
+  for (let i = 0; i < n - 1; i++) {
+    const p = points[i]!;
+    const q = points[i + 1]!;
+    const h = dx[i]! / 3;
+    d += ` C ${p.x + h} ${p.y + m[i]! * h} ${q.x - h} ${q.y - m[i + 1]! * h} ${q.x} ${q.y}`;
+  }
+  return d;
+}
+
+/** Round axis ticks from 0 to a little above max (about 4 steps). */
+function niceTicks(max: number): number[] {
+  const raw = Math.max(1, max) / 4;
+  const mag = 10 ** Math.floor(Math.log10(raw));
+  const n = raw / mag;
+  const step = Math.max(1, (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * mag);
+  const top = Math.max(step, Math.ceil(Math.max(1, max) / step) * step);
+  const ticks: number[] = [];
+  for (let v = 0; v <= top; v += step) ticks.push(v);
+  return ticks;
+}
+
 function InjuryHistoryChart({
   years,
   currentYear,
@@ -520,13 +585,20 @@ function InjuryHistoryChart({
   currentYear: number;
 }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const uid = useId().replace(/:/g, "");
 
   const width = 640;
-  const height = 220;
-  const pad = { top: 16, right: 24, bottom: 32, left: 24 };
+  const height = 240;
+  const pad = { top: 18, right: 28, bottom: 28, left: 40 };
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
-  const max = Math.max(1, ...years.flatMap((y) => [y.injuries, y.lostTimeCases]));
+  const baseline = pad.top + plotH;
+
+  const ticks = useMemo(
+    () => niceTicks(Math.max(0, ...years.flatMap((y) => [y.injuries, y.lostTimeCases]))),
+    [years],
+  );
+  const maxTick = ticks[ticks.length - 1]!;
 
   const xAt = useCallback(
     (i: number) =>
@@ -534,21 +606,27 @@ function InjuryHistoryChart({
     [years.length, pad.left, plotW],
   );
   const yAt = useCallback(
-    (value: number) => pad.top + plotH - (value / max) * plotH,
-    [pad.top, plotH, max],
+    (v: number) => baseline - (v / maxTick) * plotH,
+    [baseline, maxTick, plotH],
   );
+
+  // The current year is partial, so its segment is drawn dashed.
+  const hasYtd = years.length > 1 && years[years.length - 1]!.year === currentYear;
+  const splitX = hasYtd ? xAt(years.length - 2) : width;
 
   const lines = useMemo(
     () =>
       HISTORY_SERIES.map((series) => {
         const pts = years.map((y, i) => ({ x: xAt(i), y: yAt(y[series.key]) }));
-        const d = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
-        return { ...series, pts, d };
+        const d = monotoneLinePath(pts);
+        const area =
+          pts.length > 1
+            ? `${d} L ${pts[pts.length - 1]!.x} ${baseline} L ${pts[0]!.x} ${baseline} Z`
+            : "";
+        return { ...series, pts, d, area };
       }),
-    [years, xAt, yAt],
+    [years, xAt, yAt, baseline],
   );
-
-  const gridYs = [0.25, 0.5, 0.75, 1].map((t) => pad.top + plotH * (1 - t));
 
   const onMove = useCallback(
     (ev: PointerEvent<SVGSVGElement>) => {
@@ -571,7 +649,11 @@ function InjuryHistoryChart({
 
   const active = activeIndex != null ? years[activeIndex] : null;
   const activeX = activeIndex != null ? xAt(activeIndex) : 0;
+  const tooltipOnRight = activeX < width / 2;
   const yearLabel = (year: number) => (year === currentYear ? `${year} YTD` : String(year));
+  // Thin out year labels when there are many years.
+  const labelEvery = years.length > 7 ? 2 : 1;
+  const lastIndex = years.length - 1;
 
   return (
     <div className="ind-dash-area">
@@ -581,17 +663,51 @@ function InjuryHistoryChart({
         role="img"
         aria-label="Injuries and lost-time cases by year"
         onPointerMove={onMove}
+        onPointerDown={onMove}
         onPointerLeave={() => setActiveIndex(null)}
       >
-        {gridYs.map((y) => (
-          <line
-            key={y}
-            className="ind-dash-area__grid"
-            x1={pad.left}
-            x2={width - pad.right}
-            y1={y}
-            y2={y}
-          />
+        <defs>
+          <clipPath id={`${uid}-full`}>
+            <rect x={0} y={0} width={splitX} height={height} />
+          </clipPath>
+          <clipPath id={`${uid}-ytd`}>
+            <rect x={splitX} y={0} width={width - splitX} height={height} />
+          </clipPath>
+          {HISTORY_SERIES.map((s) => (
+            <linearGradient
+              key={s.key}
+              id={`${uid}-${s.key}`}
+              className={`ind-dash-history ${s.className}`}
+              x1="0"
+              y1="0"
+              x2="0"
+              y2="1"
+            >
+              <stop offset="0%" stopColor="var(--ind-history-color)" stopOpacity="0.22" />
+              <stop offset="100%" stopColor="var(--ind-history-color)" stopOpacity="0" />
+            </linearGradient>
+          ))}
+        </defs>
+
+        {ticks.map((t) => (
+          <g key={t}>
+            <line
+              className={t === 0 ? "ind-dash-history__baseline" : "ind-dash-area__grid"}
+              x1={pad.left}
+              x2={width - pad.right}
+              y1={yAt(t)}
+              y2={yAt(t)}
+            />
+            <text
+              className="ind-dash-area__axis"
+              x={pad.left - 10}
+              y={yAt(t)}
+              textAnchor="end"
+              dominantBaseline="middle"
+            >
+              {t}
+            </text>
+          </g>
         ))}
 
         {active ? (
@@ -600,44 +716,69 @@ function InjuryHistoryChart({
             x1={activeX}
             x2={activeX}
             y1={pad.top}
-            y2={pad.top + plotH}
+            y2={baseline}
           />
         ) : null}
 
         {lines.map((line) => (
           <g key={line.key} className={`ind-dash-history ${line.className}`}>
-            <path className="ind-dash-history__line" d={line.d} />
+            {line.area ? <path d={line.area} fill={`url(#${uid}-${line.key})`} /> : null}
+            <path
+              className="ind-dash-history__line"
+              d={line.d}
+              clipPath={hasYtd ? `url(#${uid}-full)` : undefined}
+            />
+            {hasYtd ? (
+              <path
+                className="ind-dash-history__line is-partial"
+                d={line.d}
+                clipPath={`url(#${uid}-ytd)`}
+              />
+            ) : null}
             {line.pts.map((p, i) => (
               <circle
                 key={years[i]!.year}
                 className={`ind-dash-history__dot ${activeIndex === i ? "is-active" : ""}`}
                 cx={p.x}
                 cy={p.y}
-                r={activeIndex === i ? 5 : 3.5}
+                r={activeIndex === i ? 5.5 : 4}
               />
             ))}
+            {activeIndex == null && line.pts.length > 0 ? (
+              <text
+                className="ind-dash-history__value"
+                x={line.pts[lastIndex]!.x}
+                y={line.pts[lastIndex]!.y - 10}
+                textAnchor="middle"
+              >
+                {years[lastIndex]![line.key]}
+              </text>
+            ) : null}
           </g>
         ))}
 
-        {years.map((y, i) => (
-          <text
-            key={y.year}
-            className="ind-dash-area__axis"
-            x={xAt(i)}
-            y={height - 8}
-            textAnchor="middle"
-          >
-            {yearLabel(y.year)}
-          </text>
-        ))}
+        {years.map((y, i) =>
+          i % labelEvery === lastIndex % labelEvery || i === activeIndex ? (
+            <text
+              key={y.year}
+              className={`ind-dash-area__axis ${activeIndex === i ? "is-strong" : ""}`}
+              x={xAt(i)}
+              y={height - 6}
+              textAnchor={i === 0 ? "start" : i === lastIndex ? "end" : "middle"}
+            >
+              {yearLabel(y.year)}
+            </text>
+          ) : null,
+        )}
       </svg>
 
       {active ? (
         <div
           className="ind-dash-area__tooltip"
           style={{
-            left: `${(activeX / width) * 100}%`,
-            top: `${(yAt(Math.max(active.injuries, active.lostTimeCases)) / height) * 100}%`,
+            left: `${((activeX + (tooltipOnRight ? 12 : -12)) / width) * 100}%`,
+            top: 0,
+            transform: tooltipOnRight ? "none" : "translateX(-100%)",
           }}
         >
           <div className="ind-dash-area__tooltip-title">{yearLabel(active.year)}</div>
@@ -659,6 +800,28 @@ function InjuryHistoryChart({
           </div>
         </div>
       ) : null}
+
+      <table className="visually-hidden">
+        <caption>Injuries and lost-time cases by year</caption>
+        <thead>
+          <tr>
+            <th scope="col">Year</th>
+            <th scope="col">Injuries</th>
+            <th scope="col">Lost-time cases</th>
+            <th scope="col">Days away</th>
+          </tr>
+        </thead>
+        <tbody>
+          {years.map((y) => (
+            <tr key={y.year}>
+              <th scope="row">{yearLabel(y.year)}</th>
+              <td>{y.injuries}</td>
+              <td>{y.lostTimeCases}</td>
+              <td>{y.daysAway}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -701,6 +864,12 @@ export function InjuryHistoryCard({
   years: InjuryHistoryYear[];
   currentYear?: number;
 }) {
+  const [range, setRange] = useState<HistoryRange>(5);
+  const shown = useMemo(
+    () => fillHistoryYears(years, currentYear, range),
+    [years, currentYear, range],
+  );
+  // Badges compare real years only, not the zero years added to fill the range.
   const injuriesChange = injuryHistoryChange(years, "injuries", currentYear);
   const lostTimeChange = injuryHistoryChange(years, "lostTimeCases", currentYear);
   return (
@@ -711,12 +880,27 @@ export function InjuryHistoryCard({
             <h5 className="mb-1">Injury History</h5>
             <p className="text-muted small mb-0">Injuries and lost-time cases by year</p>
           </div>
-          <Link
-            className="small text-primary fw-semibold text-decoration-none"
-            href="/modules/osha/"
-          >
-            View OSHA log →
-          </Link>
+          <div className="d-flex align-items-center gap-3">
+            <div className="btn-group btn-group-sm" role="group" aria-label="Years shown">
+              {HISTORY_RANGES.map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  className={`btn ${range === r ? "btn-primary" : "btn-outline-secondary"}`}
+                  aria-pressed={range === r}
+                  onClick={() => setRange(r)}
+                >
+                  {r} yrs
+                </button>
+              ))}
+            </div>
+            <Link
+              className="small text-primary fw-semibold text-decoration-none"
+              href="/modules/osha/"
+            >
+              View OSHA log →
+            </Link>
+          </div>
         </div>
         {years.length === 0 ? (
           <p className="text-muted mb-0">No injuries or OSHA cases recorded yet.</p>
@@ -735,7 +919,7 @@ export function InjuryHistoryCard({
               <HistoryChangeBadge label="Injuries" change={injuriesChange} />
               <HistoryChangeBadge label="Lost time" change={lostTimeChange} />
             </div>
-            <InjuryHistoryChart years={years} currentYear={currentYear} />
+            <InjuryHistoryChart years={shown} currentYear={currentYear} />
           </>
         )}
       </div>

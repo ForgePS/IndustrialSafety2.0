@@ -4784,6 +4784,30 @@ html[data-walkthrough-mode="interactive"] .layout-page {
   stroke-linejoin: round;
 }
 
+.ind-dash-history__line.is-partial {
+  stroke-dasharray: 6 5;
+}
+
+.ind-dash-history__baseline {
+  stroke: rgba(67, 89, 113, 0.35);
+  stroke-width: 1;
+}
+
+.ind-dash-history__value {
+  fill: var(--ind-heading, #566a7f);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  paint-order: stroke;
+  stroke: var(--ind-surface, #fff);
+  stroke-width: 3px;
+}
+
+.ind-dash-area__axis.is-strong {
+  fill: var(--ind-heading, #566a7f);
+  font-weight: 600;
+}
+
 .ind-dash-history__dot {
   fill: var(--ind-surface, #fff);
   stroke: var(--ind-history-color);
