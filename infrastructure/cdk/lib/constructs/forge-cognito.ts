@@ -113,7 +113,11 @@ export class ForgeCognito extends Construct {
     );
 
     const customMessageFn = new lambda.Function(this, "PasswordResetCustomMessage", {
-      functionName: resourceName(config, "lambda", "cognito-custom-message"),
+      // "-cdk" suffix: production already has a hand-deployed function named
+      // "<prefix>-lambda-cognito-custom-message" wired to the pool. A distinct name lets
+      // CloudFormation create this one and swap the pool trigger in a single update,
+      // with no window where the trigger points at a missing function.
+      functionName: resourceName(config, "lambda", "cognito-custom-message-cdk"),
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: "index.handler",
       code: lambda.Code.fromAsset(path.join(cdkDir, "../lambdas/cognito-custom-message")),
