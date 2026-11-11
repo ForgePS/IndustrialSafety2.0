@@ -196,21 +196,27 @@ export const productionCostProfile: CostProfile = {
   knobs: {
     networking: {
       availabilityZoneCount: 3,
-      natGatewayCount: 3,
+      // Cost: single NAT (~$33/mo each). Outbound egress from all private subnets routes
+      // through one AZ; inbound app traffic is unaffected. Raise to 3 for per-AZ egress HA.
+      natGatewayCount: 1,
       enableVpcFlowLogs: true,
       flowLogDestination: "cloudwatch",
       enableInterfaceEndpoints: true,
     },
     database: {
-      // Floor above 2 ACU avoids Sunday-morning cold latency after idle scale-down.
-      serverlessMinCapacity: 4,
+      // Cost: observed load (Nov 2026) is ~1% CPU on a 4 ACU floor. 1 ACU keeps the instance
+      // warm (auto-pause only happens at 0) and still scales up on demand. The previous floor
+      // of 4 was chosen to avoid Sunday-morning cold latency — raise it again if that returns.
+      serverlessMinCapacity: 1,
       serverlessMaxCapacity: 32,
       backupRetentionDays: 35,
       deletionProtection: true,
-      multiAz: true,
+      // Cost: the reader replica had zero connections. Aurora storage stays replicated across
+      // 3 AZs; without a reader, writer failure recovers by instance replacement (~5–10 min).
+      multiAz: false,
     },
     compute: {
-      apiDesiredCount: 3,
+      apiDesiredCount: 2,
       workerDesiredCount: 2,
     },
     retention: {
