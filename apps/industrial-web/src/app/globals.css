@@ -4765,27 +4765,35 @@ html[data-walkthrough-mode="interactive"] .layout-page {
   padding-bottom: 5.5rem;
 }
 
-/* Dashboard Injury History — injuries vs lost-time cases by year */
-.ind-dash-history.is-injuries,
-.ind-dash-history__swatch.is-injuries {
-  --ind-history-color: var(--bs-warning, #ffab00);
+/* Dashboard Injury History — month by month, one line per year */
+.ind-dash-history.is-current,
+.ind-dash-history__swatch.is-current {
+  --ind-history-color: var(--bs-primary, #696cff);
+  --ind-history-width: 3;
 }
 
-.ind-dash-history.is-lost-time,
-.ind-dash-history__swatch.is-lost-time {
-  --ind-history-color: var(--bs-danger, #ff3e1d);
+.ind-dash-history.is-previous,
+.ind-dash-history__swatch.is-previous {
+  --ind-history-color: var(--bs-warning, #ffab00);
+  --ind-history-width: 2.25;
+}
+
+.ind-dash-history.is-older,
+.ind-dash-history__swatch.is-older {
+  --ind-history-color: #a1acb8;
+  --ind-history-width: 1.5;
 }
 
 .ind-dash-history__line {
   fill: none;
   stroke: var(--ind-history-color);
-  stroke-width: 2.5;
+  stroke-width: var(--ind-history-width, 2);
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.ind-dash-history__line.is-partial {
-  stroke-dasharray: 6 5;
+.ind-dash-history.is-older .ind-dash-history__line {
+  opacity: 0.7;
 }
 
 .ind-dash-history__baseline {
