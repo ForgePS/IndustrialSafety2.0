@@ -258,7 +258,12 @@ import {
   writeOshaForm300AMetaToSitePayload,
   type OshaRecordability,
 } from "./osha-helpers.js";
-import { buildInjuryHistory, incidentYear, isInjuryCategory } from "./injury-history.js";
+import {
+  buildInjuryHistory,
+  incidentYearMonth,
+  isInjuryCategory,
+  type InjuryHistoryDate,
+} from "./injury-history.js";
 import { incidentOccurredDate, monthlyIncidentTrend } from "./incident-trend.js";
 import {
   ehsDirectorSignatureValueChanged,
@@ -17256,11 +17261,11 @@ export class IndustrialDomainService {
         })
         .from(industrialIncidents)
         .where(and(...incidentConditions));
-      const injuryYears: Array<number | null> = [];
+      const injuries: InjuryHistoryDate[] = [];
       for (const row of incidents) {
         const payload = this.unwrapSourcePayload(row.sourcePayload);
         if (!isInjuryCategory(payload.category ?? payload.incidentCategory)) continue;
-        injuryYears.push(incidentYear(payload, row.createdAt));
+        injuries.push(incidentYearMonth(payload, row.createdAt));
       }
 
       const oshaCases = await this.loadHydratedOshaCases(
@@ -17269,7 +17274,7 @@ export class IndustrialDomainService {
         siteId ? { siteId } : {},
       );
       const years = buildInjuryHistory({
-        injuryYears,
+        injuries,
         oshaCases,
         currentYear: new Date().getUTCFullYear(),
       });

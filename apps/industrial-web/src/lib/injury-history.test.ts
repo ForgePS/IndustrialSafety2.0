@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { injuryHistoryChange, toInjuryHistory } from "./injury-history";
+import { fillHistoryYears, injuryHistoryChange, toInjuryHistory } from "./injury-history";
 
 const years = toInjuryHistory({
   years: [
@@ -15,6 +15,25 @@ describe("injury history", () => {
     expect(years.map((y) => y.year)).toEqual([2024, 2025, 2026]);
     expect(toInjuryHistory(null)).toEqual([]);
     expect(toInjuryHistory({ years: [{ year: 2020, injuries: -2 }] })[0]?.injuries).toBe(0);
+  });
+
+  it("always has 12 months per year, filling missing months with 0", () => {
+    const [row] = toInjuryHistory({
+      years: [{ year: 2025, injuries: 3, months: [{ injuries: 2 }, { injuries: 1, daysAway: 4 }] }],
+    });
+    expect(row!.months).toHaveLength(12);
+    expect(row!.months[0]).toEqual({ injuries: 2, lostTimeCases: 0, daysAway: 0 });
+    expect(row!.months[1]!.daysAway).toBe(4);
+    expect(row!.months[11]!.injuries).toBe(0);
+    expect(toInjuryHistory({ years: [{ year: 2024 }] })[0]!.months).toHaveLength(12);
+  });
+
+  it("fills every year in the range, oldest first", () => {
+    const filled = fillHistoryYears(years, 2026, 5);
+    expect(filled.map((y) => y.year)).toEqual([2022, 2023, 2024, 2025, 2026]);
+    expect(filled[0]!.injuries).toBe(0);
+    expect(filled[0]!.months).toHaveLength(12);
+    expect(filled[2]!.injuries).toBe(10);
   });
 
   it("compares the last two full years, skipping the current year", () => {
