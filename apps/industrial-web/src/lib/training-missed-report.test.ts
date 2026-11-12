@@ -5,6 +5,7 @@ import {
   daysLate,
   daysLateLabel,
   dueDay,
+  groupByDepartment,
   type MissedReportRosterRow,
 } from "./training-missed-report";
 
@@ -83,10 +84,29 @@ describe("buildMissedTrainingReport", () => {
   });
 
   it("exports one CSV line per missed training", () => {
-    const csv = buildMissedTrainingCsv(buildMissedTrainingReport([row({})], now));
+    const csv = buildMissedTrainingCsv(
+      buildMissedTrainingReport([row({ departmentName: "Shipping" })], now),
+    );
     expect(csv.split("\n")).toEqual([
-      "Name,Employee #,Location,Training,Assigned,Due by,Days late",
-      '"SMITH, JANE",100,,Forklift,2026-10-15,2026-11-01,9',
+      "Department,Name,Employee #,Location,Training,Assigned,Due by,Days late",
+      'Shipping,"SMITH, JANE",100,,Forklift,2026-10-15,2026-11-01,9',
     ]);
+  });
+});
+
+describe("groupByDepartment", () => {
+  it("sorts departments A-Z with people who have none last", () => {
+    const people = buildMissedTrainingReport(
+      [
+        row({ personnelId: "p1", userLabel: "SMITH, JANE", departmentName: "Shipping" }),
+        row({ personnelId: "p2", userLabel: "ADAMS, BO", departmentName: "Production" }),
+        row({ personnelId: "p3", userLabel: "COLE, AL", departmentName: null }),
+        row({ personnelId: "p4", userLabel: "BAKER, CY", departmentName: "Shipping" }),
+      ],
+      now,
+    );
+    const groups = groupByDepartment(people);
+    expect(groups.map((g) => g.name)).toEqual(["Production", "Shipping", "No department"]);
+    expect(groups[1]!.people.map((p) => p.name)).toEqual(["BAKER, CY", "SMITH, JANE"]);
   });
 });

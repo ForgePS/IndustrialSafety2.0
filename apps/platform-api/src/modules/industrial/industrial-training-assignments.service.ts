@@ -2,6 +2,7 @@ import { Inject, Injectable, Optional } from "@nestjs/common";
 import { createHash, randomBytes } from "node:crypto";
 import {
   createId,
+  industrialDepartments,
   industrialPersonnel,
   industrialSites,
   industrialTrainingAssignmentAssignees,
@@ -888,6 +889,7 @@ export class IndustrialTrainingAssignmentsService {
           ).toLocaleUpperCase("en-US"),
           siteId: personnelLabel?.siteId ?? null,
           siteName: personnelLabel?.siteName ?? null,
+          departmentName: personnelLabel?.departmentName ?? null,
           groupIds: personnelLabel?.groupIds ?? [],
           groupNames: personnelLabel?.groupNames ?? [],
           status: a.status,
@@ -1178,6 +1180,8 @@ export class IndustrialTrainingAssignmentsService {
         displayName: string;
         siteId: string | null;
         siteName: string | null;
+        departmentId: string | null;
+        departmentName: string | null;
         groupIds: string[];
         groupNames: string[];
       }
@@ -1193,9 +1197,15 @@ export class IndustrialTrainingAssignmentsService {
         lastName: industrialPersonnel.lastName,
         siteId: industrialPersonnel.siteId,
         siteName: industrialSites.name,
+        departmentId: industrialPersonnel.departmentId,
+        departmentName: industrialDepartments.name,
       })
       .from(industrialPersonnel)
       .leftJoin(industrialSites, eq(industrialPersonnel.siteId, industrialSites.id))
+      .leftJoin(
+        industrialDepartments,
+        eq(industrialPersonnel.departmentId, industrialDepartments.id),
+      )
       .where(
         and(
           eq(industrialPersonnel.tenantId, tenantId),
@@ -1250,6 +1260,8 @@ export class IndustrialTrainingAssignmentsService {
         displayName,
         siteId: row.siteId ?? null,
         siteName: row.siteName?.trim() || null,
+        departmentId: row.departmentId ?? null,
+        departmentName: row.departmentName?.trim() || null,
         groupIds: groups.ids,
         groupNames: groups.names,
       });

@@ -11,6 +11,7 @@ export type MissedReportRosterRow = {
   employeeNumber?: string | null;
   userLabel: string;
   siteName?: string | null;
+  departmentName?: string | null;
   status: string;
   dueAt?: string | null;
   assignedAt?: string | null;
@@ -31,7 +32,15 @@ export type MissedTrainingPerson = {
   name: string;
   employeeNumber: string | null;
   siteName: string | null;
+  departmentName: string | null;
   trainings: MissedTraining[];
+};
+
+export const NO_DEPARTMENT = "No department";
+
+export type MissedTrainingDepartment = {
+  name: string;
+  people: MissedTrainingPerson[];
 };
 
 const DAY_MS = 86_400_000;
@@ -95,6 +104,7 @@ export function buildMissedTrainingReport(
         name: row.userLabel,
         employeeNumber,
         siteName: row.siteName ?? null,
+        departmentName: row.departmentName?.trim() || null,
         trainings: [],
       };
       people.set(key, person);
@@ -115,6 +125,28 @@ export function buildMissedTrainingReport(
     );
   }
   return result.sort((a, b) => nameCollator.compare(a.name, b.name));
+}
+
+/** Departments A–Z with "No department" last; people stay sorted by name. */
+export function groupByDepartment(
+  people: readonly MissedTrainingPerson[],
+): MissedTrainingDepartment[] {
+  const groups = new Map<string, MissedTrainingDepartment>();
+  for (const person of people) {
+    const name = person.departmentName || NO_DEPARTMENT;
+    const key = name.toLowerCase();
+    let group = groups.get(key);
+    if (!group) {
+      group = { name, people: [] };
+      groups.set(key, group);
+    }
+    group.people.push(person);
+  }
+  return [...groups.values()].sort((a, b) => {
+    if (a.name === NO_DEPARTMENT) return 1;
+    if (b.name === NO_DEPARTMENT) return -1;
+    return nameCollator.compare(a.name, b.name);
+  });
 }
 
 /** "Nov 9, 2026" for a YYYY-MM-DD day. */
@@ -139,12 +171,22 @@ function escapeCsv(value: string): string {
 
 export function buildMissedTrainingCsv(people: readonly MissedTrainingPerson[]): string {
   const lines = [
-    ["Name", "Employee #", "Location", "Training", "Assigned", "Due by", "Days late"].join(","),
+    [
+      "Department",
+      "Name",
+      "Employee #",
+      "Location",
+      "Training",
+      "Assigned",
+      "Due by",
+      "Days late",
+    ].join(","),
   ];
-  for (const person of people) {
+  for (const person of groupByDepartment(people).flatMap((d) => d.people)) {
     for (const t of person.trainings) {
       lines.push(
         [
+          person.departmentName || NO_DEPARTMENT,
           person.name,
           person.employeeNumber ?? "",
           person.siteName ?? "",
@@ -175,27 +217,34 @@ export function buildMissedTrainingPrintHtml(
 ): string {
   const total = people.reduce((sum, p) => sum + p.trainings.length, 0);
   const generated = now.toLocaleString();
-  const sections = people
-    .map((person) => {
-      const meta = [person.employeeNumber ? `#${person.employeeNumber}` : "", person.siteName ?? ""]
-        .filter(Boolean)
-        .map(escapeHtml)
-        .join(" · ");
-      const rows = person.trainings
-        .map(
-          (t) =>
-            `<tr><td>${escapeHtml(t.title)}</td><td>${formatReportDay(t.assignedOn)}</td><td>${formatReportDay(t.dueOn)}</td><td class="late">${daysLateLabel(t.daysLate)}</td></tr>`,
-        )
-        .join("");
-      return `<section><h2>${escapeHtml(person.name)}${meta ? ` <span>${meta}</span>` : ""}</h2>
+  const personSection = (person: MissedTrainingPerson) => {
+    const meta = [person.employeeNumber ? `#${person.employeeNumber}` : "", person.siteName ?? ""]
+      .filter(Boolean)
+      .map(escapeHtml)
+      .join(" · ");
+    const rows = person.trainings
+      .map(
+        (t) =>
+          `<tr><td>${escapeHtml(t.title)}</td><td>${formatReportDay(t.assignedOn)}</td><td>${formatReportDay(t.dueOn)}</td><td class="late">${daysLateLabel(t.daysLate)}</td></tr>`,
+      )
+      .join("");
+    return `<section><h2>${escapeHtml(person.name)}${meta ? ` <span>${meta}</span>` : ""}</h2>
 <table><thead><tr><th>Training</th><th>Assigned</th><th>Due by</th><th>Days late</th></tr></thead><tbody>${rows}</tbody></table></section>`;
+  };
+  const sections = groupByDepartment(people)
+    .map((dept) => {
+      const count = dept.people.length;
+      return `<div class="dept"><h3>${escapeHtml(dept.name)} <span>${count} ${count === 1 ? "person" : "people"}</span></h3>${dept.people.map(personSection).join("")}</div>`;
     })
     .join("");
   return `<!doctype html><html><head><meta charset="utf-8"><title>Missed trainings</title>
 <style>
 body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#222;margin:24px;font-size:12px}
 h1{font-size:18px;margin:0 0 4px}p.sub{color:#666;margin:0 0 16px}
-section{break-inside:avoid;margin-bottom:16px}
+section{break-inside:avoid;margin:0 0 16px 12px}
+.dept{margin-bottom:20px}
+h3{font-size:15px;margin:0 0 8px;padding:4px 8px;background:#f1f3f5;border-left:4px solid #435971}
+h3 span{font-weight:normal;color:#666;font-size:12px}
 h2{font-size:14px;margin:0 0 4px;border-bottom:1px solid #ccc;padding-bottom:2px}
 h2 span{font-weight:normal;color:#666;font-size:12px}
 table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:3px 6px;border-bottom:1px solid #eee}
