@@ -35,11 +35,14 @@ import {
   canRenameFolder,
   deleteDocumentFolder,
   deleteFolderPrompt,
+  DOCUMENT_UPLOAD_ACCEPT,
+  folderUploadNotice,
   renameDocumentFolder,
   FALLBACK_DOCUMENT_FOLDERS,
   listDocumentFolders,
   sameFolderName,
   sortByDocumentName,
+  uploadFilesToFolder,
   type DocumentFolder,
 } from "@/lib/document-folders";
 
@@ -240,6 +243,32 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
       await loadFolders();
     } catch (e) {
       setError(formatApiErrorMessage(e, "Unable to delete folder"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onUploadToFolder(folder: DocumentFolder, files: File[]) {
+    if (!canManage || files.length === 0) return;
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const result = await uploadFilesToFolder(folder.name, files, {
+        createDocument: (body) => createControlledDocument(body),
+        uploadVersion: (documentId, file) => uploadControlledVersion(documentId, file),
+        discardDocument: (documentId) => archiveControlledDocument(documentId),
+      });
+      if (result.uploaded.length)
+        setNotice(folderUploadNotice(folder.name, result.uploaded.length));
+      if (result.failed.length) {
+        setError(
+          result.failed
+            .map((f) => `${f.filename}: ${formatApiErrorMessage(f.error, "Upload failed")}`)
+            .join("; "),
+        );
+      }
+      await Promise.all([loadLibrary(), loadFolders()]);
     } finally {
       setBusy(false);
     }
@@ -478,6 +507,28 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
                 New folder
               </button>
             ) : null}
+            {canManage && activeFolder ? (
+              <label
+                className={`btn btn-sm btn-primary mb-0${busy ? " disabled" : ""}`}
+                title={`Upload files into ${activeFolder.name}`}
+              >
+                <i className="bx bx-upload me-1" aria-hidden="true" />
+                Upload to folder
+                <input
+                  type="file"
+                  className="visually-hidden"
+                  multiple
+                  accept={DOCUMENT_UPLOAD_ACCEPT}
+                  disabled={busy}
+                  aria-label={`Upload files into ${activeFolder.name}`}
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files ?? []);
+                    e.target.value = "";
+                    void onUploadToFolder(activeFolder, files);
+                  }}
+                />
+              </label>
+            ) : null}
             {canManage && activeFolder && canRenameFolder(activeFolder) && !renamingFolder ? (
               <button
                 type="button"
@@ -680,7 +731,10 @@ export function DocumentsWorkspace({ moduleName }: { moduleName: string }) {
                         {loading
                           ? "Loading…"
                           : activeFolderName
-                            ? `No documents in ${activeFolder?.name ?? activeFolderName} yet.`
+                            ? `No documents in ${activeFolder?.name ?? activeFolderName} yet.` +
+                              (canManage && activeFolder
+                                ? " Use Upload to folder to add files."
+                                : "")
                             : "No controlled documents found."}
                       </td>
                     </tr>
