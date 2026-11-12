@@ -8,7 +8,9 @@ import {
   buildMissedTrainingReport,
   daysLateLabel,
   formatReportDay,
+  groupByDepartment,
   localDay,
+  NO_DEPARTMENT,
 } from "@/lib/training-missed-report";
 import { downloadText, openPrintHtml, openPrintWindow } from "@/lib/sanitation-module";
 
@@ -20,19 +22,25 @@ type Props = {
 
 export function TrainingMissedReport({ roster, canManage, onRefresh }: Props) {
   const [search, setSearch] = useState("");
+  const [department, setDepartment] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const people = useMemo(() => buildMissedTrainingReport(roster ?? []), [roster]);
+  const departmentNames = useMemo(() => groupByDepartment(people).map((d) => d.name), [people]);
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return people;
-    return people.filter(
+    const inDepartment = department
+      ? people.filter((p) => (p.departmentName || NO_DEPARTMENT) === department)
+      : people;
+    if (!q) return inDepartment;
+    return inDepartment.filter(
       (p) =>
         p.name.toLowerCase().includes(q) ||
         (p.employeeNumber ?? "").toLowerCase().includes(q) ||
         p.trainings.some((t) => t.title.toLowerCase().includes(q)),
     );
-  }, [people, search]);
+  }, [people, search, department]);
+  const departments = useMemo(() => groupByDepartment(visible), [visible]);
   const total = visible.reduce((sum, p) => sum + p.trainings.length, 0);
 
   const print = () => {
@@ -105,6 +113,20 @@ export function TrainingMissedReport({ roster, canManage, onRefresh }: Props) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+        <select
+          className="form-select form-select-sm"
+          style={{ maxWidth: "16rem" }}
+          aria-label="Filter by department"
+          value={department}
+          onChange={(e) => setDepartment(e.target.value)}
+        >
+          <option value="">All departments</option>
+          {departmentNames.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
         <span className="text-muted small">
           {visible.length} {visible.length === 1 ? "person" : "people"} · {total}{" "}
           {total === 1 ? "training" : "trainings"}
@@ -120,43 +142,53 @@ export function TrainingMissedReport({ roster, canManage, onRefresh }: Props) {
             : "No missed trainings. Everyone is on time."}
         </p>
       ) : (
-        visible.map((person) => (
-          <div key={person.key} className="card mb-3">
-            <div className="card-header py-2 d-flex flex-wrap justify-content-between gap-2">
-              <span className="fw-semibold">
-                {person.name}
-                {person.employeeNumber ? (
-                  <span className="text-muted fw-normal ms-2">#{person.employeeNumber}</span>
-                ) : null}
-                {person.siteName ? (
-                  <span className="text-muted fw-normal ms-2">{person.siteName}</span>
-                ) : null}
+        departments.map((dept) => (
+          <section key={dept.name} className="mb-4">
+            <h5 className="mb-2 pb-1 border-bottom d-flex flex-wrap align-items-baseline gap-2">
+              {dept.name}
+              <span className="text-muted small fw-normal">
+                {dept.people.length} {dept.people.length === 1 ? "person" : "people"}
               </span>
-              <span className="badge bg-label-danger">{person.trainings.length} missed</span>
-            </div>
-            <div className="table-responsive">
-              <table className="table table-sm mb-0">
-                <thead>
-                  <tr>
-                    <th>Training</th>
-                    <th>Assigned</th>
-                    <th>Due by</th>
-                    <th>Days late</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {person.trainings.map((t) => (
-                    <tr key={t.assignmentId}>
-                      <td>{t.title}</td>
-                      <td>{formatReportDay(t.assignedOn)}</td>
-                      <td>{formatReportDay(t.dueOn)}</td>
-                      <td className="text-danger fw-semibold">{daysLateLabel(t.daysLate)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+            </h5>
+            {dept.people.map((person) => (
+              <div key={person.key} className="card mb-3">
+                <div className="card-header py-2 d-flex flex-wrap justify-content-between gap-2">
+                  <span className="fw-semibold">
+                    {person.name}
+                    {person.employeeNumber ? (
+                      <span className="text-muted fw-normal ms-2">#{person.employeeNumber}</span>
+                    ) : null}
+                    {person.siteName ? (
+                      <span className="text-muted fw-normal ms-2">{person.siteName}</span>
+                    ) : null}
+                  </span>
+                  <span className="badge bg-label-danger">{person.trainings.length} missed</span>
+                </div>
+                <div className="table-responsive">
+                  <table className="table table-sm mb-0">
+                    <thead>
+                      <tr>
+                        <th>Training</th>
+                        <th>Assigned</th>
+                        <th>Due by</th>
+                        <th>Days late</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {person.trainings.map((t) => (
+                        <tr key={t.assignmentId}>
+                          <td>{t.title}</td>
+                          <td>{formatReportDay(t.assignedOn)}</td>
+                          <td>{formatReportDay(t.dueOn)}</td>
+                          <td className="text-danger fw-semibold">{daysLateLabel(t.daysLate)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))}
+          </section>
         ))
       )}
     </>

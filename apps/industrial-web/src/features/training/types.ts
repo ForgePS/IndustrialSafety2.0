@@ -234,6 +234,8 @@ export type TrainingTeamSummary = {
 
     siteName?: string | null;
 
+    departmentName?: string | null;
+
     groupIds?: string[];
 
     groupNames?: string[];
