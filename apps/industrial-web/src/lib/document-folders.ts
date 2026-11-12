@@ -79,3 +79,74 @@ export function sortByDocumentName<T extends { name: string }>(items: readonly T
 export function sameFolderName(a: string | null | undefined, b: string | null | undefined) {
   return (a ?? "").trim().toLowerCase() === (b ?? "").trim().toLowerCase();
 }
+
+/** File types the documents API accepts for a version upload. */
+export const DOCUMENT_UPLOAD_ACCEPT = [
+  ".pdf",
+  ".doc",
+  ".docx",
+  ".xls",
+  ".xlsx",
+  ".ppt",
+  ".pptx",
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".webp",
+  ".txt",
+].join(",");
+
+/** Document name for an uploaded file: the filename without its extension. */
+export function documentNameFromFilename(filename: string): string {
+  const base = filename.replace(/^.*[\\/]/, "").trim();
+  const withoutExt = base.replace(/\.[^.\s]{1,10}$/, "");
+  const name = (withoutExt || base).replace(/[_\s]+/g, " ").trim();
+  return name || "Untitled document";
+}
+
+export type FolderUploadDeps = {
+  createDocument: (body: { name: string; category: string }) => Promise<{ id: string }>;
+  uploadVersion: (documentId: string, file: File) => Promise<unknown>;
+  /** Called when a file fails after its document was created, so no empty draft is left. */
+  discardDocument?: (documentId: string) => Promise<unknown>;
+};
+
+export type FolderUploadResult = {
+  uploaded: Array<{ filename: string; documentId: string }>;
+  failed: Array<{ filename: string; error: unknown }>;
+};
+
+/**
+ * Upload files into a folder through the normal document flow: each file becomes a new
+ * document whose category is the folder name, with the file as its first version.
+ */
+export async function uploadFilesToFolder(
+  folderName: string,
+  files: readonly File[],
+  deps: FolderUploadDeps,
+): Promise<FolderUploadResult> {
+  const result: FolderUploadResult = { uploaded: [], failed: [] };
+  for (const file of files) {
+    let documentId: string | null = null;
+    try {
+      const created = await deps.createDocument({
+        name: documentNameFromFilename(file.name),
+        category: folderName,
+      });
+      documentId = created.id;
+      await deps.uploadVersion(created.id, file);
+      result.uploaded.push({ filename: file.name, documentId: created.id });
+    } catch (error) {
+      if (documentId && deps.discardDocument) {
+        await deps.discardDocument(documentId).catch(() => undefined);
+      }
+      result.failed.push({ filename: file.name, error });
+    }
+  }
+  return result;
+}
+
+export function folderUploadNotice(folderName: string, uploadedCount: number): string {
+  const docs = uploadedCount === 1 ? "1 document" : `${uploadedCount} documents`;
+  return `Uploaded ${docs} to "${folderName}"`;
+}
