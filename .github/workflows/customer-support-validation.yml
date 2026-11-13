@@ -97,6 +97,9 @@ jobs:
       - name: Run help desk database regression
         run: node apps/web/tests/fis-hd01-helpdesk-db.cjs
 
+      - name: Run RPC execute hardening regression
+        run: node apps/web/tests/rpc-execute-hardening-db.cjs
+
       - name: Install Playwright Chromium
         run: |
           pnpm add -Dw @playwright/test@1.55.0 --lockfile=false
