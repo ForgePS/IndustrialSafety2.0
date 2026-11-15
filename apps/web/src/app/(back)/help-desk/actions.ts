@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@repo/supabase/server'
-import { getAuthUser } from '@repo/supabase/serverHelpers'
+import { currentUser } from '@/lib/platform/identity'
 
 import {
   callHelpdeskRpc,
@@ -310,9 +310,7 @@ export async function articleFeedbackAction(input: { articleId: string; helpful:
 }
 
 export async function markNotificationsReadAction(input: { ids: string[] | 'all' }): Promise<HelpdeskActionResult> {
-  const {
-    data: { user }
-  } = await getAuthUser()
+  const user = await currentUser()
 
   if (!user) return denied('Sign in to manage notifications.')
   const ids = input.ids === 'all' ? 'all' : (input.ids || []).filter(isUuid).slice(0, 200)

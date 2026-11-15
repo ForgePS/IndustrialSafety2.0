@@ -9,6 +9,7 @@ import { getScopedPersonnel } from '@/lib/forgePersonnel'
 import { personnelRecordWithinScope } from '@/lib/forgeScope'
 import { contentComplete, isOpenAssignment, matrixStatus } from '@/lib/forgeTrainingRules'
 import type { MatrixStatus } from '@/lib/forgeTrainingRules'
+import { storage } from '@/lib/platform/storage'
 
 export const TRAINING_BUCKET = 'forge-training'
 export const PORTAL_COOKIE = 'forge-training-portal'
@@ -295,9 +296,9 @@ export const materialSignedUrl = async (organizationId: string, courseId: string
 
   if (!material) return { error: 'Material not found.' }
 
-  const { data, error } = await supabase.storage.from(TRAINING_BUCKET).createSignedUrl(material.storage_path, 600, { download: false })
+  const { url, error } = await storage().createSignedUrl(TRAINING_BUCKET, material.storage_path, 600)
 
-  return error || !data?.signedUrl ? { error: 'Unable to open this material.' } : { url: data.signedUrl as string }
+  return error || !url ? { error: 'Unable to open this material.' } : { url }
 }
 
 // ---------------------------------------------------------------------------

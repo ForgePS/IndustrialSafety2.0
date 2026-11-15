@@ -7,6 +7,7 @@ import { wcRecordWithinScope } from '@/lib/forgeWorkersComp'
 import { renderFilledWcForm } from '@/lib/forgeWcFormsPdf'
 import { WC_FORM_DEFINITIONS, layoutFor, printedValues } from '@/lib/forgeWcFormsRules'
 import type { WcFormKey } from '@/lib/forgeWcFormsRules'
+import { storage } from '@/lib/platform/storage'
 
 /**
  * Workers' comp case forms (server side): access, templates, prefill, PDF rendering and history.
@@ -106,11 +107,11 @@ export const prefillWcForm = async (organizationId: string, record: any, formKey
 export const wcFormSignedDate = (signedAt: string | null) => (signedAt ? zonedDateTimeParts(signedAt, OSHA_TIME_ZONE).date : null)
 
 const download = async (path: string) => {
-  const { data, error } = await db().storage.from(WC_FORMS_BUCKET).download(path)
+  const { bytes, error } = await storage().download(WC_FORMS_BUCKET, path)
 
-  if (error || !data) throw new Error('Unable to read the stored form file.')
+  if (error || !bytes) throw new Error('Unable to read the stored form file.')
 
-  return new Uint8Array(await data.arrayBuffer())
+  return bytes
 }
 
 export const getWcTemplateFile = async (organizationId: string, templateId: string) => {

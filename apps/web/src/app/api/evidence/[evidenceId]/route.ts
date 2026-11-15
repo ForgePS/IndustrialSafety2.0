@@ -1,4 +1,4 @@
-import { getAuthUser } from '@repo/supabase/serverHelpers'
+import { currentUser } from '@/lib/platform/identity'
 import { getEvidenceDownloadUrl } from '@/lib/forgeEvidence'
 import { getTenantContext } from '@/lib/forgeTenantContext'
 import { NextResponse } from 'next/server'
@@ -7,9 +7,7 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ evidenceId: string }> }
 ) {
-  const {
-    data: { user }
-  } = await getAuthUser()
+  const user = await currentUser()
   if (!user) return NextResponse.json({ error: 'Sign in required.' }, { status: 401 })
 
   const context = await getTenantContext()

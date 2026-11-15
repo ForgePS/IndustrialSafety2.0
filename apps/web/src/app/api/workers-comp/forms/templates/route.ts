@@ -8,6 +8,7 @@ import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import { WC_FORMS_BUCKET, WC_TEMPLATE_MAX_BYTES } from '@/lib/forgeWcForms'
 import { inspectWcFormTemplate } from '@/lib/forgeWcFormsPdf'
 import { WC_FORM_DEFINITIONS, isWcFormKey } from '@/lib/forgeWcFormsRules'
+import { storage } from '@/lib/platform/storage'
 
 export const dynamic = 'force-dynamic'
 
@@ -61,7 +62,7 @@ export async function POST(request: Request) {
   const fileName = file.name.replace(/[^A-Za-z0-9._ ()-]/g, '_').slice(0, 255) || `${formKey}.pdf`
   const sha256 = createHash('sha256').update(bytes).digest('hex')
 
-  const { error: uploadError } = await supabase.storage.from(WC_FORMS_BUCKET).upload(storagePath, bytes, { contentType: 'application/pdf', upsert: false })
+  const { error: uploadError } = await storage().upload(WC_FORMS_BUCKET, storagePath, bytes, 'application/pdf')
 
   if (uploadError) return NextResponse.json({ error: 'Unable to store the form.' }, { status: 500 })
 
@@ -78,7 +79,7 @@ export async function POST(request: Request) {
   })
 
   if (error || !template) {
-    await supabase.storage.from(WC_FORMS_BUCKET).remove([storagePath])
+    await storage().remove(WC_FORMS_BUCKET, [storagePath])
 
     return NextResponse.json({ error: 'Unable to save the form template.' }, { status: 500 })
   }

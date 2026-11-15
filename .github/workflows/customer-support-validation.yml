@@ -23,6 +23,10 @@ jobs:
       - name: Run local seed
         working-directory: apps/web
         run: supabase db reset
+      # 2.0 must stay deployable into 1.0's Aurora: apply every translated migration to a plain
+      # Postgres database as the forge2 migrator (docs/INTEGRATION_2X_INTO_1X_PLAN.md).
+      - name: Aurora rehearsal
+        run: node scripts/portability/rehearse-aurora.cjs
 
   web:
     runs-on: ubuntu-latest
@@ -37,6 +41,10 @@ jobs:
           version: 9.13.2
       - run: pnpm install --frozen-lockfile
       - run: node scripts/check-forge-ai-schemas.cjs
+      - name: Portability guard (new SQL and code stay deployable into 1.0)
+        run: node scripts/portability/check-portability.cjs
+      - run: node scripts/portability/translate-migrations.cjs --check
+      - run: node --test scripts/portability/sql.test.cjs
       - run: node --experimental-strip-types --test apps/web/tests/forge-ai-foundation.test.cjs apps/web/tests/forge-ai-agents.test.cjs apps/web/tests/forge-ai-risk-monitoring.test.cjs apps/web/tests/forge-ai-recommendations.test.cjs apps/web/tests/forge-ai-command-center.test.cjs
       - run: pnpm --filter forge-industrial-safety-2.0-web type-check
       - run: pnpm --filter forge-industrial-safety-2.0-web build
@@ -91,6 +99,9 @@ jobs:
           NEXT_PUBLIC_AUTH_MAGIC_LINK=false
           SESSION_SECRET=forge-module-smoke-test-session-secret
           EOF
+
+      - name: Integration manifest is up to date
+        run: node scripts/portability/build-manifest.cjs --check
 
       - name: Prepare second tenant for isolation test
         run: node apps/web/tests/setup-support-smoke.mjs

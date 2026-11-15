@@ -1,6 +1,8 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
-import { createClient, createServiceRoleClient } from '@repo/supabase/server'
+import { createServiceRoleClient } from '@repo/supabase/server'
+
+import { optionalUserId } from '@/lib/platform/identity'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,15 +22,7 @@ export async function GET(
     return NextResponse.redirect(new URL('/q/unavailable', request.url))
   }
 
-  let authUserId: string | null = null
-
-  try {
-    const authClient = await createClient()
-    const { data } = await authClient.auth.getUser()
-    authUserId = data.user?.id || null
-  } catch {
-    authUserId = null
-  }
+  const authUserId = await optionalUserId()
 
   const supabase = createServiceRoleClient() as any
   const { data, error } = await supabase.rpc('resolve_and_record_forge_qr_scan', {

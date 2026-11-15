@@ -6,6 +6,7 @@ import { createServiceRoleClient } from '@repo/supabase/server'
 import { writeForgeAudit } from '@/lib/forgeAudit'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import { MATERIAL_MAX_BYTES, MATERIAL_TYPES, TRAINING_BUCKET } from '@/lib/forgeTrainingLms'
+import { storage } from '@/lib/platform/storage'
 
 export const dynamic = 'force-dynamic'
 
@@ -51,9 +52,7 @@ export async function POST(request: Request) {
   const fileName = file.name.replace(/[^a-zA-Z0-9._ -]/g, '_').slice(0, 255) || 'material'
   const storagePath = `${organizationId}/${courseId}/${materialId}`
 
-  const { error: uploadError } = await supabase.storage
-    .from(TRAINING_BUCKET)
-    .upload(storagePath, await file.arrayBuffer(), { contentType: file.type, upsert: false })
+  const { error: uploadError } = await storage().upload(TRAINING_BUCKET, storagePath, await file.arrayBuffer(), file.type)
 
   if (uploadError) return NextResponse.json({ error: 'Unable to upload the file.' }, { status: 500 })
 
@@ -71,7 +70,7 @@ export async function POST(request: Request) {
   })
 
   if (error) {
-    await supabase.storage.from(TRAINING_BUCKET).remove([storagePath])
+    await storage().remove(TRAINING_BUCKET, [storagePath])
 
     return NextResponse.json({ error: 'Unable to save the material.' }, { status: 500 })
   }

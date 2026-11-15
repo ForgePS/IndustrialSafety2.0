@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { TbBell } from 'react-icons/tb'
-import { getAuthUser } from '@repo/supabase/serverHelpers'
+import { currentUser } from '@/lib/platform/identity'
 
 import { listInbox } from '@/lib/forgeNotifications'
 import NotificationInbox from './NotificationInbox'
@@ -9,9 +9,7 @@ import NotificationInbox from './NotificationInbox'
 export const metadata: Metadata = { title: 'Notifications' }
 
 const NotificationsPage = async ({ searchParams }: { searchParams: Promise<{ filter?: string }> }) => {
-  const {
-    data: { user }
-  } = await getAuthUser()
+  const user = await currentUser()
 
   if (!user) redirect('/auth/login')
   const { filter } = await searchParams

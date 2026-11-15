@@ -11,6 +11,7 @@ import {
   type ResolvedForgeResource
 } from './forgeResourceRegistry'
 import { getTenantContext } from './forgeTenantContext'
+import { storage } from '@/lib/platform/storage'
 
 export type EvidenceType =
   | 'photo'
@@ -300,15 +301,13 @@ export const getEvidenceDownloadUrl = async ({
     return { error: 'Not found.' }
   }
 
-  const { data, error } = await supabase.storage
-    .from('forge-evidence')
-    .createSignedUrl(evidence.storage_path, 60, { download: evidence.file_name })
+  const { url, error } = await storage().createSignedUrl('forge-evidence', evidence.storage_path, 60, { downloadAs: evidence.file_name })
 
-  if (error || !data?.signedUrl) {
+  if (error || !url) {
     return { error: error?.message || 'Unable to create download URL.' }
   }
 
-  return { url: data.signedUrl as string, evidence: evidence as RecordEvidence }
+  return { url, evidence: evidence as RecordEvidence }
 }
 
 export const assertEvidenceParentExists = async ({

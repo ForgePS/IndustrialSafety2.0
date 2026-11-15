@@ -1,0 +1,19 @@
+{
+  "sqlBaselineVersion": "20261109140500",
+  "code": {
+    "supabase-storage": {
+      "apps/web/src/app/(back)/my-profile/client.ts": 3
+    },
+    "supabase-auth": {
+      "apps/web/src/app/(back)/my-profile/client.ts": 1,
+      "apps/web/src/app/(back)/my-profile/server.ts": 1,
+      "apps/web/src/app/(front)/auth/actions.ts": 1,
+      "apps/web/src/app/(front)/auth/callback/route.ts": 1,
+      "apps/web/src/app/(front)/auth/confirm/route.ts": 1
+    },
+    "supabase-session": {},
+    "vercel": {
+      "apps/web/src/lib/forgeAiProvider.ts": 1
+    }
+  }
+}
