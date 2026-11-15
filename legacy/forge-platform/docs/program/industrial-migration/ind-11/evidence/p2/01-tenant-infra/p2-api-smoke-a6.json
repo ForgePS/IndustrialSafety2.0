@@ -1,0 +1,185 @@
+{
+  "ok": true,
+  "at": "2026-08-05T19:37:50.234Z",
+  "base": "https://d108fstxdv69bo.cloudfront.net",
+  "userId": "ba491113-ba27-4ee6-8989-2eec1fe285d2",
+  "results": [
+    {
+      "label": "auth_me_home",
+      "path": "/api/v1/auth/me",
+      "method": "GET",
+      "activeTenantId": "019f9c33-2875-75aa-8d0e-e4bec722565e",
+      "status": 200,
+      "body": "{\"data\":{\"userId\":\"ba491113-ba27-4ee6-8989-2eec1fe285d2\",\"personId\":null,\"tenantId\":\"019f9c33-2875-75aa-8d0e-e4bec722565e\",\"organizationIds\":[],\"permissions\":[\"platform.tenant.read\",\"platform.tenant.create\",\"platform.tenant.update\",\"platform.tenant.suspend\",\"platform.organization.read\",\"platform.organization.create\",\"platform.person.read\",\"platform.person.create\",\"platform.person.update\",\"platform.person.merge\",\"platform.user.invite\",\"platform.role.assign\",\"platform.permission.read\",\"platform.audit.read\",\"platform.feature.manage\",\"platform.entitlement.manage\",\"platform.configuration.update\",\"platform.sensitive_data.read\",\"platform.invitation.read\",\"platform.invitation.manage\",\"platform.membership.read\",\"platform.membership.manage\",\"platform.onboarding.manage\"],\"activeProducts\":[],\"activeModules\":[],\"isPlatformAdmin\":true,\"authProvider\":\"COGNITO\",\"tenants\":[{\"tenantId\":\"0882c865-59c2-49a6-ab88-ce6ca89be30c\",\"slug\":\"producers-rice-mill-staging\",\"displayName\":\"Producers Rice Mill (Staging)\",\"tenantStatus\":\"ACTIVE\",\"membershipId\":\"89b096ab-439c-4ff5-b264-0d33ed301255\",\"membershipStatus\":\"ACTIVE\",\"isDefaultTenant\":false,\"selectable\":true},{\"tenantId\":\"019faa15-e558-70b6-adcd-a510c3c995f4\",\"slug\":\"import-acceptance-tenant-a\",\"displayName\":\"Import Acceptance Tenant A\",\"tenantStatus\":\"ACTIVE\",\"membershipId\":\"580e10b4-fe6c-4122-b6ac-5bb84a6d1d9f\",\"membershipStatus\":\"ACTIVE\",\"isDefaultTenant\":true,\"selectable\":true},{\"tenantId\":\"5da680d3-50f5-46ac-8b85-6cf454b6a0da\",\"slug\":\"producers-rice-mill\",\"displayName\":\"Producers Rice Mill\",\"tenantStatus\":\"ACTIVE\",\"membershipId\":\"38f33426-bb24-4e00-b393-a8f56f18aea3\",\"membershipStatus\":\"ACTIVE\",\"isDefaultTenant\":false,\"selectable\":true},{\"tenantId\":\"019f9c33-2875-75aa-8d0e-e4bec722565e\",\"slug\":\"forge-platform\",\"displayName\":\"Forge Platform\",\"tenantStatus\":\"ACTIVE\",\"membershipId\":\"7c0b78c0-0060-4578-b225-2c8a46a99baf\",\"membershipStatus\":\"ACTIVE\",\"isDefaultTenant\":true,\"selectable\":true}]},\"meta\":{\"requestId\":\"d554439fa7a895e7c0498cc73ae1...",
+      "expect": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "label": "select_producers_staging",
+      "path": "/api/v1/auth/select-tenant",
+      "method": "POST",
+      "activeTenantId": "019f9c33-2875-75aa-8d0e-e4bec722565e",
+      "status": 201,
+      "body": "{\"data\":{\"userId\":\"ba491113-ba27-4ee6-8989-2eec1fe285d2\",\"personId\":null,\"tenantId\":\"0882c865-59c2-49a6-ab88-ce6ca89be30c\",\"organizationIds\":[],\"permissions\":[\"industrial.access\",\"industrial.personnel.view\",\"industrial.personnel.manage\",\"industrial.training.view\",\"industrial.training.manage\",\"industrial.forms.view\",\"industrial.forms.manage\",\"industrial.inspections.view\",\"industrial.inspections.manage\",\"industrial.incidents.view\",\"industrial.incidents.manage\",\"industrial.equipment.view\",\"industrial.equipment.manage\",\"industrial.loto.view\",\"industrial.loto.manage\",\"industrial.loto.approve\",\"industrial.confined_space.view\",\"industrial.confined_space.manage\",\"industrial.confined_space.approve\",\"industrial.hot_work.view\",\"industrial.hot_work.manage\",\"industrial.hot_work.approve\",\"import.view\",\"import.upload\",\"import.template.manage\"],\"activeProducts\":[\"FORGE_INDUSTRIAL\"],\"activeModules\":[\"PERSONNEL\",\"TRAINING\",\"INCIDENTS\",\"INSPECTIONS\",\"FORMS\",\"LOCKOUT_TAGOUT\",\"REPORTING\",\"QR_LINKS\",\"EQUIPMENT\",\"CONFINED_SPACE\",\"HOT_WORK\",\"EMERGENCY_RESPONSE\",\"TASKS\",\"MESSAGING\",\"DOCUMENTS\"],\"isPlatformAdmin\":true,\"authProvider\":\"COGNITO\",\"tenants\":[{\"tenantId\":\"0882c865-59c2-49a6-ab88-ce6ca89be30c\",\"slug\":\"producers-rice-mill-staging\",\"displayName\":\"Producers Rice Mill (Staging)\",\"tenantStatus\":\"ACTIVE\",\"membershipId\":\"89b096ab-439c-4ff5-b264-0d33ed301255\",\"membershipStatus\":\"ACTIVE\",\"isDefaultTenant\":false,\"selectable\":true},{\"tenantId\":\"019faa15-e558-70b6-adcd-a510c3c995f4\",\"slug\":\"import-acceptance-tenant-a\",\"displayName\":\"Import Acceptance Tenant A\",\"tenantStatus\":\"ACTIVE\",\"membershipId\":\"580e10b4-fe6c-4122-b6ac-5bb84a6d1d9f\",\"membershipStatus\":\"ACTIVE\",\"isDefaultTenant\":true,\"selectable\":true},{\"tenantId\":\"5da680d3-50f5-46ac-8b85-6cf454b6a0da\",\"slug\":\"producers-rice-mill\",\"displayName\":\"Producers Rice Mill\",\"tenantStatus\":\"ACTIVE\",\"membershipId\":\"38f33426-bb24-4e00-b393-a8f56f18aea3\",\"membershipStatus\":\"ACTIVE\",\"isDefaultTenant\":false,\"selectable\":true},{\"tenantId\":\"019f9c33-2875-7...",
+      "expect": [
+        200,
+        201
+      ],
+      "pass": true
+    },
+    {
+      "label": "auth_me_producers_staging",
+      "path": "/api/v1/auth/me",
+      "method": "GET",
+      "activeTenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+      "status": 200,
+      "body": "{\"data\":{\"userId\":\"ba491113-ba27-4ee6-8989-2eec1fe285d2\",\"personId\":null,\"tenantId\":\"0882c865-59c2-49a6-ab88-ce6ca89be30c\",\"organizationIds\":[],\"permissions\":[\"industrial.access\",\"industrial.personnel.view\",\"industrial.personnel.manage\",\"industrial.training.view\",\"industrial.training.manage\",\"industrial.forms.view\",\"industrial.forms.manage\",\"industrial.inspections.view\",\"industrial.inspections.manage\",\"industrial.incidents.view\",\"industrial.incidents.manage\",\"industrial.equipment.view\",\"industrial.equipment.manage\",\"industrial.loto.view\",\"industrial.loto.manage\",\"industrial.loto.approve\",\"industrial.confined_space.view\",\"industrial.confined_space.manage\",\"industrial.confined_space.approve\",\"industrial.hot_work.view\",\"industrial.hot_work.manage\",\"industrial.hot_work.approve\",\"import.view\",\"import.upload\",\"import.template.manage\"],\"activeProducts\":[\"FORGE_INDUSTRIAL\"],\"activeModules\":[\"PERSONNEL\",\"TRAINING\",\"INCIDENTS\",\"INSPECTIONS\",\"FORMS\",\"LOCKOUT_TAGOUT\",\"REPORTING\",\"QR_LINKS\",\"EQUIPMENT\",\"CONFINED_SPACE\",\"HOT_WORK\",\"EMERGENCY_RESPONSE\",\"TASKS\",\"MESSAGING\",\"DOCUMENTS\"],\"isPlatformAdmin\":false,\"authProvider\":\"COGNITO\",\"tenants\":[{\"tenantId\":\"0882c865-59c2-49a6-ab88-ce6ca89be30c\",\"slug\":\"producers-rice-mill-staging\",\"displayName\":\"Producers Rice Mill (Staging)\",\"tenantStatus\":\"ACTIVE\",\"membershipId\":\"89b096ab-439c-4ff5-b264-0d33ed301255\",\"membershipStatus\":\"ACTIVE\",\"isDefaultTenant\":false,\"selectable\":true},{\"tenantId\":\"019faa15-e558-70b6-adcd-a510c3c995f4\",\"slug\":\"import-acceptance-tenant-a\",\"displayName\":\"Import Acceptance Tenant A\",\"tenantStatus\":\"ACTIVE\",\"membershipId\":\"580e10b4-fe6c-4122-b6ac-5bb84a6d1d9f\",\"membershipStatus\":\"ACTIVE\",\"isDefaultTenant\":true,\"selectable\":true},{\"tenantId\":\"5da680d3-50f5-46ac-8b85-6cf454b6a0da\",\"slug\":\"producers-rice-mill\",\"displayName\":\"Producers Rice Mill\",\"tenantStatus\":\"ACTIVE\",\"membershipId\":\"38f33426-bb24-4e00-b393-a8f56f18aea3\",\"membershipStatus\":\"ACTIVE\",\"isDefaultTenant\":false,\"selectable\":true},{\"tenantId\":\"019f9c33-2875-...",
+      "expect": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "label": "bootstrap_producers_staging",
+      "path": "/api/v1/industrial/bootstrap",
+      "method": "GET",
+      "activeTenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+      "status": 200,
+      "body": "{\"data\":{\"productCode\":\"FORGE_INDUSTRIAL\",\"productName\":\"Forge Industrial Safety\",\"tenantId\":\"0882c865-59c2-49a6-ab88-ce6ca89be30c\",\"industrialEnabled\":true,\"entitled\":true,\"permissions\":[\"industrial.access\",\"industrial.personnel.view\",\"industrial.personnel.manage\",\"industrial.training.view\",\"industrial.training.manage\",\"industrial.forms.view\",\"industrial.forms.manage\",\"industrial.inspections.view\",\"industrial.inspections.manage\",\"industrial.incidents.view\",\"industrial.incidents.manage\",\"industrial.equipment.view\",\"industrial.equipment.manage\",\"industrial.loto.view\",\"industrial.loto.manage\",\"industrial.loto.approve\",\"industrial.confined_space.view\",\"industrial.confined_space.manage\",\"industrial.confined_space.approve\",\"industrial.hot_work.view\",\"industrial.hot_work.manage\",\"industrial.hot_work.approve\"],\"modules\":[{\"code\":\"CORE\",\"name\":\"Overview\",\"group\":\"Core\",\"route\":\"/\",\"migrationStatus\":\"FOUNDATION_ONLY\",\"featureFlagKey\":\"industrial.enabled\",\"awsEnabled\":true,\"available\":true,\"requiredPermissions\":[\"industrial.access\"],\"navigationOrder\":1},{\"code\":\"ANALYTICS\",\"name\":\"Analytics\",\"group\":\"Core\",\"route\":\"/modules/analytics\",\"migrationStatus\":\"LEGACY_FIREBASE\",\"featureFlagKey\":\"industrial.module.analytics.enabled\",\"awsEnabled\":false,\"available\":false,\"requiredPermissions\":[\"industrial.access\"],\"navigationOrder\":2},{\"code\":\"PERSONNEL\",\"name\":\"Personnel\",\"group\":\"Operations\",\"route\":\"/modules/personnel\",\"migrationStatus\":\"MIGRATION_IN_PROGRESS\",\"featureFlagKey\":\"industrial.module.personnel.enabled\",\"awsEnabled\":true,\"available\":true,\"requiredPermissions\":[\"industrial.access\",\"industrial.personnel.view\"],\"navigationOrder\":3},{\"code\":\"INCIDENTS\",\"name\":\"Incidents\",\"group\":\"Operations\",\"route\":\"/modules/incidents\",\"migrationStatus\":\"MIGRATION_IN_PROGRESS\",\"featureFlagKey\":\"industrial.module.incidents.enabled\",\"awsEnabled\":true,\"available\":true,\"requiredPermissions\":[\"industrial.access\",\"industrial.incidents.view\"],\"navigationOrder\":4},{\"code\":\"INSPECTIONS\",\"name\":\"Inspec...",
+      "expect": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "label": "modules_producers_staging",
+      "path": "/api/v1/industrial/modules",
+      "method": "GET",
+      "activeTenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+      "status": 200,
+      "body": "{\"data\":{\"productCode\":\"FORGE_INDUSTRIAL\",\"modules\":[{\"code\":\"CORE\",\"name\":\"Overview\",\"group\":\"Core\",\"route\":\"/\",\"productCode\":\"FORGE_INDUSTRIAL\",\"entitlementKey\":\"CORE\",\"featureFlagKey\":\"industrial.enabled\",\"requiredPermissions\":[\"industrial.access\"],\"migrationStatus\":\"FOUNDATION_ONLY\",\"awsEnabled\":true,\"navigationOrder\":1},{\"code\":\"ANALYTICS\",\"name\":\"Analytics\",\"group\":\"Core\",\"route\":\"/modules/analytics\",\"productCode\":\"FORGE_INDUSTRIAL\",\"entitlementKey\":\"ANALYTICS\",\"featureFlagKey\":\"industrial.module.analytics.enabled\",\"requiredPermissions\":[\"industrial.access\"],\"migrationStatus\":\"LEGACY_FIREBASE\",\"awsEnabled\":false,\"navigationOrder\":2},{\"code\":\"PERSONNEL\",\"name\":\"Personnel\",\"group\":\"Operations\",\"route\":\"/modules/personnel\",\"productCode\":\"FORGE_INDUSTRIAL\",\"entitlementKey\":\"PERSONNEL\",\"featureFlagKey\":\"industrial.module.personnel.enabled\",\"requiredPermissions\":[\"industrial.access\",\"industrial.personnel.view\"],\"migrationStatus\":\"MIGRATION_IN_PROGRESS\",\"awsEnabled\":true,\"navigationOrder\":3},{\"code\":\"INCIDENTS\",\"name\":\"Incidents\",\"group\":\"Operations\",\"route\":\"/modules/incidents\",\"productCode\":\"FORGE_INDUSTRIAL\",\"entitlementKey\":\"INCIDENTS\",\"featureFlagKey\":\"industrial.module.incidents.enabled\",\"requiredPermissions\":[\"industrial.access\",\"industrial.incidents.view\"],\"migrationStatus\":\"MIGRATION_IN_PROGRESS\",\"awsEnabled\":true,\"navigationOrder\":4},{\"code\":\"INSPECTIONS\",\"name\":\"Inspections\",\"group\":\"Operations\",\"route\":\"/modules/inspections\",\"productCode\":\"FORGE_INDUSTRIAL\",\"entitlementKey\":\"INSPECTIONS\",\"featureFlagKey\":\"industrial.module.inspections.enabled\",\"requiredPermissions\":[\"industrial.access\",\"industrial.inspections.view\"],\"migrationStatus\":\"MIGRATION_IN_PROGRESS\",\"awsEnabled\":true,\"navigationOrder\":5},{\"code\":\"TRAINING\",\"name\":\"Training\",\"group\":\"Operations\",\"route\":\"/modules/training\",\"productCode\":\"FORGE_INDUSTRIAL\",\"entitlementKey\":\"TRAINING\",\"featureFlagKey\":\"industrial.module.training.enabled\",\"requiredPermissions\":[\"industrial.access\",\"industrial.training...",
+      "expect": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "label": "select_producers_prod",
+      "path": "/api/v1/auth/select-tenant",
+      "method": "POST",
+      "activeTenantId": "019f9c33-2875-75aa-8d0e-e4bec722565e",
+      "status": 201,
+      "body": "{\"data\":{\"userId\":\"ba491113-ba27-4ee6-8989-2eec1fe285d2\",\"personId\":null,\"tenantId\":\"5da680d3-50f5-46ac-8b85-6cf454b6a0da\",\"organizationIds\":[],\"permissions\":[\"industrial.access\",\"industrial.personnel.view\",\"industrial.personnel.manage\",\"industrial.training.view\",\"industrial.training.manage\",\"industrial.forms.view\",\"industrial.forms.manage\",\"industrial.inspections.view\",\"industrial.inspections.manage\",\"industrial.incidents.view\",\"industrial.incidents.manage\",\"industrial.equipment.view\",\"industrial.equipment.manage\",\"industrial.loto.view\",\"industrial.loto.manage\",\"industrial.loto.approve\",\"industrial.confined_space.view\",\"industrial.confined_space.manage\",\"industrial.confined_space.approve\",\"industrial.hot_work.view\",\"industrial.hot_work.manage\",\"industrial.hot_work.approve\",\"import.view\",\"import.upload\",\"import.template.manage\"],\"activeProducts\":[\"FORGE_INDUSTRIAL\"],\"activeModules\":[\"PERSONNEL\",\"TRAINING\",\"INCIDENTS\",\"INSPECTIONS\",\"FORMS\",\"LOCKOUT_TAGOUT\",\"REPORTING\",\"QR_LINKS\",\"EQUIPMENT\",\"CONFINED_SPACE\",\"HOT_WORK\",\"EMERGENCY_RESPONSE\",\"TASKS\",\"MESSAGING\",\"DOCUMENTS\"],\"isPlatformAdmin\":true,\"authProvider\":\"COGNITO\",\"tenants\":[{\"tenantId\":\"0882c865-59c2-49a6-ab88-ce6ca89be30c\",\"slug\":\"producers-rice-mill-staging\",\"displayName\":\"Producers Rice Mill (Staging)\",\"tenantStatus\":\"ACTIVE\",\"membershipId\":\"89b096ab-439c-4ff5-b264-0d33ed301255\",\"membershipStatus\":\"ACTIVE\",\"isDefaultTenant\":false,\"selectable\":true},{\"tenantId\":\"019faa15-e558-70b6-adcd-a510c3c995f4\",\"slug\":\"import-acceptance-tenant-a\",\"displayName\":\"Import Acceptance Tenant A\",\"tenantStatus\":\"ACTIVE\",\"membershipId\":\"580e10b4-fe6c-4122-b6ac-5bb84a6d1d9f\",\"membershipStatus\":\"ACTIVE\",\"isDefaultTenant\":true,\"selectable\":true},{\"tenantId\":\"5da680d3-50f5-46ac-8b85-6cf454b6a0da\",\"slug\":\"producers-rice-mill\",\"displayName\":\"Producers Rice Mill\",\"tenantStatus\":\"ACTIVE\",\"membershipId\":\"38f33426-bb24-4e00-b393-a8f56f18aea3\",\"membershipStatus\":\"ACTIVE\",\"isDefaultTenant\":false,\"selectable\":true},{\"tenantId\":\"019f9c33-2875-7...",
+      "expect": [
+        200,
+        201
+      ],
+      "pass": true
+    },
+    {
+      "label": "auth_me_producers_prod",
+      "path": "/api/v1/auth/me",
+      "method": "GET",
+      "activeTenantId": "5da680d3-50f5-46ac-8b85-6cf454b6a0da",
+      "status": 200,
+      "body": "{\"data\":{\"userId\":\"ba491113-ba27-4ee6-8989-2eec1fe285d2\",\"personId\":null,\"tenantId\":\"5da680d3-50f5-46ac-8b85-6cf454b6a0da\",\"organizationIds\":[],\"permissions\":[\"industrial.access\",\"industrial.personnel.view\",\"industrial.personnel.manage\",\"industrial.training.view\",\"industrial.training.manage\",\"industrial.forms.view\",\"industrial.forms.manage\",\"industrial.inspections.view\",\"industrial.inspections.manage\",\"industrial.incidents.view\",\"industrial.incidents.manage\",\"industrial.equipment.view\",\"industrial.equipment.manage\",\"industrial.loto.view\",\"industrial.loto.manage\",\"industrial.loto.approve\",\"industrial.confined_space.view\",\"industrial.confined_space.manage\",\"industrial.confined_space.approve\",\"industrial.hot_work.view\",\"industrial.hot_work.manage\",\"industrial.hot_work.approve\",\"import.view\",\"import.upload\",\"import.template.manage\"],\"activeProducts\":[\"FORGE_INDUSTRIAL\"],\"activeModules\":[\"PERSONNEL\",\"TRAINING\",\"INCIDENTS\",\"INSPECTIONS\",\"FORMS\",\"LOCKOUT_TAGOUT\",\"REPORTING\",\"QR_LINKS\",\"EQUIPMENT\",\"CONFINED_SPACE\",\"HOT_WORK\",\"EMERGENCY_RESPONSE\",\"TASKS\",\"MESSAGING\",\"DOCUMENTS\"],\"isPlatformAdmin\":false,\"authProvider\":\"COGNITO\",\"tenants\":[{\"tenantId\":\"0882c865-59c2-49a6-ab88-ce6ca89be30c\",\"slug\":\"producers-rice-mill-staging\",\"displayName\":\"Producers Rice Mill (Staging)\",\"tenantStatus\":\"ACTIVE\",\"membershipId\":\"89b096ab-439c-4ff5-b264-0d33ed301255\",\"membershipStatus\":\"ACTIVE\",\"isDefaultTenant\":false,\"selectable\":true},{\"tenantId\":\"019faa15-e558-70b6-adcd-a510c3c995f4\",\"slug\":\"import-acceptance-tenant-a\",\"displayName\":\"Import Acceptance Tenant A\",\"tenantStatus\":\"ACTIVE\",\"membershipId\":\"580e10b4-fe6c-4122-b6ac-5bb84a6d1d9f\",\"membershipStatus\":\"ACTIVE\",\"isDefaultTenant\":true,\"selectable\":true},{\"tenantId\":\"5da680d3-50f5-46ac-8b85-6cf454b6a0da\",\"slug\":\"producers-rice-mill\",\"displayName\":\"Producers Rice Mill\",\"tenantStatus\":\"ACTIVE\",\"membershipId\":\"38f33426-bb24-4e00-b393-a8f56f18aea3\",\"membershipStatus\":\"ACTIVE\",\"isDefaultTenant\":false,\"selectable\":true},{\"tenantId\":\"019f9c33-2875-...",
+      "expect": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "label": "bootstrap_producers_prod",
+      "path": "/api/v1/industrial/bootstrap",
+      "method": "GET",
+      "activeTenantId": "5da680d3-50f5-46ac-8b85-6cf454b6a0da",
+      "status": 200,
+      "body": "{\"data\":{\"productCode\":\"FORGE_INDUSTRIAL\",\"productName\":\"Forge Industrial Safety\",\"tenantId\":\"5da680d3-50f5-46ac-8b85-6cf454b6a0da\",\"industrialEnabled\":true,\"entitled\":true,\"permissions\":[\"industrial.access\",\"industrial.personnel.view\",\"industrial.personnel.manage\",\"industrial.training.view\",\"industrial.training.manage\",\"industrial.forms.view\",\"industrial.forms.manage\",\"industrial.inspections.view\",\"industrial.inspections.manage\",\"industrial.incidents.view\",\"industrial.incidents.manage\",\"industrial.equipment.view\",\"industrial.equipment.manage\",\"industrial.loto.view\",\"industrial.loto.manage\",\"industrial.loto.approve\",\"industrial.confined_space.view\",\"industrial.confined_space.manage\",\"industrial.confined_space.approve\",\"industrial.hot_work.view\",\"industrial.hot_work.manage\",\"industrial.hot_work.approve\"],\"modules\":[{\"code\":\"CORE\",\"name\":\"Overview\",\"group\":\"Core\",\"route\":\"/\",\"migrationStatus\":\"FOUNDATION_ONLY\",\"featureFlagKey\":\"industrial.enabled\",\"awsEnabled\":true,\"available\":true,\"requiredPermissions\":[\"industrial.access\"],\"navigationOrder\":1},{\"code\":\"ANALYTICS\",\"name\":\"Analytics\",\"group\":\"Core\",\"route\":\"/modules/analytics\",\"migrationStatus\":\"LEGACY_FIREBASE\",\"featureFlagKey\":\"industrial.module.analytics.enabled\",\"awsEnabled\":false,\"available\":false,\"requiredPermissions\":[\"industrial.access\"],\"navigationOrder\":2},{\"code\":\"PERSONNEL\",\"name\":\"Personnel\",\"group\":\"Operations\",\"route\":\"/modules/personnel\",\"migrationStatus\":\"MIGRATION_IN_PROGRESS\",\"featureFlagKey\":\"industrial.module.personnel.enabled\",\"awsEnabled\":true,\"available\":true,\"requiredPermissions\":[\"industrial.access\",\"industrial.personnel.view\"],\"navigationOrder\":3},{\"code\":\"INCIDENTS\",\"name\":\"Incidents\",\"group\":\"Operations\",\"route\":\"/modules/incidents\",\"migrationStatus\":\"MIGRATION_IN_PROGRESS\",\"featureFlagKey\":\"industrial.module.incidents.enabled\",\"awsEnabled\":true,\"available\":true,\"requiredPermissions\":[\"industrial.access\",\"industrial.incidents.view\"],\"navigationOrder\":4},{\"code\":\"INSPECTIONS\",\"name\":\"Inspec...",
+      "expect": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "label": "modules_producers_prod",
+      "path": "/api/v1/industrial/modules",
+      "method": "GET",
+      "activeTenantId": "5da680d3-50f5-46ac-8b85-6cf454b6a0da",
+      "status": 200,
+      "body": "{\"data\":{\"productCode\":\"FORGE_INDUSTRIAL\",\"modules\":[{\"code\":\"CORE\",\"name\":\"Overview\",\"group\":\"Core\",\"route\":\"/\",\"productCode\":\"FORGE_INDUSTRIAL\",\"entitlementKey\":\"CORE\",\"featureFlagKey\":\"industrial.enabled\",\"requiredPermissions\":[\"industrial.access\"],\"migrationStatus\":\"FOUNDATION_ONLY\",\"awsEnabled\":true,\"navigationOrder\":1},{\"code\":\"ANALYTICS\",\"name\":\"Analytics\",\"group\":\"Core\",\"route\":\"/modules/analytics\",\"productCode\":\"FORGE_INDUSTRIAL\",\"entitlementKey\":\"ANALYTICS\",\"featureFlagKey\":\"industrial.module.analytics.enabled\",\"requiredPermissions\":[\"industrial.access\"],\"migrationStatus\":\"LEGACY_FIREBASE\",\"awsEnabled\":false,\"navigationOrder\":2},{\"code\":\"PERSONNEL\",\"name\":\"Personnel\",\"group\":\"Operations\",\"route\":\"/modules/personnel\",\"productCode\":\"FORGE_INDUSTRIAL\",\"entitlementKey\":\"PERSONNEL\",\"featureFlagKey\":\"industrial.module.personnel.enabled\",\"requiredPermissions\":[\"industrial.access\",\"industrial.personnel.view\"],\"migrationStatus\":\"MIGRATION_IN_PROGRESS\",\"awsEnabled\":true,\"navigationOrder\":3},{\"code\":\"INCIDENTS\",\"name\":\"Incidents\",\"group\":\"Operations\",\"route\":\"/modules/incidents\",\"productCode\":\"FORGE_INDUSTRIAL\",\"entitlementKey\":\"INCIDENTS\",\"featureFlagKey\":\"industrial.module.incidents.enabled\",\"requiredPermissions\":[\"industrial.access\",\"industrial.incidents.view\"],\"migrationStatus\":\"MIGRATION_IN_PROGRESS\",\"awsEnabled\":true,\"navigationOrder\":4},{\"code\":\"INSPECTIONS\",\"name\":\"Inspections\",\"group\":\"Operations\",\"route\":\"/modules/inspections\",\"productCode\":\"FORGE_INDUSTRIAL\",\"entitlementKey\":\"INSPECTIONS\",\"featureFlagKey\":\"industrial.module.inspections.enabled\",\"requiredPermissions\":[\"industrial.access\",\"industrial.inspections.view\"],\"migrationStatus\":\"MIGRATION_IN_PROGRESS\",\"awsEnabled\":true,\"navigationOrder\":5},{\"code\":\"TRAINING\",\"name\":\"Training\",\"group\":\"Operations\",\"route\":\"/modules/training\",\"productCode\":\"FORGE_INDUSTRIAL\",\"entitlementKey\":\"TRAINING\",\"featureFlagKey\":\"industrial.module.training.enabled\",\"requiredPermissions\":[\"industrial.access\",\"industrial.training...",
+      "expect": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "label": "a6_personnel_on_staging",
+      "path": "/api/v1/industrial/personnel?limit=5",
+      "method": "GET",
+      "activeTenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+      "status": 200,
+      "body": "{\"data\":{\"items\":[],\"page\":1,\"pageSize\":25},\"meta\":{\"requestId\":\"cc588f7637ebacde256f8a25e7ac0749\",\"correlationId\":\"9916a9ab7629a0fe6d06ce0946098de9\",\"page\":1,\"pageSize\":25,\"total\":0}}",
+      "expect": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "label": "a6_personnel_on_tenant_a",
+      "path": "/api/v1/industrial/personnel?limit=5",
+      "method": "GET",
+      "activeTenantId": "019faa15-e558-70b6-adcd-a510c3c995f4",
+      "status": 200,
+      "body": "{\"data\":{\"items\":[{\"id\":\"ce54f846-9375-5cdb-b2a1-cc5ba0dbe2ff\",\"tenantId\":\"019faa15-e558-70b6-adcd-a510c3c995f4\",\"employeeNumber\":\"EMP-25126\",\"firstName\":\"JADEN\",\"lastName\":\"D CRIDDLE\",\"displayName\":\"JADEN D CRIDDLE\",\"email\":null,\"phone\":null,\"jobTitle\":\"SHIPPING SCALE OPER-CR\",\"department\":null,\"status\":\"ACTIVE\",\"hireDate\":\"2025-12-30\",\"linkedUserId\":null,\"platformPersonId\":null,\"customFieldsJson\":{\"linkedUserId\":\"\",\"importSource\":\"employee-roster\",\"locationId\":\"\",\"divisionId\":\"\",\"departmentId\":\"\",\"createdAt\":\"2026-06-27T20:44:08.851Z\",\"site\":\"\",\"notes\":\"Synced from employee roster (ActiveEmpAllByJobDept6-29-26.xls).\\nSynced from employee roster (ActiveEmpAllByJobDept6-29-26.xls).\\nDepartment: STUTTGART\\nSynced from employee roster (ActiveEmpAllByJobDept6-29-26.xls).\\nDepartment: STUTTGART\\nSynced from employee roster (ActiveEmpAllByJobDept6-29-26.xls).\\nDepartment: STUTTGART\\nSynced from employee roster (ActiveEmpAllByJobDept6-29-26.xls).\\nSynced from employee roster (active_employees_by_department (7-22-26).csv).\",\"middleInitial\":\"\",\"suffix\":\"\",\"updatedAt\":\"2026-07-23T02:26:50.272Z\"},\"sourceSystem\":\"firebase\",\"sourceProject\":\"forge-industrial-safety\",\"sourceCollection\":\"personnelRecords\",\"sourceDocumentId\":\"zz560vrGszoDx9ycXsIB\",\"sourcePath\":\"personnelRecords/zz560vrGszoDx9ycXsIB\",\"migrationBatchId\":\"481abc6b-c054-53fe-a424-1b65c7769409\",\"createdBy\":null,\"updatedBy\":null,\"archivedAt\":null,\"archivedBy\":null,\"recordVersion\":1,\"createdAt\":\"2026-08-05T09:39:43.111Z\",\"updatedAt\":\"2026-08-05T09:39:43.111Z\"},{\"id\":\"4f509637-bdc0-56ba-b9a2-ef491e185a05\",\"tenantId\":\"019faa15-e558-70b6-adcd-a510c3c995f4\",\"employeeNumber\":\"EMP-21975\",\"firstName\":\"TIFFANY\",\"lastName\":\"D CLAIBORNE\",\"displayName\":\"TIFFANY D CLAIBORNE\",\"email\":null,\"phone\":null,\"jobTitle\":\"UTILITY-PB WHSE\",\"department\":null,\"status\":\"ACTIVE\",\"hireDate\":\"2026-06-10\",\"linkedUserId\":null,\"platformPersonId\":null,\"customFieldsJson\":{\"linkedUserId\":\"\",\"importSource\":\"employee-roster\",\"locationId\":\"\",\"divisionId\":\"\",\"...",
+      "expect": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "label": "a6_negative_forge_platform_bootstrap",
+      "path": "/api/v1/industrial/bootstrap",
+      "method": "GET",
+      "activeTenantId": "019f9c33-2875-75aa-8d0e-e4bec722565e",
+      "status": 403,
+      "body": "{\"error\":{\"code\":\"FORBIDDEN\",\"message\":\"This tenant is not entitled to Forge Industrial Safety.\",\"details\":[{\"reasonCode\":\"PRODUCT_NOT_ENTITLED\",\"productCode\":\"FORGE_INDUSTRIAL\"}],\"requestId\":\"917409e5e17b720f07756d9d693524e3\",\"correlationId\":\"1ace877bc8c1a2af3f080742a65cbfeb\"}}",
+      "expect": [
+        401,
+        403,
+        404
+      ],
+      "pass": true
+    },
+    {
+      "label": "a6_negative_foreign_bootstrap",
+      "path": "/api/v1/industrial/bootstrap",
+      "method": "GET",
+      "activeTenantId": "00000000-0000-4000-8000-000000000099",
+      "status": 403,
+      "body": "{\"error\":{\"code\":\"FORBIDDEN\",\"message\":\"This tenant is not entitled to Forge Industrial Safety.\",\"details\":[{\"reasonCode\":\"PRODUCT_NOT_ENTITLED\",\"productCode\":\"FORGE_INDUSTRIAL\"}],\"requestId\":\"f37d92af1dc0aea09a7905803c8ef61a\",\"correlationId\":\"ff45bed7aa990969e3f6212b70da7f49\"}}",
+      "expect": [
+        401,
+        403,
+        404
+      ],
+      "pass": true
+    },
+    {
+      "label": "a6_negative_select_foreign",
+      "path": "/api/v1/auth/select-tenant",
+      "method": "POST",
+      "activeTenantId": "019f9c33-2875-75aa-8d0e-e4bec722565e",
+      "status": 404,
+      "body": "{\"error\":{\"code\":\"NOT_FOUND\",\"message\":\"Tenant not found\",\"details\":[],\"requestId\":\"54feef7e981fc652bad98b014f12a2aa\",\"correlationId\":\"063de7204cfc34dac927b85aeacc52bd\"}}",
+      "expect": [
+        400,
+        401,
+        403,
+        404
+      ],
+      "pass": true
+    }
+  ]
+}

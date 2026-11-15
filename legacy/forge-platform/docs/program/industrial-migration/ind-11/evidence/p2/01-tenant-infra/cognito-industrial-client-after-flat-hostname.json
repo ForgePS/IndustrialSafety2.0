@@ -1,0 +1,51 @@
+{
+    "UserPoolClient": {
+        "UserPoolId": "us-east-1_VYjUFLXG4",
+        "ClientName": "forge-development-cognito-industrial-web",
+        "ClientId": "3rls9835j4qs3jmchb3uh7ketm",
+        "LastModifiedDate": "2026-08-05T13:01:14.792000-05:00",
+        "CreationDate": "2026-08-02T04:51:06.359000-05:00",
+        "RefreshTokenValidity": 30,
+        "TokenValidityUnits": {},
+        "ExplicitAuthFlows": [
+            "ALLOW_USER_SRP_AUTH",
+            "ALLOW_REFRESH_TOKEN_AUTH"
+        ],
+        "SupportedIdentityProviders": [
+            "COGNITO"
+        ],
+        "CallbackURLs": [
+            "http://localhost:3003/auth/callback/",
+            "https://producers-rice-mill.industrial.forgepublicsafety.com/auth/callback/",
+            "https://d2ed3566n8x2gi.cloudfront.net/auth/callback/",
+            "https://producers-rice-mill.forgepublicsafety.com/auth/callback/",
+            "https://d3ud5uzwd9js2z.cloudfront.net/auth/callback/",
+            "http://localhost:3002/auth/callback/",
+            "https://industrial-dev.forgepublicsafety.com/auth/callback/",
+            "http://localhost:3001/auth/callback/"
+        ],
+        "LogoutURLs": [
+            "https://d3ud5uzwd9js2z.cloudfront.net/",
+            "http://localhost:3002/",
+            "http://localhost:3003/",
+            "https://industrial-dev.forgepublicsafety.com/",
+            "https://producers-rice-mill.forgepublicsafety.com/",
+            "https://producers-rice-mill.industrial.forgepublicsafety.com/",
+            "https://d2ed3566n8x2gi.cloudfront.net/",
+            "http://localhost:3001/"
+        ],
+        "AllowedOAuthFlows": [
+            "code"
+        ],
+        "AllowedOAuthScopes": [
+            "openid",
+            "profile",
+            "email"
+        ],
+        "AllowedOAuthFlowsUserPoolClient": true,
+        "PreventUserExistenceErrors": "ENABLED",
+        "EnableTokenRevocation": true,
+        "EnablePropagateAdditionalUserContextData": false,
+        "AuthSessionValidity": 3
+    }
+}

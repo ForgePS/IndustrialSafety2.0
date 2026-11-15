@@ -1,0 +1,17 @@
+{
+  "program": "FX-S0",
+  "shadow": {
+    "small": "0 1px 2px rgba(18, 23, 28, 0.08)",
+    "medium": "0 2px 8px rgba(18, 23, 28, 0.12)",
+    "large": "0 8px 24px rgba(18, 23, 28, 0.16)",
+    "floating": "0 12px 32px rgba(18, 23, 28, 0.20)",
+    "modal": "0 16px 48px rgba(18, 23, 28, 0.28)"
+  },
+  "elevation": {
+    "0": { "shadow": "none", "zIndex": 0 },
+    "1": { "shadow": "{shadow.small}", "zIndex": 10 },
+    "2": { "shadow": "{shadow.medium}", "zIndex": 20 },
+    "3": { "shadow": "{shadow.large}", "zIndex": 30 },
+    "4": { "shadow": "{shadow.modal}", "zIndex": 40 }
+  }
+}

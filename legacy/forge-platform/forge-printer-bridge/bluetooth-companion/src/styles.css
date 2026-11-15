@@ -1,0 +1,174 @@
+:root {
+  --bg: #1a2229;
+  --panel: #243038;
+  --text: #e8eef2;
+  --muted: #9aadb8;
+  --accent: #2f7d6d;
+  --accent-hover: #3a9482;
+  --danger: #b84a3d;
+  --border: #33444f;
+  --font: "Segoe UI", "Candara", "Gill Sans", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(ellipse at top left, #2a3a42 0%, transparent 55%),
+    linear-gradient(160deg, #141b20 0%, #1a2229 45%, #12201c 100%);
+  color: var(--text);
+  font-family: var(--font);
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-header {
+  padding: 1.25rem 1.5rem 0.75rem;
+}
+
+.brand {
+  font-size: 1.35rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 0.2rem;
+}
+
+.app {
+  flex: 1;
+  padding: 0.5rem 1.5rem 1.5rem;
+}
+
+.app-footer {
+  padding: 0.75rem 1.5rem 1.25rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.screen {
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem 1.35rem 1.5rem;
+}
+
+.screen h1 {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+}
+
+.steps {
+  margin: 0 0 1.25rem;
+  padding-left: 1.2rem;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1.1rem;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.7rem 1rem;
+}
+
+button.primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+button.primary:hover {
+  background: var(--accent-hover);
+}
+
+button.secondary {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.meta {
+  margin: 0.35rem 0;
+  color: var(--muted);
+}
+
+.hint {
+  margin-top: 0.85rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.35rem 0.7rem;
+  border-radius: 6px;
+  background: #2c3a42;
+  border: 1px solid var(--border);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.status-badge[data-status="READY"],
+.status-badge[data-status="CONNECTED"] {
+  border-color: #3d7a65;
+  color: #8fd6b8;
+}
+
+.status-badge[data-status="DISCONNECTED"],
+.status-badge[data-status="PRINTER_ERROR"],
+.status-badge[data-status="OUT_OF_RANGE"] {
+  border-color: #7a3d3d;
+  color: #f0a8a0;
+}
+
+.status-badge[data-status="USER_ACTION_REQUIRED"],
+.status-badge[data-status="PERMISSION_REQUIRED"],
+.status-badge[data-status="SCANNING"],
+.status-badge[data-status="PAIRING"] {
+  border-color: #7a6a3d;
+  color: #e6d59a;
+}
+
+.device-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+}
+
+.device-list li {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.65rem 0.8rem;
+  margin-bottom: 0.45rem;
+  cursor: pointer;
+}
+
+.device-list li:hover {
+  border-color: var(--accent);
+}

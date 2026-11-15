@@ -1,0 +1,10 @@
+openapi: 3.0.3
+info:
+  title: Forge Platform API (entrypoint)
+  version: 0.2.0
+  description: |
+    Entrypoint referenced by Configuration Platform acceptance and Import S2.
+    Canonical full contract: `platform-openapi-v1.yaml`.
+    Configuration Studio extensions: `configuration-studio-openapi.yaml`.
+    Universal Import (S2): `import-openapi.yaml` and `import-platform.md`.
+paths: {}

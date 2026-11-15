@@ -1,0 +1,481 @@
+openapi: 3.0.3
+info:
+  title: Forge AI Narrative Assistant API
+  version: 0.1.0-foundation
+  description: |
+    AI Narrative Assistant foundation routes hosted on platform-api under `/api/v1/ai/*`.
+
+    All `ai.narrative.*` feature flags default false. Stub provider only.
+    Human review required. No auto-finalize, NERIS, or ePCR submission.
+    Phase 5 NOT AUTHORIZED. Not enabled for Phase 4 synthetic tenant.
+
+    Auth and response envelope match platform-contract-v1.md.
+servers:
+  - url: http://localhost:3000
+    description: Local platform-api
+  - url: https://api-dev.example.com
+    description: Development
+tags:
+  - name: Narratives
+  - name: Quality
+  - name: Templates
+  - name: Usage
+  - name: Policies
+paths:
+  /api/v1/ai/narratives:
+    post:
+      tags: [Narratives]
+      summary: Create narrative generation request
+      operationId: createAiNarrative
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      x-forge-permissions:
+        - ai.narrative.generate
+        - rms.incident.ai_narrative.generate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAiNarrativeRequest"
+      responses:
+        "200":
+          description: Wrapped success (`data` + `meta`)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkEnvelope"
+        "403":
+          description: Feature disabled or missing permission
+
+  /api/v1/ai/narratives/{requestId}:
+    get:
+      tags: [Narratives]
+      summary: Get narrative request and draft
+      operationId: getAiNarrative
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      x-forge-permissions:
+        - ai.narrative.use
+      parameters:
+        - $ref: "#/components/parameters/requestId"
+      responses:
+        "200":
+          description: Request detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkEnvelope"
+
+  /api/v1/ai/narratives/{requestId}/regenerate:
+    post:
+      tags: [Narratives]
+      summary: Regenerate draft from existing request
+      operationId: regenerateAiNarrative
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      x-forge-permissions:
+        - ai.narrative.generate
+        - ai.narrative.rewrite
+        - rms.incident.ai_narrative.generate
+      parameters:
+        - $ref: "#/components/parameters/requestId"
+      responses:
+        "200":
+          description: Regenerated draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkEnvelope"
+
+  /api/v1/ai/narratives/{requestId}/accept:
+    post:
+      tags: [Narratives]
+      summary: Accept draft (human review)
+      operationId: acceptAiNarrative
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      x-forge-permissions:
+        - ai.narrative.accept
+        - rms.incident.ai_narrative.accept
+      parameters:
+        - $ref: "#/components/parameters/requestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AcceptAiNarrative"
+      responses:
+        "200":
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkEnvelope"
+
+  /api/v1/ai/narratives/{requestId}/partial-accept:
+    post:
+      tags: [Narratives]
+      summary: Partially accept draft sections
+      operationId: partialAcceptAiNarrative
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      x-forge-permissions:
+        - ai.narrative.accept
+        - rms.incident.ai_narrative.accept
+      parameters:
+        - $ref: "#/components/parameters/requestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AcceptAiNarrative"
+      responses:
+        "200":
+          description: Partially accepted (mode forced to PARTIAL)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkEnvelope"
+
+  /api/v1/ai/narratives/{requestId}/reject:
+    post:
+      tags: [Narratives]
+      summary: Reject draft
+      operationId: rejectAiNarrative
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      x-forge-permissions:
+        - ai.narrative.reject
+      parameters:
+        - $ref: "#/components/parameters/requestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectAiNarrative"
+      responses:
+        "200":
+          description: Rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkEnvelope"
+
+  /api/v1/ai/narratives/{requestId}/history:
+    get:
+      tags: [Narratives]
+      summary: Narrative request history
+      operationId: aiNarrativeHistory
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      x-forge-permissions:
+        - ai.narrative.use
+      parameters:
+        - $ref: "#/components/parameters/requestId"
+      responses:
+        "200":
+          description: History entries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkEnvelope"
+
+  /api/v1/ai/narratives/quality-check:
+    post:
+      tags: [Quality]
+      summary: Run quality check on narrative text
+      operationId: aiNarrativeQualityCheck
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      x-forge-permissions:
+        - ai.narrative.use
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Quality check result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkEnvelope"
+
+  /api/v1/ai/templates:
+    get:
+      tags: [Templates]
+      summary: List narrative templates
+      operationId: listAiNarrativeTemplates
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      x-forge-permissions:
+        - ai.narrative.use
+      responses:
+        "200":
+          description: Template list (foundation may return empty items)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkEnvelope"
+    post:
+      tags: [Templates]
+      summary: Create template (reserved)
+      operationId: createAiNarrativeTemplate
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      x-forge-permissions:
+        - ai.narrative.manage_templates
+      responses:
+        "200":
+          description: Reserved response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkEnvelope"
+
+  /api/v1/ai/templates/{templateId}/publish:
+    post:
+      tags: [Templates]
+      summary: Publish template (reserved)
+      operationId: publishAiNarrativeTemplate
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      x-forge-permissions:
+        - platform.ai.narrative.manage
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Reserved response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkEnvelope"
+
+  /api/v1/ai/usage:
+    get:
+      tags: [Usage]
+      summary: Tenant AI usage summary
+      operationId: getAiNarrativeUsage
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      x-forge-permissions:
+        - ai.narrative.view_usage
+        - platform.ai.usage.view
+      responses:
+        "200":
+          description: Usage summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkEnvelope"
+
+  /api/v1/ai/policies:
+    get:
+      tags: [Policies]
+      summary: List narrative policies
+      operationId: listAiNarrativePolicies
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      x-forge-permissions:
+        - ai.narrative.configure
+        - platform.ai.policy.manage
+      responses:
+        "200":
+          description: Policy list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkEnvelope"
+
+  /api/v1/ai/policies/{policyId}:
+    patch:
+      tags: [Policies]
+      summary: Update policy (reserved / fail-closed)
+      operationId: patchAiNarrativePolicy
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      x-forge-permissions:
+        - platform.ai.policy.manage
+      parameters:
+        - name: policyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Reserved — mutations not enabled in foundation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkEnvelope"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    devPrincipal:
+      type: apiKey
+      in: header
+      name: x-forge-dev-principal
+      description: Local/development/testing only
+  parameters:
+    requestId:
+      name: requestId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    OkEnvelope:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          additionalProperties: true
+        meta:
+          type: object
+          properties:
+            requestId:
+              type: string
+            correlationId:
+              type: string
+    CreateAiNarrativeRequest:
+      type: object
+      required:
+        - product
+        - module
+        - recordType
+        - recordId
+        - requestType
+        - acknowledgeWarning
+      properties:
+        product:
+          type: string
+          enum: [RMS, INDUSTRIAL, ACADEMY, PLATFORM]
+        module:
+          type: string
+          maxLength: 64
+        recordType:
+          type: string
+          maxLength: 120
+        recordId:
+          type: string
+          format: uuid
+        requestType:
+          type: string
+          enum:
+            - GENERATE_FROM_RECORD
+            - IMPROVE_EXISTING
+            - GRAMMAR_AND_CLARITY
+            - EXPAND_BRIEF_NOTES
+            - CONDENSE
+            - PROFESSIONALIZE
+            - ACTIVE_VOICE
+            - TIMELINE_FORMAT
+            - QUALITY_REVIEW
+            - MISSING_INFORMATION_CHECK
+            - CONTRADICTION_CHECK
+        tone:
+          type: string
+          enum: [NEUTRAL, FORMAL, CONCISE, DETAILED]
+          default: NEUTRAL
+        detailLevel:
+          type: string
+          enum: [BRIEF, STANDARD, DETAILED]
+          default: STANDARD
+        includeCategories:
+          type: array
+          items:
+            type: string
+        excludeCategories:
+          type: array
+          items:
+            type: string
+        existingNarrative:
+          type: string
+          nullable: true
+          maxLength: 50000
+        templateKey:
+          type: string
+          nullable: true
+        acknowledgeWarning:
+          type: boolean
+          enum: [true]
+        authorizeSensitiveData:
+          type: boolean
+          default: false
+        businessPurpose:
+          type: string
+          nullable: true
+        idempotencyKey:
+          type: string
+          minLength: 8
+          maxLength: 128
+    AcceptAiNarrative:
+      type: object
+      required: [draftId]
+      properties:
+        draftId:
+          type: string
+          format: uuid
+        mode:
+          type: string
+          enum: [ACCEPT_ALL, PARTIAL]
+          default: ACCEPT_ALL
+        selectedSections:
+          type: array
+          items:
+            type: string
+        insertIntoRecord:
+          type: boolean
+          default: false
+        feedback:
+          type: string
+          nullable: true
+    RejectAiNarrative:
+      type: object
+      required: [draftId, reason]
+      properties:
+        draftId:
+          type: string
+          format: uuid
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        feedback:
+          type: string
+          nullable: true

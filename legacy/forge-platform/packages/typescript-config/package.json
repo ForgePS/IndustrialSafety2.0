@@ -1,0 +1,14 @@
+{
+  "name": "@forge/typescript-config",
+  "version": "0.1.0",
+  "private": true,
+  "files": [
+    "*.json"
+  ],
+  "exports": {
+    "./base.json": "./base.json",
+    "./react.json": "./react.json",
+    "./nextjs.json": "./nextjs.json",
+    "./node.json": "./node.json"
+  }
+}

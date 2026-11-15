@@ -1,0 +1,63 @@
+{
+  "defect": "DEF-S8-013",
+  "status": "VERIFIED",
+  "environment": "development",
+  "account": "511343547817",
+  "region": "us-east-1",
+  "cluster": "forge-development-ecs-platform",
+  "service": "forge-development-ecs-worker-service",
+  "taskDefinition": 26,
+  "syntheticOnly": true,
+  "method": "Inserted a synthetic PROCESSING job with an expired execution lease, sent an IMPORT_EXECUTE redelivery, observed worker reclaim and completion, then deleted the synthetic job and file.",
+  "lockSemantics": {
+    "columns": [
+      "execution_lock_owner",
+      "execution_lock_acquired_at",
+      "execution_lock_heartbeat_at",
+      "execution_lock_expires_at"
+    ],
+    "defaultTtlMs": 300000,
+    "source": "packages/imports/src/execution/engine.ts",
+    "workerBehaviorSource": "apps/worker-service/src/processors/import-execute-processor.ts"
+  },
+  "orchestration": {
+    "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/efccd2aafc0f4d758be2994b7a476840",
+    "taskExitCode": 0,
+    "jobId": "bf395857-bd96-4818-a09e-c0b422faf469",
+    "fileId": "51cdf265-a222-4020-b21d-8966e55d8745",
+    "tenantId": "019faa15-e558-70b6-adcd-a510c3c995f4",
+    "correlationId": "def-s8-013-3bbf2a0dcbe34ec1b17adf40cd510431",
+    "queueMessageId": "1240caf1-214b-4ccb-b6aa-95fa39d69aa2"
+  },
+  "before": {
+    "status": "PROCESSING",
+    "executionLockOwner": "def-s8-013-stale-owner",
+    "executionLockAcquiredAt": "2026-07-30T18:19:19.177Z",
+    "executionLockHeartbeatAt": "2026-07-30T18:19:19.177Z",
+    "executionLockExpiresAt": "2026-07-30T18:24:19.177Z",
+    "workerId": null,
+    "version": 1,
+    "staleLockAgeMinutes": 10
+  },
+  "after": {
+    "status": "COMPLETED",
+    "executionLockOwner": null,
+    "executionLockAcquiredAt": "2026-07-30T18:34:19.371Z",
+    "executionLockHeartbeatAt": "2026-07-30T18:34:19.386Z",
+    "executionLockExpiresAt": null,
+    "workerId": "ip-10-20-2-131.ec2.internal",
+    "version": 2,
+    "completedAt": "2026-07-30T18:34:19.384Z"
+  },
+  "assertions": {
+    "expiredLeaseWasPresent": true,
+    "redeliveryWasPublished": true,
+    "differentWorkerReacquiredLock": true,
+    "lockAcquiredTimestampAdvanced": true,
+    "jobReachedCompleted": true,
+    "terminalLockCleared": true,
+    "syntheticRowsCleaned": true
+  },
+  "verified": true,
+  "error": null
+}

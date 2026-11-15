@@ -1,0 +1,26 @@
+{
+  "name": "@forge/fx-design-tokens",
+  "version": "1.0.0-rc.1",
+  "private": true,
+  "type": "module",
+  "description": "Forge Experience (FX) design tokens — light, dark, high-contrast",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": "./src/styles.css",
+    "./themes/*": "./src/themes/*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rimraf dist"
+  },
+  "devDependencies": {
+    "rimraf": "^6.1.4",
+    "typescript": "^5.8.3"
+  }
+}

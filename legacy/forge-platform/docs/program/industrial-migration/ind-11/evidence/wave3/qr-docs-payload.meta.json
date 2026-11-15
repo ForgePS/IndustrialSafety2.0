@@ -1,0 +1,13 @@
+{
+  "counts": {
+    "qr_links": 2505,
+    "qr_link_versions": 5081,
+    "controlledDocuments": 2,
+    "equipmentDocuments": 12,
+    "documentAccessEvents": 18
+  },
+  "migrationBatchId": "e535a254-9dcc-4376-a271-cba4ff3c43db",
+  "wave": "3-qr-docs",
+  "rotateQrTokens": true,
+  "note": "Storage blobs NOT copied; document versions marked PENDING_UPLOAD"
+}

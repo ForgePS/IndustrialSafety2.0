@@ -1,0 +1,333 @@
+{
+  "startedAt": "2026-07-30T17:32:41.101Z",
+  "api": "https://d108fstxdv69bo.cloudfront.net",
+  "tenantId": "019faa15-e558-70b6-adcd-a510c3c995f4",
+  "steps": [
+    {
+      "step": "auth.me.operator",
+      "status": 200,
+      "permissions": [
+        "import.view",
+        "import.upload",
+        "import.map",
+        "import.validate",
+        "import.preview",
+        "import.profile.manage",
+        "import.template.manage"
+      ]
+    },
+    {
+      "step": "upload.init",
+      "status": 201,
+      "jobId": "019fb415-e4b6-743a-b34f-3f28abb69e00",
+      "hasPresign": true
+    },
+    {
+      "step": "upload.put",
+      "status": 200
+    },
+    {
+      "step": "upload.complete",
+      "status": 201,
+      "body": {
+        "job": {
+          "id": "019fb415-e4b6-743a-b34f-3f28abb69e00",
+          "productKey": "FORGE_RMS",
+          "moduleKey": "CORE",
+          "recordCategory": "personnel",
+          "status": "UPLOADED",
+          "profileId": null,
+          "profileKey": null,
+          "format": "csv",
+          "displayName": "S8 Evidence Clean CSV 3f29c04a",
+          "description": null,
+          "sourceType": "csv",
+          "requestedMode": "UPSERT",
+          "correlationId": "775af54eec7e6a4b4e2d363542119176",
+          "clientRequestId": null,
+          "progressPercent": 20,
+          "currentStage": "UPLOAD_COMPLETE",
+          "errorSummary": null,
+          "approvedAt": null,
+          "approvedBy": null,
+          "securityHold": false,
+          "malwareGatePassedAt": null,
+          "version": 2,
+          "createdAt": "2026-07-30T17:32:41.526Z",
+          "createdBy": "c6d951ba-f79a-4d4d-97ab-0bc6a5fda697",
+          "updatedAt": "2026-07-30T17:32:41.990Z",
+          "updatedBy": "c6d951ba-f79a-4d4d-97ab-0bc6a5fda697"
+        },
+        "file": {
+          "id": "019fb415-e4b8-72b6-bf74-ff3886a85f2e",
+          "jobId": "019fb415-e4b6-743a-b34f-3f28abb69e00",
+          "fileName": "s8-clean-3f29c04a.csv",
+          "storedFileName": "019fb415-e4b8-72b6-bf74-fae23a495489-s8-clean-3f29c04a.csv",
+          "contentType": "text/csv",
+          "format": "csv",
+          "byteSize": 91,
+          "contentHash": "4f347a76be862c395c82ee9935bb253eecd25780a0b2ee01b420ade11bc07a3f",
+          "clientChecksumSha256": "4f347a76be862c395c82ee9935bb253eecd25780a0b2ee01b420ade11bc07a3f",
+          "s3Bucket": "forge-development-imports-511343547817-us-east-1",
+          "s3Key": "tenants/019faa15-e558-70b6-adcd-a510c3c995f4/imports/019fb415-e4b6-743a-b34f-3f28abb69e00/019fb415-e4b8-72b6-bf74-fae23a495489-s8-clean-3f29c04a.csv",
+          "scanStatus": "SUBMITTED",
+          "scanDetail": null,
+          "malwareVerdict": "SUBMITTED",
+          "malwareVerdictAt": "2026-07-30T17:32:41.987Z",
+          "quarantineStatus": "NONE",
+          "quarantinedAt": null,
+          "scanAttemptCount": 0,
+          "rescanRequired": false,
+          "securityHold": false,
+          "uploadStatus": "COMPLETED",
+          "validationStatus": "PENDING",
+          "validationDetail": null,
+          "encryptionStatus": "SSE_KMS",
+          "multipartUploadId": null,
+          "uploadProgressPercent": 100,
+          "detectedHeaders": null,
+          "detectedSheets": null,
+          "completedAt": "2026-07-30T17:32:41.987Z",
+          "version": 2,
+          "createdAt": "2026-07-30T17:32:41.528Z",
+          "updatedAt": "2026-07-30T17:32:41.987Z"
+        },
+        "enqueued": true
+      }
+    },
+    {
+      "step": "poll.0",
+      "http": 200,
+      "jobStatus": "READY_FOR_MAPPING",
+      "stage": "READY_FOR_MAPPING"
+    },
+    {
+      "step": "mappings.put",
+      "status": 200
+    },
+    {
+      "step": "request-validation",
+      "status": 201,
+      "data": {
+        "jobId": "019fb415-e4b6-743a-b34f-3f28abb69e00",
+        "status": "MAPPED",
+        "requestStatus": "NOT_AVAILABLE_UNTIL_S5",
+        "message": "Validation orchestration accepted for audit only. Row-level validation workers are not available until Sprint S5."
+      }
+    },
+    {
+      "step": "request-preview",
+      "status": 201,
+      "data": {
+        "jobId": "019fb415-e4b6-743a-b34f-3f28abb69e00",
+        "status": "MAPPED",
+        "requestStatus": "NOT_AVAILABLE_UNTIL_S5",
+        "message": "Preview orchestration accepted for audit only. Preview generation is not available until Sprint S5."
+      }
+    },
+    {
+      "step": "submit-for-approval",
+      "status": 201,
+      "data": {
+        "id": "019fb415-e4b6-743a-b34f-3f28abb69e00",
+        "productKey": "FORGE_RMS",
+        "moduleKey": "CORE",
+        "recordCategory": "personnel",
+        "status": "AWAITING_APPROVAL",
+        "profileId": null,
+        "profileKey": null,
+        "format": "csv",
+        "displayName": "S8 Evidence Clean CSV 3f29c04a",
+        "description": null,
+        "sourceType": "csv",
+        "requestedMode": "UPSERT",
+        "correlationId": "775af54eec7e6a4b4e2d363542119176",
+        "clientRequestId": null,
+        "progressPercent": 50,
+        "currentStage": "MAPPED",
+        "errorSummary": null,
+        "approvedAt": null,
+        "approvedBy": null,
+        "securityHold": false,
+        "malwareGatePassedAt": "2026-07-30T17:32:42.192Z",
+        "version": 7,
+        "createdAt": "2026-07-30T17:32:41.526Z",
+        "createdBy": "c6d951ba-f79a-4d4d-97ab-0bc6a5fda697",
+        "updatedAt": "2026-07-30T17:32:45.662Z",
+        "updatedBy": "c6d951ba-f79a-4d4d-97ab-0bc6a5fda697"
+      }
+    },
+    {
+      "step": "approve",
+      "status": 201,
+      "data": {
+        "id": "019fb415-e4b6-743a-b34f-3f28abb69e00",
+        "productKey": "FORGE_RMS",
+        "moduleKey": "CORE",
+        "recordCategory": "personnel",
+        "status": "APPROVED",
+        "profileId": null,
+        "profileKey": null,
+        "format": "csv",
+        "displayName": "S8 Evidence Clean CSV 3f29c04a",
+        "description": null,
+        "sourceType": "csv",
+        "requestedMode": "UPSERT",
+        "correlationId": "775af54eec7e6a4b4e2d363542119176",
+        "clientRequestId": null,
+        "progressPercent": 50,
+        "currentStage": "MAPPED",
+        "errorSummary": null,
+        "approvedAt": "2026-07-30T17:32:45.842Z",
+        "approvedBy": "72130d76-d1ed-4bd9-9133-2ce261846d5f",
+        "securityHold": false,
+        "malwareGatePassedAt": "2026-07-30T17:32:42.192Z",
+        "version": 8,
+        "createdAt": "2026-07-30T17:32:41.526Z",
+        "createdBy": "c6d951ba-f79a-4d4d-97ab-0bc6a5fda697",
+        "updatedAt": "2026-07-30T17:32:45.842Z",
+        "updatedBy": "72130d76-d1ed-4bd9-9133-2ce261846d5f"
+      }
+    },
+    {
+      "step": "rows.stage",
+      "status": 201,
+      "data": {
+        "jobId": "019fb415-e4b6-743a-b34f-3f28abb69e00",
+        "stagedCount": 2,
+        "items": [
+          {
+            "id": "019fb415-f5f2-767f-babc-0b587444dda6",
+            "sourceRowKey": "S8-3f29c04a-001",
+            "status": "STAGED"
+          },
+          {
+            "id": "019fb415-f5f4-74bf-ad50-1a09d5bfe319",
+            "sourceRowKey": "S8-3f29c04a-002",
+            "status": "STAGED"
+          }
+        ]
+      }
+    },
+    {
+      "step": "execute",
+      "status": 201,
+      "adapterKeyUsed": "reference:generic:record@1",
+      "omittedAdapterKey": true,
+      "data": {
+        "accepted": true,
+        "duplicate": false,
+        "job": {
+          "id": "019fb415-e4b6-743a-b34f-3f28abb69e00",
+          "productKey": "FORGE_RMS",
+          "moduleKey": "CORE",
+          "recordCategory": "personnel",
+          "status": "QUEUED",
+          "profileId": null,
+          "profileKey": null,
+          "format": "csv",
+          "displayName": "S8 Evidence Clean CSV 3f29c04a",
+          "description": null,
+          "sourceType": "csv",
+          "requestedMode": "UPSERT",
+          "correlationId": "775af54eec7e6a4b4e2d363542119176",
+          "clientRequestId": null,
+          "progressPercent": 0,
+          "currentStage": "EXECUTION_QUEUED",
+          "errorSummary": null,
+          "approvedAt": "2026-07-30T17:32:45.842Z",
+          "approvedBy": "72130d76-d1ed-4bd9-9133-2ce261846d5f",
+          "securityHold": false,
+          "malwareGatePassedAt": "2026-07-30T17:32:42.192Z",
+          "version": 9,
+          "createdAt": "2026-07-30T17:32:41.526Z",
+          "createdBy": "c6d951ba-f79a-4d4d-97ab-0bc6a5fda697",
+          "updatedAt": "2026-07-30T17:32:46.367Z",
+          "updatedBy": "12852475-b307-41ac-b1dd-739e861643d5"
+        },
+        "execution": {
+          "status": "QUEUED",
+          "idempotencyKey": "s8-wf-execute-41127cf4-425c-470b-8279-bf7b4e32b6a5",
+          "adapterKey": "reference:generic:record@1",
+          "attempt": 1
+        }
+      }
+    },
+    {
+      "step": "exec.poll.0",
+      "http": 200,
+      "jobStatus": "COMPLETED",
+      "progress": 100
+    },
+    {
+      "step": "results",
+      "status": 200
+    },
+    {
+      "step": "results.download",
+      "status": 201,
+      "hasUrl": true,
+      "urlHost": "forge-development-imports-511343547817-us-east-1.s3.us-east-1.amazonaws.com"
+    },
+    {
+      "step": "rollback-request",
+      "status": 201,
+      "data": {
+        "status": "ROLLBACK_PENDING",
+        "classification": "FULLY_REVERSIBLE",
+        "rollbackEventId": "019fb416-0618-7247-bb6c-862624f97784",
+        "note": "Rollback preparation only — compensation execution is deferred."
+      }
+    }
+  ],
+  "jobId": "019fb415-e4b6-743a-b34f-3f28abb69e00",
+  "finalStatus": "COMPLETED",
+  "resultCounts": {
+    "jobId": "019fb415-e4b6-743a-b34f-3f28abb69e00",
+    "tenantId": "019faa15-e558-70b6-adcd-a510c3c995f4",
+    "status": "COMPLETED",
+    "result": {
+      "jobId": "019fb415-e4b6-743a-b34f-3f28abb69e00",
+      "tenantId": "019faa15-e558-70b6-adcd-a510c3c995f4",
+      "moduleKey": "CORE",
+      "startedAt": "2026-07-30T17:32:46.505Z",
+      "totalRows": 2,
+      "adapterKey": "reference:generic:record@1",
+      "durationMs": 82,
+      "failedRows": 0,
+      "productKey": "FORGE_RMS",
+      "recordType": "personnel",
+      "completedAt": "2026-07-30T17:32:46.587Z",
+      "retriedRows": 0,
+      "skippedRows": 0,
+      "cancelledRows": 0,
+      "correlationId": "29d74790120d9e524fc8a297aa926a63",
+      "duplicateRows": 0,
+      "adapterVersion": "1",
+      "createdRecords": 2,
+      "errorReportRef": null,
+      "successfulRows": 2,
+      "updatedRecords": 0,
+      "unchangedRecords": 0,
+      "executionImageVersion": null,
+      "rollbackClassificationSummary": {
+        "NOT_REVERSIBLE": 0,
+        "FULLY_REVERSIBLE": 2,
+        "COMPENSATING_ACTION": 0,
+        "MANUAL_REVIEW_REQUIRED": 0
+      }
+    },
+    "rollbackClassificationSummary": {
+      "NOT_REVERSIBLE": 0,
+      "FULLY_REVERSIBLE": 2,
+      "jobClassification": "FULLY_REVERSIBLE",
+      "COMPENSATING_ACTION": 0,
+      "MANUAL_REVIEW_REQUIRED": 0
+    }
+  },
+  "correlationIds": ["775af54eec7e6a4b4e2d363542119176", "775af54eec7e6a4b4e2d363542119176"],
+  "ok": true,
+  "completedAt": "2026-07-30T17:32:50.032Z",
+  "detectReplayUsed": false,
+  "defS8023": "AUTO_DETECT_OK"
+}

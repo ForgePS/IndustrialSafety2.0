@@ -1,0 +1,17 @@
+{
+  "ok": true,
+  "at": "2026-08-05T11:48:26.652Z",
+  "wave": "3-qr-docs",
+  "cluster": "forge-development-ecs-platform",
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/a590b68a24914b15bbd1b99113a7a937",
+  "exitCode": 0,
+  "payloadUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/wave3-qr-docs/2026-08-05T11-46-42-743Z/payload.json",
+  "extractCounts": {
+    "qr_links": 2505,
+    "qr_link_versions": 5081,
+    "controlledDocuments": 2,
+    "equipmentDocuments": 12,
+    "documentAccessEvents": 18
+  },
+  "logExcerpt": "{\"dbUser\":\"forge_admin\",\"batchId\":\"6bdd01be-e185-5237-9bb6-b2df42b29dff\"}\t{\t  \"ok\": true,\t  \"phase\": \"IND-11B-wave3-qr-docs\",\t  \"counts\": {\t    \"qrLinks\": 2505,\t    \"qrVersions\": 2505,\t    \"documents\": 2,\t    \"equipmentDocLinks\": 12,\t    \"accessEvents\": 0\t  },\t  \"errorCount\": 0,\t  \"errors\": [],\t  \"migrationBatchId\": \"e535a254-9dcc-4376-a271-cba4ff3c43db\",\t  \"dbBatchId\": \"6bdd01be-e185-5237-9bb6-b2df42b29dff\",\t  \"note\": \"QR tokens rotated; Storage blobs not copied (PENDING_UPLOAD placeholders)\"\t}"
+}

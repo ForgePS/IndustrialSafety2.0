@@ -1,0 +1,435 @@
+{
+  "meta": {
+    "generated_at": "2026-07-26T21:43:39.252Z",
+    "environment": "development",
+    "aws_account": "511343547817",
+    "aws_region": "us-east-1",
+    "tool_versions": {
+      "awsCli": "aws-cli/2.36.8 Python/3.14.6 Windows/11 exe/AMD64",
+      "node": "v20.20.2"
+    },
+    "control_id": "CC-LOG-01",
+    "risk_id": "R-002",
+    "title": "CloudWatch CloudTrail security alarms and metric filters",
+    "classification": "Confidential",
+    "source": "aws cloudwatch describe-alarms + logs describe-metric-filters",
+    "review_status": "ACCEPTED",
+    "reviewed_by": "Jeremy Powell",
+    "reviewed_at": "2026-07-26"
+  },
+  "data": {
+    "trailName": "forge-development-cloudtrail-management",
+    "alarmPrefix": "forge-development-alarm-",
+    "alarms": [
+      {
+        "AlarmName": "forge-development-alarm-api-5xx",
+        "StateValue": "OK",
+        "MetricName": "HTTPCode_Target_5XX_Count",
+        "Namespace": "AWS/ApplicationELB",
+        "Threshold": 5
+      },
+      {
+        "AlarmName": "forge-development-alarm-api-cf-5xx",
+        "StateValue": "OK",
+        "MetricName": "5xxErrorRate",
+        "Namespace": "AWS/CloudFront",
+        "Threshold": 5
+      },
+      {
+        "AlarmName": "forge-development-alarm-api-running-tasks",
+        "StateValue": "OK",
+        "MetricName": "RunningTaskCount",
+        "Namespace": "ECS/ContainerInsights",
+        "Threshold": 1
+      },
+      {
+        "AlarmName": "forge-development-alarm-api-unhealthy",
+        "StateValue": "OK",
+        "MetricName": "UnHealthyHostCount",
+        "Namespace": "AWS/ApplicationELB",
+        "Threshold": 1
+      },
+      {
+        "AlarmName": "forge-development-alarm-cloudtrail-deleted",
+        "AlarmDescription": "CloudTrail DeleteTrail",
+        "StateValue": "OK",
+        "MetricName": "cloudtrail-deleted",
+        "Namespace": "Forge/CloudTrail",
+        "Threshold": 1
+      },
+      {
+        "AlarmName": "forge-development-alarm-cloudtrail-stopped",
+        "AlarmDescription": "CloudTrail StopLogging",
+        "StateValue": "OK",
+        "MetricName": "cloudtrail-stopped",
+        "Namespace": "Forge/CloudTrail",
+        "Threshold": 1
+      },
+      {
+        "AlarmName": "forge-development-alarm-cloudtrail-updated",
+        "AlarmDescription": "CloudTrail configuration changed",
+        "StateValue": "OK",
+        "MetricName": "cloudtrail-updated",
+        "Namespace": "Forge/CloudTrail",
+        "Threshold": 1
+      },
+      {
+        "AlarmName": "forge-development-alarm-console-login-no-mfa",
+        "AlarmDescription": "Console login without MFA (IAM users; SSO may not populate MFAUsed)",
+        "StateValue": "OK",
+        "MetricName": "console-login-no-mfa",
+        "Namespace": "Forge/CloudTrail",
+        "Threshold": 1
+      },
+      {
+        "AlarmName": "forge-development-alarm-cw-log-deletion",
+        "AlarmDescription": "CloudWatch log deletion",
+        "StateValue": "OK",
+        "MetricName": "cw-log-deletion",
+        "Namespace": "Forge/CloudTrail",
+        "Threshold": 1
+      },
+      {
+        "AlarmName": "forge-development-alarm-db-connections",
+        "StateValue": "OK",
+        "MetricName": "DatabaseConnections",
+        "Namespace": "AWS/RDS",
+        "Threshold": 80
+      },
+      {
+        "AlarmName": "forge-development-alarm-db-cpu",
+        "StateValue": "OK",
+        "MetricName": "CPUUtilization",
+        "Namespace": "AWS/RDS",
+        "Threshold": 80
+      },
+      {
+        "AlarmName": "forge-development-alarm-documentsdlq",
+        "StateValue": "OK",
+        "MetricName": "ApproximateNumberOfMessagesVisible",
+        "Namespace": "AWS/SQS",
+        "Threshold": 1
+      },
+      {
+        "AlarmName": "forge-development-alarm-iam-policy-changes",
+        "AlarmDescription": "IAM policy changes",
+        "StateValue": "OK",
+        "MetricName": "iam-policy-changes",
+        "Namespace": "Forge/CloudTrail",
+        "Threshold": 1
+      },
+      {
+        "AlarmName": "forge-development-alarm-iam-role-changes",
+        "AlarmDescription": "IAM role changes",
+        "StateValue": "OK",
+        "MetricName": "iam-role-changes",
+        "Namespace": "Forge/CloudTrail",
+        "Threshold": 1
+      },
+      {
+        "AlarmName": "forge-development-alarm-igw-changes",
+        "AlarmDescription": "Internet gateway changes",
+        "StateValue": "OK",
+        "MetricName": "igw-changes",
+        "Namespace": "Forge/CloudTrail",
+        "Threshold": 1
+      },
+      {
+        "AlarmName": "forge-development-alarm-imports-backlog",
+        "StateValue": "OK",
+        "MetricName": "ApproximateNumberOfMessagesVisible",
+        "Namespace": "AWS/SQS",
+        "Threshold": 100
+      },
+      {
+        "AlarmName": "forge-development-alarm-importsdlq",
+        "StateValue": "OK",
+        "MetricName": "ApproximateNumberOfMessagesVisible",
+        "Namespace": "AWS/SQS",
+        "Threshold": 1
+      },
+      {
+        "AlarmName": "forge-development-alarm-integrationdlq",
+        "StateValue": "OK",
+        "MetricName": "ApproximateNumberOfMessagesVisible",
+        "Namespace": "AWS/SQS",
+        "Threshold": 1
+      },
+      {
+        "AlarmName": "forge-development-alarm-kms-key-changes",
+        "AlarmDescription": "KMS key disable / deletion / policy",
+        "StateValue": "OK",
+        "MetricName": "kms-key-changes",
+        "Namespace": "Forge/CloudTrail",
+        "Threshold": 1
+      },
+      {
+        "AlarmName": "forge-development-alarm-nacl-changes",
+        "AlarmDescription": "Network ACL changes",
+        "StateValue": "OK",
+        "MetricName": "nacl-changes",
+        "Namespace": "Forge/CloudTrail",
+        "Threshold": 1
+      },
+      {
+        "AlarmName": "forge-development-alarm-notificationsdlq",
+        "StateValue": "OK",
+        "MetricName": "ApproximateNumberOfMessagesVisible",
+        "Namespace": "AWS/SQS",
+        "Threshold": 1
+      },
+      {
+        "AlarmName": "forge-development-alarm-rms-cf-5xx",
+        "StateValue": "OK",
+        "MetricName": "5xxErrorRate",
+        "Namespace": "AWS/CloudFront",
+        "Threshold": 5
+      },
+      {
+        "AlarmName": "forge-development-alarm-root-activity",
+        "AlarmDescription": "Root account activity",
+        "StateValue": "OK",
+        "MetricName": "root-activity",
+        "Namespace": "Forge/CloudTrail",
+        "Threshold": 1
+      },
+      {
+        "AlarmName": "forge-development-alarm-route-table-changes",
+        "AlarmDescription": "Route table changes",
+        "StateValue": "OK",
+        "MetricName": "route-table-changes",
+        "Namespace": "Forge/CloudTrail",
+        "Threshold": 1
+      },
+      {
+        "AlarmName": "forge-development-alarm-s3-bucket-policy-changes",
+        "AlarmDescription": "S3 bucket policy / ACL / public access changes",
+        "StateValue": "INSUFFICIENT_DATA",
+        "MetricName": "s3-bucket-policy-changes",
+        "Namespace": "Forge/CloudTrail",
+        "Threshold": 1
+      },
+      {
+        "AlarmName": "forge-development-alarm-secrets-policy-changes",
+        "AlarmDescription": "Secrets Manager policy / delete",
+        "StateValue": "OK",
+        "MetricName": "secrets-policy-changes",
+        "Namespace": "Forge/CloudTrail",
+        "Threshold": 1
+      },
+      {
+        "AlarmName": "forge-development-alarm-sg-changes",
+        "AlarmDescription": "Security group changes",
+        "StateValue": "OK",
+        "MetricName": "sg-changes",
+        "Namespace": "Forge/CloudTrail",
+        "Threshold": 1
+      },
+      {
+        "AlarmName": "forge-development-alarm-sso-directory-changes",
+        "AlarmDescription": "Identity Center / SSO API activity (visibility varies by event source)",
+        "StateValue": "OK",
+        "MetricName": "sso-directory-changes",
+        "Namespace": "Forge/CloudTrail",
+        "Threshold": 1
+      },
+      {
+        "AlarmName": "forge-development-alarm-unauthorized-api",
+        "AlarmDescription": "Unauthorized / AccessDenied API calls",
+        "StateValue": "OK",
+        "MetricName": "unauthorized-api",
+        "Namespace": "Forge/CloudTrail",
+        "Threshold": 1
+      }
+    ],
+    "metricFilters": [
+      {
+        "filterName": "CloudTrailTrailLogGroupConsoleLoginNoMfaED022656-PrisPJTtG7Q0",
+        "filterPattern": "{ ($.eventName = ConsoleLogin) && ($.additionalEventData.MFAUsed != \"Yes\") && ($.userIdentity.type = \"IAMUser\") }",
+        "metricTransformations": [
+          {
+            "metricName": "console-login-no-mfa",
+            "metricNamespace": "Forge/CloudTrail",
+            "metricValue": "1"
+          }
+        ]
+      },
+      {
+        "filterName": "CloudTrailTrailLogGroupCwLogDeletionADC8E6DC-a6vzGWv0c64S",
+        "filterPattern": "{ ($.eventSource = logs.amazonaws.com) && (($.eventName = DeleteLogGroup) || ($.eventName = DeleteLogStream)) }",
+        "metricTransformations": [
+          {
+            "metricName": "cw-log-deletion",
+            "metricNamespace": "Forge/CloudTrail",
+            "metricValue": "1"
+          }
+        ]
+      },
+      {
+        "filterName": "CloudTrailTrailLogGroupIamPolicyChangesBC9740E4-RYQxQgcwxbul",
+        "filterPattern": "{ ($.eventName = DeleteGroupPolicy) || ($.eventName = DeleteRolePolicy) || ($.eventName = DeleteUserPolicy) || ($.eventName = PutGroupPolicy) || ($.eventName = PutRolePolicy) || ($.eventName = PutUserPolicy) || ($.eventName = CreatePolicy) || ($.eventName = DeletePolicy) || ($.eventName = CreatePolicyVersion) || ($.eventName = DeletePolicyVersion) || ($.eventName = AttachRolePolicy) || ($.eventName = DetachRolePolicy) || ($.eventName = AttachUserPolicy) || ($.eventName = DetachUserPolicy) || ($.eventName = AttachGroupPolicy) || ($.eventName = DetachGroupPolicy) }",
+        "metricTransformations": [
+          {
+            "metricName": "iam-policy-changes",
+            "metricNamespace": "Forge/CloudTrail",
+            "metricValue": "1"
+          }
+        ]
+      },
+      {
+        "filterName": "CloudTrailTrailLogGroupIamRoleChangesBC4631B7-b1fAYtZuQEIm",
+        "filterPattern": "{ ($.eventName = CreateRole) || ($.eventName = DeleteRole) || ($.eventName = UpdateAssumeRolePolicy) }",
+        "metricTransformations": [
+          {
+            "metricName": "iam-role-changes",
+            "metricNamespace": "Forge/CloudTrail",
+            "metricValue": "1"
+          }
+        ]
+      },
+      {
+        "filterName": "CloudTrailTrailLogGroupIgwChanges70930E68-BcY3IVawfC3y",
+        "filterPattern": "{ ($.eventName = CreateInternetGateway) || ($.eventName = AttachInternetGateway) || ($.eventName = DetachInternetGateway) || ($.eventName = DeleteInternetGateway) }",
+        "metricTransformations": [
+          {
+            "metricName": "igw-changes",
+            "metricNamespace": "Forge/CloudTrail",
+            "metricValue": "1"
+          }
+        ]
+      },
+      {
+        "filterName": "CloudTrailTrailLogGroupKmsKeyChanges42886C40-4vkIWbw3oVDv",
+        "filterPattern": "{ ($.eventSource = kms.amazonaws.com) && (($.eventName = DisableKey) || ($.eventName = ScheduleKeyDeletion) || ($.eventName = PutKeyPolicy)) }",
+        "metricTransformations": [
+          {
+            "metricName": "kms-key-changes",
+            "metricNamespace": "Forge/CloudTrail",
+            "metricValue": "1"
+          }
+        ]
+      },
+      {
+        "filterName": "CloudTrailTrailLogGroupNaclChanges81292445-89Sd4m87BCm1",
+        "filterPattern": "{ ($.eventName = CreateNetworkAcl) || ($.eventName = CreateNetworkAclEntry) || ($.eventName = DeleteNetworkAcl) || ($.eventName = DeleteNetworkAclEntry) || ($.eventName = ReplaceNetworkAclEntry) || ($.eventName = ReplaceNetworkAclAssociation) }",
+        "metricTransformations": [
+          {
+            "metricName": "nacl-changes",
+            "metricNamespace": "Forge/CloudTrail",
+            "metricValue": "1"
+          }
+        ]
+      },
+      {
+        "filterName": "CloudTrailTrailLogGroupRootActivity210142CC-skra4olEwm88",
+        "filterPattern": "{ ($.userIdentity.type = \"Root\") && ($.userIdentity.invokedBy NOT EXISTS) && ($.eventType != \"AwsServiceEvent\") }",
+        "metricTransformations": [
+          {
+            "metricName": "root-activity",
+            "metricNamespace": "Forge/CloudTrail",
+            "metricValue": "1"
+          }
+        ]
+      },
+      {
+        "filterName": "CloudTrailTrailLogGroupRouteTableChanges24122C23-TaOGnG9obMp0",
+        "filterPattern": "{ ($.eventName = CreateRoute) || ($.eventName = CreateRouteTable) || ($.eventName = ReplaceRoute) || ($.eventName = ReplaceRouteTableAssociation) || ($.eventName = DeleteRouteTable) || ($.eventName = DeleteRoute) || ($.eventName = DisassociateRouteTable) }",
+        "metricTransformations": [
+          {
+            "metricName": "route-table-changes",
+            "metricNamespace": "Forge/CloudTrail",
+            "metricValue": "1"
+          }
+        ]
+      },
+      {
+        "filterName": "CloudTrailTrailLogGroupS3BucketPolicyChangesC70262FA-JMUzQcMDKZu0",
+        "filterPattern": "{ ($.eventSource = s3.amazonaws.com) && (($.eventName = PutBucketPolicy) || ($.eventName = DeleteBucketPolicy) || ($.eventName = PutBucketAcl) || ($.eventName = PutPublicAccessBlock)) }",
+        "metricTransformations": [
+          {
+            "metricName": "s3-bucket-policy-changes",
+            "metricNamespace": "Forge/CloudTrail",
+            "metricValue": "1"
+          }
+        ]
+      },
+      {
+        "filterName": "CloudTrailTrailLogGroupSecretsPolicyChanges07FF4561-e1XxF6uwmtAz",
+        "filterPattern": "{ ($.eventSource = secretsmanager.amazonaws.com) && (($.eventName = PutResourcePolicy) || ($.eventName = DeleteResourcePolicy) || ($.eventName = DeleteSecret)) }",
+        "metricTransformations": [
+          {
+            "metricName": "secrets-policy-changes",
+            "metricNamespace": "Forge/CloudTrail",
+            "metricValue": "1"
+          }
+        ]
+      },
+      {
+        "filterName": "CloudTrailTrailLogGroupSecurityGroupChangesD40BC889-VMjEeB0ZYYpK",
+        "filterPattern": "{ ($.eventName = AuthorizeSecurityGroupIngress) || ($.eventName = AuthorizeSecurityGroupEgress) || ($.eventName = RevokeSecurityGroupIngress) || ($.eventName = RevokeSecurityGroupEgress) || ($.eventName = CreateSecurityGroup) || ($.eventName = DeleteSecurityGroup) }",
+        "metricTransformations": [
+          {
+            "metricName": "sg-changes",
+            "metricNamespace": "Forge/CloudTrail",
+            "metricValue": "1"
+          }
+        ]
+      },
+      {
+        "filterName": "CloudTrailTrailLogGroupSsoPrivilegeHintFDEF8735-0QFh2Bl7euPH",
+        "filterPattern": "{ ($.eventSource = sso.amazonaws.com) || ($.eventSource = sso-directory.amazonaws.com) || ($.eventSource = identitystore.amazonaws.com) }",
+        "metricTransformations": [
+          {
+            "metricName": "sso-directory-changes",
+            "metricNamespace": "Forge/CloudTrail",
+            "metricValue": "1"
+          }
+        ]
+      },
+      {
+        "filterName": "CloudTrailTrailLogGroupTrailDeletedE66A044C-jIcwimZ2U3xx",
+        "filterPattern": "{ ($.eventName = DeleteTrail) }",
+        "metricTransformations": [
+          {
+            "metricName": "cloudtrail-deleted",
+            "metricNamespace": "Forge/CloudTrail",
+            "metricValue": "1"
+          }
+        ]
+      },
+      {
+        "filterName": "CloudTrailTrailLogGroupTrailStopped48CDEFAF-RrZUTqSzuYYc",
+        "filterPattern": "{ ($.eventName = StopLogging) }",
+        "metricTransformations": [
+          {
+            "metricName": "cloudtrail-stopped",
+            "metricNamespace": "Forge/CloudTrail",
+            "metricValue": "1"
+          }
+        ]
+      },
+      {
+        "filterName": "CloudTrailTrailLogGroupTrailUpdated1EE7AC80-K3rer1BYGbRH",
+        "filterPattern": "{ ($.eventName = UpdateTrail) || ($.eventName = StartLogging) }",
+        "metricTransformations": [
+          {
+            "metricName": "cloudtrail-updated",
+            "metricNamespace": "Forge/CloudTrail",
+            "metricValue": "1"
+          }
+        ]
+      },
+      {
+        "filterName": "CloudTrailTrailLogGroupUnauthorizedApi2F18F6B6-n8EJ46B1JHsA",
+        "filterPattern": "{ ($.errorCode = \"*UnauthorizedOperation\") || ($.errorCode = \"AccessDenied*\") }",
+        "metricTransformations": [
+          {
+            "metricName": "unauthorized-api",
+            "metricNamespace": "Forge/CloudTrail",
+            "metricValue": "1"
+          }
+        ]
+      }
+    ]
+  }
+}

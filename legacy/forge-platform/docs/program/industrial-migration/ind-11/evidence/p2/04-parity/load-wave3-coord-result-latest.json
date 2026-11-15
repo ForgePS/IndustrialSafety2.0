@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "at": "2026-08-06T15:25:34.621Z",
+  "wave": "wave3-coord",
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/dc0b0e0d1a584185ae6facc2247a600f",
+  "exitCode": 0,
+  "payloadUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave3-coord/payload.json",
+  "loaderUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave3-coord/ecs-loader.mjs",
+  "remappedSha256": "f12b7e28f7897e639269c29e317cc9c6be310b6b6e591956f82e1f8245c34f43",
+  "logExcerpt": "{\"dbUser\":\"forge_admin\",\"batchId\":\"e21f8cfa-b10a-5021-b847-c317c91bb925\"}\t{\t  \"ok\": true,\t  \"phase\": \"IND-11B-wave3-coord\",\t  \"counts\": {\t    \"tasks\": 2,\t    \"threads\": 2,\t    \"messages\": 7,\t    \"emergency\": 30\t  },\t  \"errorCount\": 0,\t  \"errors\": [],\t  \"migrationBatchId\": \"p4-staging-wave3-coord-2026-08-06T15-15-28-618Z\",\t  \"dbBatchId\": \"e21f8cfa-b10a-5021-b847-c317c91bb925\",\t  \"note\": \"sender/created_by are deterministic UUIDs from Firebase IDs (no Cognito import)\"\t}"
+}

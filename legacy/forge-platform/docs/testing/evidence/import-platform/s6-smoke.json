@@ -1,0 +1,37 @@
+{
+  "expected": {
+    "execute": 401,
+    "health": 200,
+    "rescan": 401,
+    "resultsDownload": 401
+  },
+  "baseUrl": "https://d108fstxdv69bo.cloudfront.net",
+  "timestamp": "2026-07-29T20:33:52Z",
+  "checks": [
+    {
+      "method": "GET",
+      "url": "https://d108fstxdv69bo.cloudfront.net/health",
+      "name": "health",
+      "statusCode": 200
+    },
+    {
+      "method": "POST",
+      "url": "https://d108fstxdv69bo.cloudfront.net/api/v1/imports/jobs/00000000-0000-0000-0000-000000000000/execute",
+      "name": "execute-unauth",
+      "statusCode": 401
+    },
+    {
+      "method": "POST",
+      "url": "https://d108fstxdv69bo.cloudfront.net/api/v1/imports/jobs/00000000-0000-0000-0000-000000000000/results/download",
+      "name": "results-download-unauth",
+      "statusCode": 401
+    },
+    {
+      "method": "POST",
+      "url": "https://d108fstxdv69bo.cloudfront.net/api/v1/imports/jobs/00000000-0000-0000-0000-000000000000/files/00000000-0000-0000-0000-000000000000/rescan",
+      "name": "rescan-unauth",
+      "statusCode": 401
+    }
+  ],
+  "passed": true
+}

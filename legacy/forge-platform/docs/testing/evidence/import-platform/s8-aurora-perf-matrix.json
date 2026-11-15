@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-30T18:32:00.000Z",
+  "defect": "DEF-S8-015",
+  "status": "PARTIAL",
+  "environment": {
+    "name": "development",
+    "api": "https://d108fstxdv69bo.cloudfront.net",
+    "awsProfile": "forge-dev",
+    "awsRegion": "us-east-1",
+    "apiTaskDefinitionRevision": 42,
+    "workerTaskDefinitionRevision": 26,
+    "workerCpu": 256,
+    "workerMemoryMiB": 512,
+    "workerDesiredCount": 1
+  },
+  "method": {
+    "script": "scripts/import-s8-perf-smoke.mjs",
+    "path": "authenticated API -> S3 -> SQS -> ECS worker -> Aurora",
+    "adapterKey": "reference:generic:record@1",
+    "syntheticDataOnly": true,
+    "stageChunkSize": 25,
+    "note": "The 25-row stage chunks stay below the deployed CloudFront/WAF request-body boundary. Workflow wall time is measured from job creation through the worker result completedAt."
+  },
+  "runs": [
+    {
+      "label": "aurora-500-b50-stable",
+      "jobId": "019fb447-b9ae-722a-9008-b9f165d3ae5e",
+      "tenantId": "019faa15-e558-70b6-adcd-a510c3c995f4",
+      "rows": 500,
+      "batchSize": 50,
+      "createdAt": "2026-07-30T18:27:07.310Z",
+      "executionStartedAt": "2026-07-30T18:27:17.586Z",
+      "completedAt": "2026-07-30T18:27:29.304Z",
+      "workflowWallMs": 21994,
+      "workerDurationMs": 11718,
+      "finalStatus": "COMPLETED",
+      "successfulRows": 500,
+      "failedRows": 0,
+      "createdRecords": 500
+    },
+    {
+      "label": "aurora-5000-b50-stable",
+      "jobId": "019fb448-1516-75cb-b2f5-9654ca23714a",
+      "tenantId": "019faa15-e558-70b6-adcd-a510c3c995f4",
+      "rows": 5000,
+      "batchSize": 50,
+      "createdAt": "2026-07-30T18:27:30.710Z",
+      "executionStartedAt": "2026-07-30T18:28:20.120Z",
+      "completedAt": "2026-07-30T18:30:16.001Z",
+      "workflowWallMs": 165291,
+      "workerDurationMs": 115881,
+      "finalStatus": "COMPLETED",
+      "successfulRows": 5000,
+      "failedRows": 0,
+      "createdRecords": 5000
+    }
+  ],
+  "cloudWatch": {
+    "window": {
+      "start": "2026-07-30T18:27:00Z",
+      "end": "2026-07-30T18:31:00Z",
+      "periodSeconds": 60
+    },
+    "workerCpuUtilizationPercent": {
+      "maximum": 99.88764953613281,
+      "highestMinuteAverage": 99.52312723795573
+    },
+    "workerMemoryUtilizationPercent": {
+      "maximum": 16.69921875,
+      "highestMinuteAverage": 16.569010416666668
+    },
+    "auroraCpuUtilizationPercent": {
+      "maximum": 100,
+      "highestMinuteAverage": 74.3464759837102
+    },
+    "auroraDatabaseConnections": {
+      "maximum": 9,
+      "minuteAverage": 9
+    },
+    "interpretation": "CPU reached saturation on both the worker and Aurora during this bounded run; memory remained below 17%. These measurements do not establish safe capacity beyond 5,000 rows."
+  },
+  "excludedRun": {
+    "jobId": "019fb43e-76d0-74ea-9db7-525485ab5be9",
+    "rowsRequested": 500,
+    "batchSize": 50,
+    "status": "PROCESSING",
+    "progressPercent": 99,
+    "processedRows": 250,
+    "reason": "Excluded from the matrix because it was claimed while worker revision 25 was draining during deployment overlap. The service later stabilized on revision 26."
+  },
+  "remainingGap": {
+    "untestedRows": [25000, 100000, 250000],
+    "reason": "Not attempted in this bounded session. No result is claimed above 5,000 rows."
+  }
+}

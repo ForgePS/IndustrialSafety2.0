@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "generated_at": "2026-07-26T21:44:14.638Z",
+    "environment": "development",
+    "aws_account": "511343547817",
+    "aws_region": "us-east-1",
+    "tool_versions": {
+      "awsCli": "aws-cli/2.36.8 Python/3.14.6 Windows/11 exe/AMD64",
+      "node": "v20.20.2"
+    },
+    "control_id": "CC-ISO-01",
+    "risk_id": "R-001",
+    "title": "Tenant isolation test evidence index",
+    "classification": "Confidential",
+    "source": "docs/neris/phase-2-final-acceptance-report.md + test paths",
+    "review_status": "ACCEPTED",
+    "reviewed_by": "Jeremy Powell",
+    "reviewed_at": "2026-07-26"
+  },
+  "data": {
+    "sources": {
+      "phase2AcceptanceReport": "docs/neris/phase-2-final-acceptance-report.md",
+      "isolationSpec": "apps/rms-web-e2e/tests/isolation.spec.ts",
+      "rlsVerifyScript": "scripts/phase2-verify-rls.mjs"
+    },
+    "phase2Decision": " `ACCEPTED`  ",
+    "expectedControls": [
+      "FORCE RLS active",
+      "forge_app cannot BYPASSRLS",
+      "cross-tenant read/write fail",
+      "missing tenant context fails"
+    ],
+    "note": "Full Playwright re-run may be executed separately; this artifact indexes accepted Phase 2 evidence."
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-30T18:32:00.000Z",
+  "defect": "DEF-S8-016",
+  "status": "PARTIAL",
+  "environment": {
+    "name": "development",
+    "api": "https://d108fstxdv69bo.cloudfront.net",
+    "awsRegion": "us-east-1",
+    "apiTaskDefinitionRevision": 42,
+    "workerTaskDefinitionRevision": 26
+  },
+  "method": {
+    "script": "scripts/import-s8-perf-smoke.mjs",
+    "path": "authenticated API -> S3 -> SQS -> ECS worker -> Aurora",
+    "syntheticDataOnly": true,
+    "jobsStartedInParallel": 3,
+    "distinctTenants": 2,
+    "sameTenantJobs": 2,
+    "rowsPerJob": 200,
+    "batchSize": 50
+  },
+  "window": {
+    "executeRequestsStartedAt": "2026-07-30T18:25:49.040Z",
+    "allTerminalWallMs": 13202
+  },
+  "runs": [
+    {
+      "label": "concurrent-a1-200",
+      "jobId": "019fb446-5a22-718f-b13a-f7af22f5e9e2",
+      "tenantId": "019faa15-e558-70b6-adcd-a510c3c995f4",
+      "finalStatus": "COMPLETED",
+      "workerDurationMs": 7032,
+      "executeToTerminalMs": 8493,
+      "successfulRows": 200,
+      "failedRows": 0
+    },
+    {
+      "label": "concurrent-a2-200",
+      "jobId": "019fb446-5a27-71f9-885e-b5740fe766bb",
+      "tenantId": "019faa15-e558-70b6-adcd-a510c3c995f4",
+      "finalStatus": "COMPLETED",
+      "workerDurationMs": 7025,
+      "executeToTerminalMs": 8314,
+      "successfulRows": 200,
+      "failedRows": 0
+    },
+    {
+      "label": "concurrent-b1-200",
+      "jobId": "019fb446-5a8f-731e-999d-a06114484c25",
+      "tenantId": "019faa15-e578-76bd-b269-038d23c03b5e",
+      "finalStatus": "COMPLETED",
+      "workerDurationMs": 4031,
+      "successfulRows": 200,
+      "failedRows": 0
+    }
+  ],
+  "tenantIsolationChecks": [
+    {
+      "jobId": "019fb446-5a22-718f-b13a-f7af22f5e9e2",
+      "ownerTenantId": "019faa15-e558-70b6-adcd-a510c3c995f4",
+      "otherTenantHttpStatus": 404,
+      "dataReturned": false,
+      "isolated": true
+    },
+    {
+      "jobId": "019fb446-5a27-71f9-885e-b5740fe766bb",
+      "ownerTenantId": "019faa15-e558-70b6-adcd-a510c3c995f4",
+      "otherTenantHttpStatus": 404,
+      "dataReturned": false,
+      "isolated": true
+    },
+    {
+      "jobId": "019fb446-5a8f-731e-999d-a06114484c25",
+      "ownerTenantId": "019faa15-e578-76bd-b269-038d23c03b5e",
+      "otherTenantHttpStatus": 404,
+      "dataReturned": false,
+      "isolated": true
+    }
+  ],
+  "result": {
+    "completedJobs": 3,
+    "failedRows": 0,
+    "crossTenantDataReturned": false,
+    "sameTenantConcurrencyVerified": true,
+    "crossTenantConcurrencyVerifiedForTwoTenants": true
+  },
+  "remainingGaps": [
+    "Three or more distinct tenants were not available in the supplied seed fixture.",
+    "A supported maximum in-flight job count is not established.",
+    "Lock-wait telemetry was not captured.",
+    "The shared load window reached worker and Aurora CPU saturation; see s8-aurora-perf-matrix.json."
+  ]
+}

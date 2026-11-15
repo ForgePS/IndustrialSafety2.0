@@ -1,0 +1,164 @@
+[
+  {
+    "namespace": "tenant_profile",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "organization_profile",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "branding",
+    "listStatus": 200,
+    "itemCount": 3,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "navigation",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "terminology",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "modules",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "features",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "dropdowns",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "custom_fields",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "forms",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "workflows",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "roles",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "permissions",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "notification_templates",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "email_templates",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "document_templates",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "certificate_templates",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "dashboards",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "reporting",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "import_config",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "export_config",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "security",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "retention",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "business_hours",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "holiday_calendar",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "facilities",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  },
+  {
+    "namespace": "locations",
+    "listStatus": 200,
+    "itemCount": 2,
+    "classification": "OPERATIONAL_GENERIC_EDITOR"
+  }
+]

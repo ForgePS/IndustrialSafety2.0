@@ -1,0 +1,25 @@
+{
+  "name": "Forge Safety - Field Version",
+  "short_name": "Field Version",
+  "description": "Mobile operational app for Forge Industrial Safety",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#232333",
+  "theme_color": "#232333",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/brand/forge-field-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

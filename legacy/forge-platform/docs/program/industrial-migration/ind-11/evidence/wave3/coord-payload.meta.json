@@ -1,0 +1,10 @@
+{
+  "counts": {
+    "taskRecords": 2,
+    "conversations": 2,
+    "messages": 7,
+    "emergencyResponseRecords": 30
+  },
+  "migrationBatchId": "e1f631e9-7cfc-483d-ace2-ab4a8fcc2b7e",
+  "wave": "3-coord"
+}

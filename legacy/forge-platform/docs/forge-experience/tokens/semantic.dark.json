@@ -1,0 +1,46 @@
+{
+  "program": "FX-S0",
+  "theme": "dark",
+  "color": {
+    "surface": {
+      "default": "{color.neutral.950}",
+      "secondary": "{color.neutral.900}",
+      "tertiary": "{color.neutral.800}",
+      "inverse": "{color.neutral.50}",
+      "overlay": "rgba(0, 0, 0, 0.65)",
+      "disabled": "{color.neutral.800}"
+    },
+    "text": {
+      "primary": "{color.neutral.50}",
+      "secondary": "{color.neutral.300}",
+      "muted": "{color.neutral.400}",
+      "inverse": "{color.neutral.950}"
+    },
+    "border": {
+      "default": "{color.neutral.700}",
+      "subtle": "{color.neutral.800}",
+      "focus": "{color.brand.300}"
+    },
+    "action": {
+      "primary": "{color.brand.400}",
+      "secondary": "{color.neutral.200}",
+      "success": "{color.success.400}",
+      "warning": "{color.warning.400}",
+      "danger": "{color.danger.400}",
+      "disabled": "{color.neutral.600}"
+    },
+    "status": {
+      "success": "{color.success.400}",
+      "warning": "{color.warning.400}",
+      "danger": "{color.danger.400}",
+      "info": "{color.info.400}",
+      "neutral": "{color.neutral.400}"
+    },
+    "priority": {
+      "low": "{color.neutral.500}",
+      "normal": "{color.info.400}",
+      "high": "{color.warning.400}",
+      "critical": "{color.danger.400}"
+    }
+  }
+}

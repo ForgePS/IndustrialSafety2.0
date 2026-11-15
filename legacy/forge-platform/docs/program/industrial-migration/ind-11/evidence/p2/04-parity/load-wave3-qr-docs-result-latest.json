@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "at": "2026-08-06T15:27:01.498Z",
+  "wave": "wave3-qr-docs",
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/e159fe0a4367497c98928958e1a4ebe4",
+  "exitCode": 0,
+  "payloadUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave3-qr-docs/payload.json",
+  "loaderUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave3-qr-docs/ecs-loader.mjs",
+  "remappedSha256": "8f98e4303bfda803a081f6d6f26529fc2f6a2bc0ae181e781d811244ff8fd267",
+  "logExcerpt": "{\"dbUser\":\"forge_admin\",\"batchId\":\"22f13a13-c24c-5f6b-a9b7-5aa669b7d72e\"}\t{\t  \"ok\": true,\t  \"phase\": \"IND-11B-wave3-qr-docs\",\t  \"counts\": {\t    \"qrLinks\": 2505,\t    \"qrVersions\": 2505,\t    \"documents\": 0,\t    \"equipmentDocLinks\": 12,\t    \"accessEvents\": 0\t  },\t  \"errorCount\": 0,\t  \"errors\": [],\t  \"migrationBatchId\": \"p4-staging-wave3-qr-docs-2026-08-06T15-15-28-618Z\",\t  \"dbBatchId\": \"22f13a13-c24c-5f6b-a9b7-5aa669b7d72e\",\t  \"note\": \"QR tokens rotated; Storage blobs not copied (PENDING_UPLOAD placeholders)\"\t}"
+}

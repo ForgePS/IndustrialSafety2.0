@@ -1,0 +1,14 @@
+{
+  "ok": true,
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/1ddecfd893184a6f929aed5e28c77a04",
+  "exitCode": 0,
+  "totals": { "cases": 45, "passed": 45, "failed": 0 },
+  "crossTenantReads": 0,
+  "crossTenantWrites": 0,
+  "rlsBypass": 0,
+  "metadataLeakage": 0,
+  "verifiedAt": "2026-07-30T14:37:00.000Z",
+  "sprint": "S8-closeout",
+  "logStream": "platform-api/platform-api/1ddecfd893184a6f929aed5e28c77a04",
+  "note": "Post-deploy re-verify on API TD :40"
+}

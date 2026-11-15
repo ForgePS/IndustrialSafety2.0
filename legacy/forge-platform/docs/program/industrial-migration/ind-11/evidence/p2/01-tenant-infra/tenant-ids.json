@@ -1,0 +1,31 @@
+{
+  "pilot": "PRODUCERS_AWS_PRIMARY_P2",
+  "firebaseBusinessId": "business-1782553339499",
+  "firebaseProject": "forge-industrial-safety",
+  "doNotUseTenantIds": [
+    "019faa15-e558-70b6-adcd-a510c3c995f4"
+  ],
+  "provisionedAt": "2026-08-05T15:52:33.249Z",
+  "tenants": {
+    "staging": {
+      "tenantKey": "producers-rice-mill-staging",
+      "displayName": "Producers Rice Mill (Staging)",
+      "tenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+      "hostname": null,
+      "adminEmail": "p2-admin@producers-rice-mill-staging.forge.test",
+      "adminUserId": "0a46dd93-4ecf-4c91-9fad-70d24cee3308",
+      "modulesEntitled": 15
+    },
+    "production": {
+      "tenantKey": "producers-rice-mill",
+      "displayName": "Producers Rice Mill",
+      "tenantId": "5da680d3-50f5-46ac-8b85-6cf454b6a0da",
+      "hostname": "https://producers-rice-mill.forgepublicsafety.com/",
+      "adminEmail": "p2-admin@producers-rice-mill.forge.test",
+      "adminUserId": "a2a7b4b7-98ae-4207-a6bd-c386c81ac012",
+      "modulesEntitled": 15
+    }
+  },
+  "notes": "Provisioned in development Aurora. Do not promote import-acceptance-tenant-a.",
+  "hostnameNote": "Flattened 2026-08-05 for ACM *.forgepublicsafety.com coverage"
+}

@@ -1,0 +1,27 @@
+{
+  "ok": true,
+  "phase": "PRODUCERS-P2-storage-s3-copy-staging-reconcile",
+  "reconciledAt": "2026-08-06T11:58:00.000Z",
+  "method": "ListObjectsV2 full pagination under staging documents prefix",
+  "destBucket": "forge-development-documents-511343547817-us-east-1",
+  "prefix": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/",
+  "s3": {
+    "objectCount": 9077,
+    "bytes": 16516836986
+  },
+  "inventoryFreeze": {
+    "producersMatched": 9077,
+    "producersBytes": 16516836986,
+    "file": "storage-inventory-2026-08-06T01-06-44-696Z.json"
+  },
+  "copyResult": {
+    "copied": 9074,
+    "skipped_existing": 3,
+    "error": 0,
+    "file": "s3-copy-staging-result-2026-08-06T11-42-50-933Z.json"
+  },
+  "match": {
+    "objectCount": true,
+    "bytes": true
+  }
+}

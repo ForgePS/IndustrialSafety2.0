@@ -1,0 +1,9 @@
+{
+  "edge": "https://d108fstxdv69bo.cloudfront.net",
+  "health": { "path": "/health", "status": 200 },
+  "duplicatesUnauth": { "path": "GET /api/v1/imports/duplicates", "status": 401 },
+  "zipValidateUnauth": { "path": "POST /api/v1/imports/zip/validate", "status": 401 },
+  "apiSourceValidateUnauth": { "path": "POST /api/v1/imports/api-sources/validate", "status": 401 },
+  "appSecretLastChangedDate": "2026-07-26T15:30:16.387000-05:00",
+  "checkedAt": "2026-07-29T17:48:30Z"
+}

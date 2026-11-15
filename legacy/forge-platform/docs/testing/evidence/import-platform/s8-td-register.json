@@ -1,0 +1,16 @@
+{
+  "tag": "import-s8-patch-20260730113557",
+  "api": {
+    "priorRevision": 40,
+    "arn": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-platform-api:42",
+    "revision": 42,
+    "image": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-platformapi:import-s8-patch-20260730113557"
+  },
+  "worker": {
+    "priorRevision": 25,
+    "arn": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:26",
+    "revision": 26,
+    "image": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-workerservice:import-s8-patch-20260730113557"
+  },
+  "corsOrigins": "https://d3ud5uzwd9js2z.cloudfront.net,https://ddztl9s33wu40.cloudfront.net,https://d1uxdl4szvsixc.cloudfront.net"
+}

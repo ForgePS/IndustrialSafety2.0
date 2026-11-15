@@ -1,0 +1,29 @@
+{
+  "evidenceId": "GAP-009-BEFORE-HEALTH",
+  "capturedAt": "2026-07-27T11:12:00Z",
+  "apiHealth": {
+    "url": "https://d108fstxdv69bo.cloudfront.net/health",
+    "status": 200
+  },
+  "rmsHealth": {
+    "url": "https://d3ud5uzwd9js2z.cloudfront.net/",
+    "status": 200
+  },
+  "cloudTrail": {
+    "name": "forge-development-cloudtrail-management",
+    "isLogging": true,
+    "latestDeliveryTime": "2026-07-27T06:10:56.786-05:00"
+  },
+  "cloudWatchAlarmsSample": [
+    { "name": "forge-development-alarm-api-5xx", "state": "OK" },
+    { "name": "forge-development-alarm-api-cf-5xx", "state": "OK" },
+    { "name": "forge-development-alarm-api-running-tasks", "state": "OK" }
+  ],
+  "aurora": {
+    "cluster": "forge-development-rds-aurora",
+    "status": "available",
+    "earliestRestorableTime": "2026-07-25T22:22:53.025Z",
+    "latestRestorableTime": "2026-07-27T05:31:00.270Z"
+  },
+  "dataStackStatus": "UPDATE_ROLLBACK_COMPLETE"
+}

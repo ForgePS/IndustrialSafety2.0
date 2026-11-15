@@ -1,0 +1,94 @@
+{
+  "ok": true,
+  "phase": "PRODUCERS-P4-R1-staging-load",
+  "at": "2026-08-06T15:28:21.518Z",
+  "tenant": {
+    "tenantKey": "producers-rice-mill-staging",
+    "tenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c"
+  },
+  "method": "remap-prior-s3-wave-payloads",
+  "freezePrefix": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z",
+  "waves": [
+    {
+      "id": "wave1",
+      "ok": true,
+      "counts": {
+        "sites": 26,
+        "areas": 87,
+        "equipment": 2489,
+        "lotoProcedures": 2523,
+        "lotoRevisions": 2523
+      },
+      "errorCount": 0
+    },
+    {
+      "id": "wave2a",
+      "ok": true,
+      "counts": { "personnel": 1008, "rejected": 0 },
+      "errorCount": 0
+    },
+    {
+      "id": "wave2-remaining",
+      "ok": true,
+      "counts": {
+        "trainingCourses": 16,
+        "trainingEnrollments": 1,
+        "formDefinitions": 48,
+        "formSubmissions": 33,
+        "inspections": 5,
+        "incidents": 12
+      },
+      "errorCount": 0
+    },
+    {
+      "id": "wave3-workbooks",
+      "ok": true,
+      "errorCount": 0
+    },
+    {
+      "id": "wave3-coord",
+      "ok": true,
+      "counts": { "tasks": 2, "threads": 2, "messages": 7, "emergency": 30 },
+      "errorCount": 0
+    },
+    {
+      "id": "wave3-qr-docs",
+      "ok": true,
+      "counts": {
+        "qrLinks": 2505,
+        "qrVersions": 2505,
+        "documents": 0,
+        "equipmentDocLinks": 12,
+        "accessEvents": 0
+      },
+      "errorCount": 0,
+      "note": "controlledDocuments stripped (Phase 3 S3 docs already AVAILABLE)"
+    }
+  ],
+  "parityCounts": {
+    "industrial_personnel": 1008,
+    "industrial_sites": 26,
+    "industrial_equipment": 2489,
+    "industrial_loto_procedures": 2523,
+    "industrial_training_records": 17,
+    "industrial_form_definitions": 48,
+    "industrial_form_submissions": 33,
+    "industrial_inspections": 5,
+    "industrial_incidents": 12,
+    "industrial_confined_space_records": 26,
+    "industrial_hot_work_records": 25,
+    "industrial_chemical_safety_records": 52,
+    "industrial_tasks": 2,
+    "industrial_emergency_response_records": 30,
+    "qr_links": 2505,
+    "platform_documents": 9077,
+    "industrial_equipment_document_links": 12,
+    "totals": 17890
+  },
+  "notAuthorized": [
+    "Phase 5 announce / SoT flip",
+    "Disable Firebase Auth/Storage",
+    "Prod-twin domain load (awaits S2 UAT)",
+    "Live Firebase re-extract (tooling deferred)"
+  ]
+}

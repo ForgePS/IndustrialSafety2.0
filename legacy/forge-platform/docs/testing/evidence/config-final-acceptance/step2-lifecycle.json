@@ -1,0 +1,140 @@
+{
+  "tenantId": "019f9e06-a0b2-75f4-9e0b-5ae9befd8193",
+  "publishedV1Id": "019fa8f4-f518-735c-bfb8-13dbb8a3ae82",
+  "publishedV1Num": 9,
+  "v2Id": "019fa8f4-fb45-7314-b9ec-e392d55021a7",
+  "steps": {
+    "health": {
+      "ok": true,
+      "status": 200,
+      "body": {
+        "status": "healthy",
+        "service": "platform-api",
+        "environment": "development",
+        "version": "0.1.0",
+        "timestamp": "2026-07-28T13:40:52.082Z"
+      }
+    },
+    "catalog.unauth": {
+      "ok": true,
+      "status": 401,
+      "code": "UNAUTHORIZED",
+      "correlationId": "698554fadbe8b940baa0f061a137a88a",
+      "leak": []
+    },
+    "catalog.forbidden": {
+      "ok": true,
+      "status": 403,
+      "code": "FORBIDDEN",
+      "correlationId": "04c9740a3e881d7edc8348b7ed04f473",
+      "leak": []
+    },
+    "catalog.auth": {
+      "ok": true,
+      "status": 200,
+      "namespaceCount": 27,
+      "correlationId": "f4a547d74cd4b2ca45d258f3a4a712d6",
+      "leak": [],
+      "ms": 136
+    },
+    "tenants": {
+      "ok": true,
+      "a": "019f9e06-a0b2-75f4-9e0b-5ae9befd8193",
+      "b": "019fa5c5-6bd9-734c-ace5-76e0b8da28a0"
+    },
+    "lifecycle.create": {
+      "ok": true,
+      "versionId": "019fa8f4-f518-735c-bfb8-13dbb8a3ae82",
+      "version": 9,
+      "state": "DRAFT"
+    },
+    "lifecycle.read": {
+      "ok": true,
+      "status": 200
+    },
+    "lifecycle.update": {
+      "ok": true,
+      "status": 200,
+      "hash": "045a07558163ae0ce57d3f7db4fdf0888d459460ca4b2fdaba0f060de366fd16"
+    },
+    "lifecycle.validate": {
+      "ok": true,
+      "note": "Zod validateConfigPayload enforced on create/patch"
+    },
+    "lifecycle.publish": {
+      "ok": true,
+      "state": "PUBLISHED",
+      "status": 201
+    },
+    "lifecycle.immutable": {
+      "ok": true,
+      "status": 409,
+      "code": "CONFLICT"
+    },
+    "lifecycle.effective": {
+      "ok": true,
+      "source": "published",
+      "versionId": "019fa8f4-f518-735c-bfb8-13dbb8a3ae82"
+    },
+    "lifecycle.draft2": {
+      "ok": true,
+      "version": 10,
+      "id": "019fa8f4-fb45-7314-b9ec-e392d55021a7"
+    },
+    "lifecycle.compare": {
+      "ok": true,
+      "diffs": 1
+    },
+    "lifecycle.schedule": {
+      "ok": true,
+      "state": "SCHEDULED"
+    },
+    "lifecycle.notEarly": {
+      "ok": true,
+      "effectiveVersionId": "019fa8f4-f518-735c-bfb8-13dbb8a3ae82",
+      "scheduledId": "019fa8f4-fb45-7314-b9ec-e392d55021a7"
+    },
+    "lifecycle.activate": {
+      "ok": true,
+      "state": "PUBLISHED"
+    },
+    "lifecycle.archive": {
+      "ok": true,
+      "status": 201
+    },
+    "lifecycle.rollback": {
+      "ok": true,
+      "newVersionId": "019fa8f5-0148-714a-8c13-bde1f47fdab1",
+      "newVersion": 12,
+      "createdNew": true
+    },
+    "lifecycle.rollback.count": {
+      "ok": true,
+      "countBefore": 11,
+      "countAfter": 12
+    },
+    "lifecycle.export": {
+      "ok": true,
+      "format": "forge.config.bundle.v1",
+      "ms": 536
+    },
+    "lifecycle.import.dryRun": {
+      "ok": true,
+      "status": "NOT_IMPLEMENTED",
+      "limitation": true
+    },
+    "lifecycle.import.invalid": {
+      "ok": true,
+      "status": 400,
+      "code": "VALIDATION_FAILED"
+    },
+    "lifecycle.import.valid": {
+      "ok": true,
+      "imported": ["branding/imported@3"]
+    },
+    "lifecycle.unauth": {
+      "ok": true,
+      "status": 401
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "ok": true,
+  "at": "2026-08-05T14:22:00.000Z",
+  "base": "https://d2ed3566n8x2gi.cloudfront.net",
+  "tenant": "Import Acceptance Tenant A",
+  "tenantId": "019faa15-e558-70b6-adcd-a510c3c995f4",
+  "userId": "ba491113-ba27-4ee6-8989-2eec1fe285d2",
+  "auth": "Cognito bearer + forge-active-tenant-id",
+  "modules": [
+    { "path": "/modules/personnel/", "ok": true, "notes": "Roster rows present (ACTIVE)" },
+    { "path": "/modules/equipment/", "ok": true, "notes": "Assets listed (e.g. 201 Diverter Valve)" },
+    { "path": "/modules/loto/", "ok": true, "notes": "Procedures listed (DRAFT, e.g. LOTO-CON-2026-0012)" },
+    { "path": "/modules/training/", "ok": true, "notes": "Training workspace + Create" },
+    { "path": "/modules/forms/", "ok": true, "notes": "Forms workspace; ~25 ACTIVE markers in page text" },
+    { "path": "/modules/inspections/", "ok": true, "notes": "Inspections workspace; DRAFT markers present" },
+    { "path": "/modules/incidents/", "ok": true, "notes": "Incidents workspace; OPEN markers present" },
+    { "path": "/modules/qr-links/", "ok": true, "notes": "QR Links workspace loaded (token/image UX copy present)" },
+    { "path": "/modules/confined-space/", "ok": true, "notes": "Confined Space workspace + Create" },
+    { "path": "/modules/hot-work/", "ok": true, "notes": "Hot Work workspace; sample DRAFT permit visible" }
+  ]
+}

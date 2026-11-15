@@ -1,0 +1,67 @@
+{
+  "meta": {
+    "generated_at": "2026-07-26T21:44:02.464Z",
+    "environment": "development",
+    "aws_account": "511343547817",
+    "aws_region": "us-east-1",
+    "tool_versions": {
+      "awsCli": "aws-cli/2.36.8 Python/3.14.6 Windows/11 exe/AMD64",
+      "node": "v20.20.2"
+    },
+    "control_id": "CC-LOG-01",
+    "risk_id": "R-002",
+    "title": "CloudTrail controlled test event summary",
+    "classification": "Confidential",
+    "source": "scripts/compliance/verify-cloudtrail-controlled-events.mjs",
+    "review_status": "ACCEPTED",
+    "reviewed_by": "Jeremy Powell",
+    "reviewed_at": "2026-07-26"
+  },
+  "data": {
+    "trailName": "forge-development-cloudtrail-management",
+    "started": "2026-07-26T21:43:40.803Z",
+    "ended": "2026-07-26T21:44:02.463Z",
+    "tests": {
+      "readOnlyCallerIdentity": {
+        "status": 0,
+        "ok": true
+      },
+      "accessDeniedGetObject": {
+        "status": 252,
+        "expectedFailure": true,
+        "ok": true
+      },
+      "iamSimulatePrincipalPolicy": {
+        "status": 0,
+        "ok": true
+      },
+      "describeSecurityGroups": {
+        "status": 0,
+        "ok": true
+      }
+    },
+    "recentLookupEventNames": [
+      "DescribeAlarms",
+      "AssumeRole",
+      "AssumeRole",
+      "GetCallerIdentity",
+      "AssumeRoleWithSAML",
+      "DeleteBucket",
+      "AssumeRole",
+      "AssumeRole",
+      "AssumeRole",
+      "AssumeRole",
+      "AssumeRoleWithSAML",
+      "GetCallerIdentity",
+      "DescribeStacks",
+      "DescribeStacks",
+      "DeleteStack",
+      "AssumeRole",
+      "AssumeRole",
+      "AssumeRole",
+      "AssumeRole",
+      "AssumeRoleWithSAML"
+    ],
+    "note": "No lasting privilege granted; temporary SG changes were not applied (describe-only)."
+  }
+}

@@ -1,0 +1,123 @@
+.tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  overflow-x: auto;
+  margin: 0 0 1rem;
+  padding-bottom: 0.25rem;
+}
+
+.tab,
+.tabActive {
+  border: 1px solid var(--forge-border, #d0d5dd);
+  background: transparent;
+  color: inherit;
+  border-radius: 0.5rem;
+  padding: 0.45rem 0.85rem;
+  white-space: nowrap;
+  cursor: pointer;
+  font: inherit;
+}
+
+.tabActive {
+  background: var(--forge-surface-muted, #f2f4f7);
+  border-color: var(--forge-fg, #101828);
+  font-weight: 600;
+}
+
+.filterLabel,
+.checkLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.select {
+  margin-left: 0.35rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--forge-border, #d0d5dd);
+  background: var(--forge-surface, #fff);
+  color: inherit;
+}
+
+.platformSection {
+  margin: 1.5rem 0 2rem;
+}
+
+.platformTitle {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+}
+
+.categoryBlock {
+  margin: 0 0 1.25rem;
+}
+
+.categoryTitle {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--forge-muted, #667085);
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.card {
+  border: 1px solid var(--forge-border, #e4e7ec);
+  border-radius: 0.75rem;
+  padding: 0.9rem 1rem;
+  background: var(--forge-surface, #fff);
+}
+
+.cardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.cardHead h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.meta {
+  margin: 0.35rem 0 0.75rem;
+  color: var(--forge-muted, #667085);
+  font-size: 0.9rem;
+}
+
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.advanced {
+  margin: 0.75rem 0 0;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.advanced dt {
+  color: var(--forge-muted, #667085);
+}
+
+.advanced dd {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+@media (max-width: 640px) {
+  .cardGrid {
+    grid-template-columns: 1fr;
+  }
+}

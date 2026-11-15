@@ -1,0 +1,22 @@
+{
+  "name": "@forge/data-migration-transformer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "DM-S2 Firebase extract → AWS import package transformer (no Aurora/Cognito writes)",
+  "scripts": {
+    "transform": "tsx src/cli.ts",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src --max-warnings 0",
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "tsx": "^4.23.15",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

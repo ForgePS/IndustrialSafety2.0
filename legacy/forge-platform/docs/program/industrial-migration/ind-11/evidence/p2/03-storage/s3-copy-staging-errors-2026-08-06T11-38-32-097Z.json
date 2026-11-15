@@ -1,0 +1,20 @@
+{
+  "ok": false,
+  "errors": [
+    {
+      "sourcePath": "certificates/business-1782553339499/library/local-cert-lib-img-1782553896018-w206il/1782553896018-Producers_Logo.png",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/c12f2fb5-5e59-55ce-b02b-be7bd669d603/8901ddd6-9c69-58fa-aefb-d0f6668dcfab/1782553896018-Producers_Logo.png",
+      "error": "s3 etag md5 mismatch local=914be4aacd825cf84b4ec882df02d066 etag=ec6c54068810f22de6da4db31bc2e51e"
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/driversApplicationCopy/1783950366452-26-06-02.pdf",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/2f6194ee-979b-5968-916f-5877618761b0/d0c96298-feaa-5ead-99a9-7bd938fddbcf/1783950366452-26-06-02.pdf",
+      "error": "s3 etag md5 mismatch local=9b75bb280040bbaa5166034326c7942a etag=82bb58b4c4eb6672f5e000f374a9516e"
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/driversApplicationCopy/1783956143029-26-06-22.pdf",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/39913157-4cbe-5da1-8b0d-f0d50091fbfa/110f4ca1-2e3d-5aeb-9124-0b49d2e14d6a/1783956143029-26-06-22.pdf",
+      "error": "s3 etag md5 mismatch local=68d8e035d75f14cba7c70dea94fdbcb9 etag=bbe0c7be373aea7532ff2541c0eb4b0e"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "name": "@forge/worker-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src --max-warnings=0",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@aws-sdk/client-eventbridge": "^3.1161.0",
+    "@aws-sdk/client-s3": "^3.1161.0",
+    "@aws-sdk/client-sqs": "^3.1161.0",
+    "@forge/authorization": "workspace:*",
+    "@forge/database": "workspace:*",
+    "@forge/environment": "workspace:*",
+    "@forge/events": "workspace:*",
+    "@forge/imports": "workspace:*",
+    "@forge/observability": "workspace:*",
+    "@forge/security": "workspace:*",
+    "drizzle-orm": "^0.45.4"
+  },
+  "devDependencies": {
+    "rimraf": "^6.1.4",
+    "tsx": "^4.23.15",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

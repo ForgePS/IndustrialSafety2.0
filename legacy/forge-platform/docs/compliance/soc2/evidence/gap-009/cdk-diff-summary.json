@@ -1,0 +1,16 @@
+{
+  "evidenceId": "GAP-009-CDK-DIFF",
+  "capturedAt": "2026-07-27T10:45:00Z",
+  "command": "pnpm exec cdk diff ForgeData",
+  "profile": "forge-dev",
+  "account": "511343547817",
+  "region": "us-east-1",
+  "result": {
+    "ForgeNetwork": "There were no differences",
+    "ForgeSecurity": "There were no differences",
+    "ForgeData": "There were no differences",
+    "stacksWithDifferences": 0
+  },
+  "interpretation": "With importExistingAppSecret=true, Data template no longer proposes creating forge-*-secrets-database-app. Diff matches deployed CFN (admin secret only).",
+  "destructiveSecretChanges": false
+}

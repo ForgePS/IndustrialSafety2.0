@@ -1,0 +1,28 @@
+{
+  "meta": {
+    "generated_at": "2026-07-27T14:26:15.266Z",
+    "environment": "development",
+    "aws_account": "511343547817",
+    "aws_region": "us-east-1",
+    "tool_versions": {
+      "awsCli": "aws-cli/2.36.8 Python/3.14.6 Windows/11 exe/AMD64",
+      "node": "v20.20.2"
+    },
+    "control_id": "CC-ISO-02",
+    "risk_id": "R-012",
+    "title": "Database runtime role / secret evidence",
+    "classification": "Confidential",
+    "source": "aws ecs describe-task-definition",
+    "review_status": "GENERATED"
+  },
+  "data": {
+    "cluster": "forge-development-ecs-platform",
+    "service": "forge-development-ecs-platform-api",
+    "taskDefinition": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-platform-api:16",
+    "databaseSecretArn": "arn:aws:secretsmanager:us-east-1:511343547817:secret:forge-development-secrets-database-app",
+    "expectedAppSecretNameContains": "forge-development-secrets-database-app",
+    "usesAppSecret": true,
+    "usesAdminSecret": false,
+    "note": "Password/connection string not exported. forge_app role expected via app secret username."
+  }
+}

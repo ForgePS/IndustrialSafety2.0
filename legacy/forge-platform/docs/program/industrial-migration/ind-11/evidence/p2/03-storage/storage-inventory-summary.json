@@ -1,0 +1,72 @@
+{
+  "ok": true,
+  "freezeAt": "2026-08-06T01:06:44.696Z",
+  "firebaseBusinessId": "business-1782553339499",
+  "bucket": "forge-industrial-safety.firebasestorage.app",
+  "inventoryFile": "storage-inventory-2026-08-06T01-06-44-696Z.json",
+  "pagination": {
+    "pageSize": 1000,
+    "pages": 10,
+    "truncated": false,
+    "autoPaginate": false
+  },
+  "counts": {
+    "bucketObjectsScanned": 9092,
+    "producersMatched": 9077,
+    "producersBytes": 16516836986,
+    "nonProducersSkipped": 15,
+    "byCategory": {
+      "certificates": {
+        "count": 1,
+        "bytes": 1106901
+      },
+      "dot": {
+        "count": 602,
+        "bytes": 519268137
+      },
+      "equipment": {
+        "count": 2985,
+        "bytes": 6082596565
+      },
+      "module_attachments": {
+        "count": 92,
+        "bytes": 90525518
+      },
+      "loto": {
+        "count": 5395,
+        "bytes": 9800440499
+      },
+      "other": {
+        "count": 2,
+        "bytes": 22899366
+      }
+    },
+    "topPrefixesBucketWide": {
+      "certificates": 2,
+      "dot-compliance": 572,
+      "dqf-exports": 31,
+      "equipment-migrations": 1,
+      "module-attachments": 5488,
+      "platform-billing-email-templates": 2,
+      "platform-invoice-templates": 10,
+      "tenants": 2984,
+      "training-imports": 2
+    },
+    "otherBusinessCountsSample": {
+      "(none)": 13,
+      "business-forge-default": 2
+    },
+    "exceptions": {
+      "zeroByte": 0,
+      "missingContentType": 0,
+      "missingChecksum": 0,
+      "orphanNoBusinessSegment": 0
+    }
+  },
+  "exceptionsPreview": {
+    "zeroByte": [],
+    "missingContentType": [],
+    "missingChecksum": [],
+    "orphanNoBusinessSegment": []
+  }
+}

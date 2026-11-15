@@ -1,0 +1,22 @@
+{
+  "cluster": "forge-development-ecs-platform",
+  "tag": "import-s5-20260729135433",
+  "api": {
+    "priorRevision": 35,
+    "registeredPriorSeen": 37,
+    "deployedRevision": 38,
+    "service": "forge-development-ecs-platform-api",
+    "rollout": "COMPLETED",
+    "running": 1
+  },
+  "worker": {
+    "priorRevision": 20,
+    "registeredPriorSeen": 22,
+    "deployedRevision": 23,
+    "service": "forge-development-ecs-worker-service",
+    "rollout": "COMPLETED",
+    "running": 1
+  },
+  "stepFunctions": "DEFINITION_COMPLETE_DEPLOYMENT_PENDING",
+  "deployedAt": "2026-07-29T19:12:56Z"
+}

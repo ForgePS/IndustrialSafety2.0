@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-30T18:34:00.000Z",
+  "defect": "DEF-S8-017",
+  "status": "PARTIAL",
+  "environment": "development",
+  "awsRegion": "us-east-1",
+  "newPoisonMessageSentThisPass": false,
+  "dlq": {
+    "queueName": "forge-development-sqs-imports-dlq",
+    "approximateVisibleMessages": 4,
+    "approximateNotVisibleMessages": 0,
+    "approximateDelayedMessages": 0
+  },
+  "alarm": {
+    "alarmName": "forge-development-alarm-importsdlq",
+    "observedState": "ALARM",
+    "transition": "OK_TO_ALARM",
+    "transitionedAt": "2026-07-30T15:33:06.022Z",
+    "evaluatedDatapoint": 1,
+    "threshold": 1,
+    "metric": "AWS/SQS ApproximateNumberOfMessagesVisible"
+  },
+  "result": "The imports DLQ depth signal and OK-to-ALARM transition are verified without adding another poison message. Queue-age and backlog alarm transitions were not triggered.",
+  "note": "Message bodies were not read and the DLQ was not purged or replayed."
+}

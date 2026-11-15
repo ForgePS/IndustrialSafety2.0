@@ -1,0 +1,14 @@
+{
+  "ok": true,
+  "at": "2026-08-06T14:51:10.908Z",
+  "expected": {
+    "objects": 9077,
+    "bytes": 16516836986
+  },
+  "observed": {
+    "objects": 9077,
+    "bytes": 16516836986,
+    "prefix": "tenants/5da680d3-50f5-46ac-8b85-6cf454b6a0da/"
+  },
+  "note": "Prod-twin prefix list vs full staging map counts/bytes"
+}

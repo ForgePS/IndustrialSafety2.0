@@ -1,0 +1,100 @@
+{
+  "ok": true,
+  "phase": "PRODUCERS-P2-storage-s3-remount-prod-twin",
+  "startedAt": "2026-08-06T14:48:32.115Z",
+  "finishedAt": "2026-08-06T14:51:10.908Z",
+  "authorization": {
+    "gate": "FORGE_P2_STORAGE_PROD_TWIN_REMOUNT_AUTHORIZED",
+    "approval": "evidence/p2/03-storage/APPROVE-PRODUCERS-STORAGE-COPY-PROD-TWIN.md",
+    "signed": true
+  },
+  "source": {
+    "method": "s3-copy-object",
+    "bucket": "forge-development-documents-511343547817-us-east-1",
+    "tenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+    "slug": "producers-rice-mill-staging"
+  },
+  "target": {
+    "destBucket": "forge-development-documents-511343547817-us-east-1",
+    "tenantId": "5da680d3-50f5-46ac-8b85-6cf454b6a0da",
+    "slug": "producers-rice-mill",
+    "region": "us-east-1"
+  },
+  "mapFile": "s3-map-staging-latest.json",
+  "concurrency": 16,
+  "skipExisting": true,
+  "offset": 0,
+  "limit": null,
+  "counts": {
+    "planned": 9077,
+    "copied": 9057,
+    "skipped_existing": 20,
+    "error": 0
+  },
+  "inventorySliceBytes": 16516836986,
+  "reconcile": {
+    "objects": 9077,
+    "bytes": 16516836986,
+    "prefix": "tenants/5da680d3-50f5-46ac-8b85-6cf454b6a0da/"
+  },
+  "sampleCopied": [
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/DRV-2026-0002/mvrCompletedCopy/1783440390490-Pages_from_0633_001.pdf",
+      "srcKey": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/3036d77e-1891-5ffe-8dee-9a439a5f7617/5125bdae-58e7-5e1f-b579-5e1494d07480/1783440390490-Pages_from_0633_001.pdf",
+      "dstKey": "tenants/5da680d3-50f5-46ac-8b85-6cf454b6a0da/documents/3036d77e-1891-5ffe-8dee-9a439a5f7617/5125bdae-58e7-5e1f-b579-5e1494d07480/1783440390490-Pages_from_0633_001.pdf",
+      "status": "copied",
+      "size": 46746
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/DRV-2026-0002/mvrReleaseFormCopy/1783440384351-0633_001.pdf",
+      "srcKey": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/125c07b5-5708-505c-a604-78dfd05a88ca/a1d5f846-2d36-5cd1-b82e-ba97f5d7a42c/1783440384351-0633_001.pdf",
+      "dstKey": "tenants/5da680d3-50f5-46ac-8b85-6cf454b6a0da/documents/125c07b5-5708-505c-a604-78dfd05a88ca/a1d5f846-2d36-5cd1-b82e-ba97f5d7a42c/1783440384351-0633_001.pdf",
+      "status": "copied",
+      "size": 55008
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/DRV-2026-0003/cdlSelfCertificationAffidavitArCopy/1783019917248-image.jpg",
+      "srcKey": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/7143edd6-b1dc-5ef5-afec-a328395144a3/694811d9-917d-51aa-b90d-816726115b3a/1783019917248-image.jpg",
+      "dstKey": "tenants/5da680d3-50f5-46ac-8b85-6cf454b6a0da/documents/7143edd6-b1dc-5ef5-afec-a328395144a3/694811d9-917d-51aa-b90d-816726115b3a/1783019917248-image.jpg",
+      "status": "copied",
+      "size": 2844683
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/DRV-2026-0003/driversLicenseCopy/1783438691492-ISS_06-12-22.pdf",
+      "srcKey": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/dffaa5ed-35d1-5f34-b875-90e2373fe593/4f37c568-78f7-5966-8eea-6dfc16768407/1783438691492-ISS_06-12-22.pdf",
+      "dstKey": "tenants/5da680d3-50f5-46ac-8b85-6cf454b6a0da/documents/dffaa5ed-35d1-5f34-b875-90e2373fe593/4f37c568-78f7-5966-8eea-6dfc16768407/1783438691492-ISS_06-12-22.pdf",
+      "status": "copied",
+      "size": 30782
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/DRV-2026-0003/driversLicenseCopy/1783438686615-Birth_Registration_Card.pdf",
+      "srcKey": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/22afbbf2-7a54-5ced-a6b6-684e68fe2ba0/9d45e129-adca-5c93-b3af-99bf14b856ac/1783438686615-Birth_Registration_Card.pdf",
+      "dstKey": "tenants/5da680d3-50f5-46ac-8b85-6cf454b6a0da/documents/22afbbf2-7a54-5ced-a6b6-684e68fe2ba0/9d45e129-adca-5c93-b3af-99bf14b856ac/1783438686615-Birth_Registration_Card.pdf",
+      "status": "copied",
+      "size": 46527
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/DRV-2026-0003/driversApplicationCopy/1783016046688-0512_001.pdf",
+      "srcKey": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/34ad0a62-4427-50e2-a6b0-e6cdf2b40c6b/d56e83fd-a5f8-5752-99fa-8e8052cf5e81/1783016046688-0512_001.pdf",
+      "dstKey": "tenants/5da680d3-50f5-46ac-8b85-6cf454b6a0da/documents/34ad0a62-4427-50e2-a6b0-e6cdf2b40c6b/d56e83fd-a5f8-5752-99fa-8e8052cf5e81/1783016046688-0512_001.pdf",
+      "status": "copied",
+      "size": 430742
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/DRV-2026-0003/cdlSelfCertificationAffidavitArCopy/1783019929177-image.jpg",
+      "srcKey": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/466a9cdc-1bb6-5862-a417-1c73f06938ba/089d5c89-fc98-50c6-bfbc-d03ae7af7d25/1783019929177-image.jpg",
+      "dstKey": "tenants/5da680d3-50f5-46ac-8b85-6cf454b6a0da/documents/466a9cdc-1bb6-5862-a417-1c73f06938ba/089d5c89-fc98-50c6-bfbc-d03ae7af7d25/1783019929177-image.jpg",
+      "status": "copied",
+      "size": 2893748
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/DRV-2026-0003/cdlSelfCertificationAffidavitArCopy/1783019865668-image.jpg",
+      "srcKey": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/929cf981-137f-5845-a380-2e5ec0256f8b/6d8439b3-79a5-50f9-a1b1-fbcf9c150562/1783019865668-image.jpg",
+      "dstKey": "tenants/5da680d3-50f5-46ac-8b85-6cf454b6a0da/documents/929cf981-137f-5845-a380-2e5ec0256f8b/6d8439b3-79a5-50f9-a1b1-fbcf9c150562/1783019865668-image.jpg",
+      "status": "copied",
+      "size": 3038108
+    }
+  ],
+  "errorPreview": [],
+  "errorCount": 0
+}

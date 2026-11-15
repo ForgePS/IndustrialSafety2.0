@@ -1,0 +1,9 @@
+{
+  "ok": true,
+  "at": "2026-08-05T19:35:08.433Z",
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/8415bef44b9e436394ca11a09d59fd84",
+  "exitCode": 0,
+  "email": "admin@forgepublicsafety.com",
+  "cognitoSub": "e498c4d8-f091-7083-0ac4-ad145fe79b39",
+  "logExcerpt": "{\t  \"ok\": true,\t  \"phase\": \"PRODUCERS-P2-link-creator\",\t  \"email\": \"admin@forgepublicsafety.com\",\t  \"cognitoSub\": \"e498c4d8-f091-7083-0ac4-ad145fe79b39\",\t  \"userId\": \"ba491113-ba27-4ee6-8989-2eec1fe285d2\",\t  \"homeTenantId\": \"019f9c33-2875-75aa-8d0e-e4bec722565e\",\t  \"identityId\": \"3575cd98-354c-4a94-a5c9-ceb87bdd184a\",\t  \"tenants\": [\t    {\t      \"tenantId\": \"0882c865-59c2-49a6-ab88-ce6ca89be30c\",\t      \"tenantKey\": \"producers-rice-mill-staging\",\t      \"membershipId\": \"89b096ab-439c-4ff5-b264-0d33ed301255\",\t      \"membershipCreated\": true,\t      \"modulesEntitled\": 15,\t      \"modulesMissing\": [\t        \"IMPORT\"\t      ]\t    },\t    {\t      \"tenantId\": \"5da680d3-50f5-46ac-8b85-6cf454b6a0da\",\t      \"tenantKey\": \"producers-rice-mill\",\t      \"membershipId\": \"38f33426-bb24-4e00-b393-a8f56f18aea3\",\t      \"membershipCreated\": true,\t      \"modulesEntitled\": 15,\t      \"modulesMissing\": [\t        \"IMPORT\"\t      ]\t    }\t  ]\t}"
+}

@@ -1,0 +1,86 @@
+{
+  "sprint": "IMPORT-PLATFORM-S1",
+  "at": "2026-07-28T22:20:00.000Z",
+  "status": "ACCEPTED",
+  "verdict": "ACCEPTED",
+  "architecture": "APPROVED_WITH_CONDITIONS_RESOLVED",
+  "awsIdentity": {
+    "accountId": "511343547817",
+    "assumedRoleArn": "arn:aws:sts::511343547817:assumed-role/AWSReservedSSO_ForgeDeployAdmin_4e3cbf93096d93f3/forge-admin",
+    "profile": "forge-dev",
+    "region": "us-east-1",
+    "authenticatedAt": "2026-07-28T16:54:05-05:00"
+  },
+  "apiTaskDefinitionMigrate": "forge-development-ecs-platform-api:31",
+  "apiTaskDefinitionServiceObserved": "forge-development-ecs-platform-api:32",
+  "apiImageTagMigrate": "import-s1-live-20260728170110",
+  "apiImageDigestMigrate": "sha256:194364b67ae9f45af0e6c98fb9f822d0fd11c0a0b3c79c494f3639396b9eb781",
+  "apiImageTagPriorBake": "import-s1-20260728140146",
+  "apiImageDigestPriorBake": "sha256:c19338e968eaf774d3bdedd8c1f82134490e64aa26c80d854d7589f953c61f90",
+  "workerTaskDefinition": "forge-development-ecs-worker-service:19",
+  "workerImageTag": "closeout-20260727125918",
+  "migration": {
+    "id": "0022_import_platform",
+    "checksumSha256": "28d25b49406b9c248cedb8ef9a6ed4e017cb218d5003b6ac2609a2dd5c2d2054",
+    "review": "SAFE_TO_APPLY",
+    "applied": true,
+    "applyStatus": "APPLIED",
+    "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/5c11901ac2d34a41aef9dbc86cecb0cc",
+    "taskDefinition": "forge-development-ecs-platform-api:31",
+    "exitCode": 0,
+    "startedAt": "2026-07-28T17:13:16.241000-05:00",
+    "stoppedAt": "2026-07-28T17:13:45.706000-05:00",
+    "ledgerHashMatch": true,
+    "ledgerId": 232
+  },
+  "databaseObjects": {
+    "tablesVerified": 9,
+    "forceRlsVerified": 9,
+    "importPermissionCount": 12
+  },
+  "rlsVerify": {
+    "ok": true,
+    "cases": 45,
+    "passed": 45,
+    "failed": 0,
+    "crossTenantReads": 0,
+    "crossTenantWrites": 0,
+    "metadataLeakage": 0,
+    "rlsBypass": 0,
+    "unexpectedPasses": 0,
+    "role": "forge_app",
+    "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/8d78e0db6eb34ecf955e64ff8bf5625a"
+  },
+  "applicationSecret": {
+    "name": "forge-development-secrets-database-app",
+    "arn": "arn:aws:secretsmanager:us-east-1:511343547817:secret:forge-development-secrets-database-app-SknUu5",
+    "rotated": false,
+    "lastChangedDate": "2026-07-26T15:30:16.387000-05:00",
+    "unchangedThroughApply": true
+  },
+  "acceptanceData": {
+    "policy": "RETAIN",
+    "reason": "Isolated synthetic tenants import-acceptance-tenant-a/b retained for future RLS regression; no hard-delete of audit rows",
+    "tenantKeys": ["import-acceptance-tenant-a", "import-acceptance-tenant-b"]
+  },
+  "rollbackReferences": {
+    "apiPrior": "forge-development-ecs-platform-api:28 / config-accept-20260728092807 / sha256:60572176a163fd7d2cab70e81aa6a9d28fbba76c5c1c72f337fa9eed86802bff",
+    "worker": "unchanged :19",
+    "schema": "additive only; snapshot restore if destructive rollback ever required"
+  },
+  "knownLimitations": [
+    "No Nest import APIs (deferred to S2)",
+    "No malware scanner wiring",
+    "No Drizzle TS table definitions yet (SQL + live catalog only)",
+    "Concurrent API TD churn during live bake (:30 pre-apply / :31 migrate / :32 service); worker :19 unchanged; no import product behavior"
+  ],
+  "evidence": [
+    "docs/testing/evidence/import-platform/s1-identity.json",
+    "docs/testing/evidence/import-platform/s1-migrate.json",
+    "docs/testing/evidence/import-platform/s1-perms.json",
+    "docs/testing/evidence/import-platform/s1-acceptance.json",
+    "docs/testing/evidence/import-platform/s1-catalog.json",
+    "docs/testing/evidence/import-platform/s1-rls-verify.json"
+  ],
+  "s2Authorization": "AUTHORIZED_AFTER_S1 — Nest import APIs + presigned upload may begin only after explicit S2 kickoff; do not auto-start"
+}

@@ -1,0 +1,115 @@
+{
+  "ok": true,
+  "phase": "PRODUCERS-P2-roster-map",
+  "builtAt": "2026-08-05T20:32:37.533Z",
+  "sourceFreezeAt": "2026-08-05T20:16:50.164Z",
+  "sourceRosterFile": "roster-export-2026-08-05T20-16-50-164Z.json",
+  "cognitoUserPoolId": "us-east-1_VYjUFLXG4",
+  "cognitoIndustrialClientId": "3rls9835j4qs3jmchb3uh7ketm",
+  "target": {
+    "tenantKey": "producers-rice-mill-staging",
+    "tenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c"
+  },
+  "messageAction": "SUPPRESS",
+  "passwordStrategy": "TEMP_FORCE_CHANGE",
+  "counts": {
+    "total": 6,
+    "createIfMissing": 5,
+    "linkExisting": 1,
+    "admin": 2,
+    "operator": 4
+  },
+  "users": [
+    {
+      "firebaseUid": "JQcTmbOoefM7nOgQ1RMc6FMtKdB3",
+      "email": "admin@forgepublicsafety.com",
+      "displayName": null,
+      "emailVerified": true,
+      "disabled": false,
+      "businessIds": [
+        "business-1782553339499",
+        "business-forge-default"
+      ],
+      "targetTenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+      "targetTenantKey": "producers-rice-mill-staging",
+      "roleCode": "IND3V_INDUSTRIAL_ADMIN",
+      "cognitoAction": "LINK_EXISTING",
+      "note": "Already in Cognito / platform; ensure staging membership only"
+    },
+    {
+      "firebaseUid": "kd9THbtx4jVkx874a3K4Mlzgcz82",
+      "email": "jlackie@producersrice.com",
+      "displayName": "John Lackie",
+      "emailVerified": true,
+      "disabled": false,
+      "businessIds": [
+        "business-1782553339499"
+      ],
+      "targetTenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+      "targetTenantKey": "producers-rice-mill-staging",
+      "roleCode": "IND3V_INDUSTRIAL_OPERATOR",
+      "cognitoAction": "CREATE_IF_MISSING",
+      "note": "Default operator (view-capable day-1)"
+    },
+    {
+      "firebaseUid": "0D6EUP2D8AeIC8BuQZuFbz4s3bb2",
+      "email": "kmcpherson@producersrice.com",
+      "displayName": "Kiley McPherson",
+      "emailVerified": false,
+      "disabled": false,
+      "businessIds": [
+        "business-1782553339499"
+      ],
+      "targetTenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+      "targetTenantKey": "producers-rice-mill-staging",
+      "roleCode": "IND3V_INDUSTRIAL_OPERATOR",
+      "cognitoAction": "CREATE_IF_MISSING",
+      "note": "Default operator (view-capable day-1)"
+    },
+    {
+      "firebaseUid": "k8h1Ui0LrNcAsFNJiGibz571e653",
+      "email": "safetyadmin@producersrice.com",
+      "displayName": "Jamie Vanhouten",
+      "emailVerified": true,
+      "disabled": false,
+      "businessIds": [
+        "business-1782553339499"
+      ],
+      "targetTenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+      "targetTenantKey": "producers-rice-mill-staging",
+      "roleCode": "IND3V_INDUSTRIAL_ADMIN",
+      "cognitoAction": "CREATE_IF_MISSING",
+      "note": "Plant safety admin"
+    },
+    {
+      "firebaseUid": "TOuqrfkcJoTkJQRaldUgetDZNzt2",
+      "email": "sdavis2@producersrice.com",
+      "displayName": "Shannon Davis",
+      "emailVerified": false,
+      "disabled": false,
+      "businessIds": [
+        "business-1782553339499"
+      ],
+      "targetTenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+      "targetTenantKey": "producers-rice-mill-staging",
+      "roleCode": "IND3V_INDUSTRIAL_OPERATOR",
+      "cognitoAction": "CREATE_IF_MISSING",
+      "note": "Default operator (view-capable day-1)"
+    },
+    {
+      "firebaseUid": "6XaBJh0wiEXoO3xse8a8SiXJ0Cb2",
+      "email": "tbogy@producersrice.com",
+      "displayName": null,
+      "emailVerified": true,
+      "disabled": false,
+      "businessIds": [
+        "business-1782553339499"
+      ],
+      "targetTenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+      "targetTenantKey": "producers-rice-mill-staging",
+      "roleCode": "IND3V_INDUSTRIAL_OPERATOR",
+      "cognitoAction": "CREATE_IF_MISSING",
+      "note": "Default operator (view-capable day-1)"
+    }
+  ]
+}

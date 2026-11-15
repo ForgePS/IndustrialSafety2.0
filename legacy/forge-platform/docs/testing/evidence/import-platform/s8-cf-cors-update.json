@@ -1,0 +1,41 @@
+{
+  "policyId": "8814d56a-bf8e-4f64-8fd1-042526fe2c7a",
+  "etagPrior": "ETVPDKIKX0DER",
+  "etagNew": "E3UN6WX5RRO2AG",
+  "cors": {
+    "AccessControlAllowOrigins": {
+      "Quantity": 3,
+      "Items": [
+        "https://d3ud5uzwd9js2z.cloudfront.net",
+        "https://ddztl9s33wu40.cloudfront.net",
+        "https://d1uxdl4szvsixc.cloudfront.net"
+      ]
+    },
+    "AccessControlAllowHeaders": {
+      "Quantity": 9,
+      "Items": [
+        "Authorization",
+        "Content-Type",
+        "Idempotency-Key",
+        "If-Match",
+        "X-Correlation-Id",
+        "X-Request-Id",
+        "X-Forge-Dev-Principal",
+        "X-Forge-Dev-User",
+        "X-Tenant-Id"
+      ]
+    },
+    "AccessControlAllowMethods": {
+      "Quantity": 7,
+      "Items": ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    },
+    "AccessControlAllowCredentials": true,
+    "AccessControlExposeHeaders": {
+      "Quantity": 3,
+      "Items": ["ETag", "X-Correlation-Id", "X-Request-Id"]
+    },
+    "AccessControlMaxAgeSec": 600,
+    "OriginOverride": false
+  },
+  "defect": "DEF-S8-021"
+}

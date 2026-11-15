@@ -1,0 +1,16 @@
+{
+  "ok": true,
+  "at": "2026-08-06T15:15:48.871Z",
+  "sourceBusinessId": "business-1782553339499",
+  "firebaseProject": "forge-industrial-safety",
+  "target": {
+    "tenantKey": "producers-rice-mill-staging",
+    "tenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c"
+  },
+  "explicitlyNot": {
+    "tenantKey": "import-acceptance-tenant-a",
+    "tenantId": "019faa15-e558-70b6-adcd-a510c3c995f4"
+  },
+  "status": "APPROVED",
+  "dressRehearsal": true
+}

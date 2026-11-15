@@ -1,0 +1,11 @@
+{
+  "program": "FX-S0",
+  "breakpoint": {
+    "phone": { "max": "639px", "description": "Phone" },
+    "tabletPortrait": { "min": "640px", "max": "1023px", "description": "Tablet portrait" },
+    "tabletLandscape": { "min": "1024px", "max": "1279px", "description": "Tablet landscape" },
+    "desktop": { "min": "1280px", "max": "1599px", "description": "Desktop" },
+    "largeDesktop": { "min": "1600px", "max": "1919px", "description": "Large desktop" },
+    "operationsDisplay": { "min": "1920px", "description": "Operations / command display" }
+  }
+}

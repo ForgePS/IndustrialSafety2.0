@@ -1,0 +1,40 @@
+{
+  "tenantId": "019f9e06-a0b2-75f4-9e0b-5ae9befd8193",
+  "personas": {
+    "platform_support": {
+      "userId": "019fa92b-29e7-71eb-b3ec-3c2883a39bdf",
+      "email": "config-platform-support@forge.test",
+      "roleCode": "CONFIG_PLATFORM_SUPPORT"
+    },
+    "tenant_admin": {
+      "userId": "019fa92b-2a62-724c-98c3-2fa64698d618",
+      "email": "config-tenant-admin@forge.test",
+      "roleCode": "CONFIG_TENANT_ADMIN"
+    },
+    "configuration_manager": {
+      "userId": "019fa92b-2ab2-7748-bbbe-9f177ba02af8",
+      "email": "config-manager@forge.test",
+      "roleCode": "CONFIG_CONFIGURATION_MANAGER"
+    },
+    "read_only_auditor": {
+      "userId": "019fa92b-2ae5-734f-ba16-158d32655a65",
+      "email": "config-auditor@forge.test",
+      "roleCode": "CONFIG_READ_ONLY_AUDITOR"
+    },
+    "standard_user": {
+      "userId": "019fa92b-2b25-714b-b6c9-083c64311db2",
+      "email": "config-standard@forge.test",
+      "roleCode": "CONFIG_STANDARD_USER"
+    },
+    "update_only": {
+      "userId": "019fa92b-2b79-71e8-b948-3a81419758b2",
+      "email": "config-update-only@forge.test",
+      "roleCode": "CONFIG_UPDATE_ONLY"
+    },
+    "publish_only": {
+      "userId": "019fa92b-2b9c-720e-8600-c9a755725bff",
+      "email": "config-publish-only@forge.test",
+      "roleCode": "CONFIG_PUBLISH_ONLY"
+    }
+  }
+}

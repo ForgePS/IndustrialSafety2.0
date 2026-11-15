@@ -1,0 +1,4 @@
+{
+  "newArn": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-platform-api:65",
+  "CORS_ORIGINS": "https://d3ud5uzwd9js2z.cloudfront.net,https://ddztl9s33wu40.cloudfront.net,https://d1uxdl4szvsixc.cloudfront.net,https://d2ed3566n8x2gi.cloudfront.net,http://localhost:3003,https://creator-dev.forgepublicsafety.com,https://admin-dev.forgepublicsafety.com,https://industrial-dev.forgepublicsafety.com,https://rms-dev.forgepublicsafety.com,https://producers-rice-mill.forgepublicsafety.com"
+}

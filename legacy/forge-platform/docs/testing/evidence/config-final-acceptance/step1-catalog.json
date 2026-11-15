@@ -1,0 +1,209 @@
+{
+  "health": {
+    "status": 200,
+    "ms": 304,
+    "text": "{\"status\":\"healthy\",\"service\":\"platform-api\",\"environment\":\"development\",\"version\":\"0.1.0\",\"timestamp\":\"2026-07-28T13:40:52.082Z\"}",
+    "json": {
+      "status": "healthy",
+      "service": "platform-api",
+      "environment": "development",
+      "version": "0.1.0",
+      "timestamp": "2026-07-28T13:40:52.082Z"
+    },
+    "correlationId": null,
+    "requestId": null,
+    "leak": []
+  },
+  "unauth": {
+    "status": 401,
+    "ms": 127,
+    "text": "{\"error\":{\"code\":\"UNAUTHORIZED\",\"message\":\"Missing Authorization or dev principal header\",\"details\":[],\"requestId\":\"445d7109b4cfb53be01c9e043f3331b0\",\"correlationId\":\"698554fadbe8b940baa0f061a137a88a\"}}",
+    "json": {
+      "error": {
+        "code": "UNAUTHORIZED",
+        "message": "Missing Authorization or dev principal header",
+        "details": [],
+        "requestId": "445d7109b4cfb53be01c9e043f3331b0",
+        "correlationId": "698554fadbe8b940baa0f061a137a88a"
+      }
+    },
+    "correlationId": "698554fadbe8b940baa0f061a137a88a",
+    "requestId": "445d7109b4cfb53be01c9e043f3331b0",
+    "leak": []
+  },
+  "forbidden": {
+    "status": 403,
+    "ms": 276,
+    "text": "{\"error\":{\"code\":\"FORBIDDEN\",\"message\":\"You do not have permission to perform this action.\",\"details\":[{\"reasonCode\":\"PERMISSION_MISSING\",\"permission\":\"platform.configuration.update | tenant.configuration.update | platform.configuration.publish | tenant.configuration.publish\"}],\"requestId\":\"8a97851d225748c2b5bd567775e1dec1\",\"correlationId\":\"04c9740a3e881d7edc8348b7ed04f473\"}}",
+    "json": {
+      "error": {
+        "code": "FORBIDDEN",
+        "message": "You do not have permission to perform this action.",
+        "details": [
+          {
+            "reasonCode": "PERMISSION_MISSING",
+            "permission": "platform.configuration.update | tenant.configuration.update | platform.configuration.publish | tenant.configuration.publish"
+          }
+        ],
+        "requestId": "8a97851d225748c2b5bd567775e1dec1",
+        "correlationId": "04c9740a3e881d7edc8348b7ed04f473"
+      }
+    },
+    "correlationId": "04c9740a3e881d7edc8348b7ed04f473",
+    "requestId": "8a97851d225748c2b5bd567775e1dec1",
+    "leak": []
+  },
+  "auth": {
+    "status": 200,
+    "ms": 136,
+    "text": "{\"data\":{\"namespaces\":[{\"namespace\":\"tenant_profile\",\"label\":\"Tenant Profile\",\"tenantAdminEditable\":true},{\"namespace\":\"organization_profile\",\"label\":\"Organization Profile\",\"tenantAdminEditable\":true},{\"namespace\":\"branding\",\"label\":\"Branding\",\"tenantAdminEditable\":true},{\"namespace\":\"navigation\",\"label\":\"Navigation Editor\",\"tenantAdminEditable\":true},{\"namespace\":\"terminology\",\"label\":\"Terminology Manager\",\"tenantAdminEditable\":true},{\"namespace\":\"modules\",\"label\":\"Module Manager\",\"tenantAdminEditable\":false},{\"namespace\":\"features\",\"label\":\"Feature Manager\",\"tenantAdminEditable\":false},{\"namespace\":\"dropdowns\",\"label\":\"Dropdown Manager\",\"tenantAdminEditable\":true},{\"namespace\":\"custom_fields\",\"label\":\"Custom Field Builder\",\"tenantAdminEditable\":false},{\"namespace\":\"forms\",\"label\":\"Form Builder\",\"tenantAdminEditable\":false},{\"namespace\":\"workflows\",\"label\":\"Workflow Builder\",\"tenantAdminEditable\":false},{\"namespace\":\"roles\",\"label\":\"Role Builder\",\"tenantAdminEditable\":true},{\"namespace\":\"permissions\",\"label\":\"Permission Manager\",\"tenantAdminEditable\":false},{\"namespace\":\"notification_templates\",\"label\":\"Notification Templates\",\"tenantAdminEditable\":true},{\"namespace\":\"email_templates\",\"label\":\"Email Templates\",\"tenantAdminEditable\":true},{\"namespace\":\"document_templates\",\"label\":\"Document Templates\",\"tenantAdminEditable\":false},{\"namespace\":\"certificate_templates\",\"label\":\"Certificate Templates\",\"tenantAdminEditable\":false},{\"namespace\":\"dashboards\",\"label\":\"Dashboard Builder\",\"tenantAdminEditable\":false},{\"namespace\":\"reporting\",\"label\":\"Reporting Configuration\",\"tenantAdminEditable\":false},{\"namespace\":\"import_config\",\"label\":\"Import Configuration\",\"tenantAdminEditable\":false},{\"namespace\":\"export_config\",\"label\":\"Export Configuration\",\"tenantAdminEditable\":false},{\"namespace\":\"security\",\"label\":\"Security Configuration\",\"tenantAdminEditable\":false},{\"namespace\":\"retention\",\"label\":\"Retention Policies\",\"tenantAdminEditable\":false},{\"namespace\":\"business_hours\",\"la",
+    "json": {
+      "data": {
+        "namespaces": [
+          {
+            "namespace": "tenant_profile",
+            "label": "Tenant Profile",
+            "tenantAdminEditable": true
+          },
+          {
+            "namespace": "organization_profile",
+            "label": "Organization Profile",
+            "tenantAdminEditable": true
+          },
+          {
+            "namespace": "branding",
+            "label": "Branding",
+            "tenantAdminEditable": true
+          },
+          {
+            "namespace": "navigation",
+            "label": "Navigation Editor",
+            "tenantAdminEditable": true
+          },
+          {
+            "namespace": "terminology",
+            "label": "Terminology Manager",
+            "tenantAdminEditable": true
+          },
+          {
+            "namespace": "modules",
+            "label": "Module Manager",
+            "tenantAdminEditable": false
+          },
+          {
+            "namespace": "features",
+            "label": "Feature Manager",
+            "tenantAdminEditable": false
+          },
+          {
+            "namespace": "dropdowns",
+            "label": "Dropdown Manager",
+            "tenantAdminEditable": true
+          },
+          {
+            "namespace": "custom_fields",
+            "label": "Custom Field Builder",
+            "tenantAdminEditable": false
+          },
+          {
+            "namespace": "forms",
+            "label": "Form Builder",
+            "tenantAdminEditable": false
+          },
+          {
+            "namespace": "workflows",
+            "label": "Workflow Builder",
+            "tenantAdminEditable": false
+          },
+          {
+            "namespace": "roles",
+            "label": "Role Builder",
+            "tenantAdminEditable": true
+          },
+          {
+            "namespace": "permissions",
+            "label": "Permission Manager",
+            "tenantAdminEditable": false
+          },
+          {
+            "namespace": "notification_templates",
+            "label": "Notification Templates",
+            "tenantAdminEditable": true
+          },
+          {
+            "namespace": "email_templates",
+            "label": "Email Templates",
+            "tenantAdminEditable": true
+          },
+          {
+            "namespace": "document_templates",
+            "label": "Document Templates",
+            "tenantAdminEditable": false
+          },
+          {
+            "namespace": "certificate_templates",
+            "label": "Certificate Templates",
+            "tenantAdminEditable": false
+          },
+          {
+            "namespace": "dashboards",
+            "label": "Dashboard Builder",
+            "tenantAdminEditable": false
+          },
+          {
+            "namespace": "reporting",
+            "label": "Reporting Configuration",
+            "tenantAdminEditable": false
+          },
+          {
+            "namespace": "import_config",
+            "label": "Import Configuration",
+            "tenantAdminEditable": false
+          },
+          {
+            "namespace": "export_config",
+            "label": "Export Configuration",
+            "tenantAdminEditable": false
+          },
+          {
+            "namespace": "security",
+            "label": "Security Configuration",
+            "tenantAdminEditable": false
+          },
+          {
+            "namespace": "retention",
+            "label": "Retention Policies",
+            "tenantAdminEditable": false
+          },
+          {
+            "namespace": "business_hours",
+            "label": "Business Hours",
+            "tenantAdminEditable": true
+          },
+          {
+            "namespace": "holiday_calendar",
+            "label": "Holiday Calendar",
+            "tenantAdminEditable": true
+          },
+          {
+            "namespace": "facilities",
+            "label": "Facilities",
+            "tenantAdminEditable": true
+          },
+          {
+            "namespace": "locations",
+            "label": "Locations",
+            "tenantAdminEditable": true
+          }
+        ]
+      },
+      "meta": {
+        "requestId": "0434a86d830acb758d4e0a6469f2ade9",
+        "correlationId": "f4a547d74cd4b2ca45d258f3a4a712d6"
+      }
+    },
+    "correlationId": "f4a547d74cd4b2ca45d258f3a4a712d6",
+    "requestId": "0434a86d830acb758d4e0a6469f2ade9",
+    "leak": []
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/de1a4227562045d1855848411d3df22b",
+  "taskDefinitionArn": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-platform-api:34",
+  "lastStatus": "STOPPED",
+  "startedAt": "2026-07-29T11:24:31.525000-05:00",
+  "stoppedAt": "2026-07-29T11:25:00.229000-05:00",
+  "stopCode": "EssentialContainerExited",
+  "stoppedReason": "Essential container in task exited",
+  "exitCode": 0,
+  "adminSecret": "forge-development-secrets-database",
+  "migration": "0024_import_platform_s3_upload"
+}

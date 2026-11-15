@@ -1,0 +1,10 @@
+{
+  "syncedAt": "2026-07-30T18:06:11.665Z",
+  "reason": "Creator Console baked localhost:4000; authorized Import Center unavailable until rebuild",
+  "apiUrl": "https://d108fstxdv69bo.cloudfront.net",
+  "apps": ["console", "tenantadmin"],
+  "script": "scripts/sync-static-site.mjs",
+  "fix": "resolveConsoleBuildEnv sets NEXT_PUBLIC_API_URL from ForgeCompute-ApiHttpsDomain",
+  "playwrightAfterSync": "7/7 PASS (s8-playwright-import-center.json)",
+  "cfCorsOriginOverride": false
+}

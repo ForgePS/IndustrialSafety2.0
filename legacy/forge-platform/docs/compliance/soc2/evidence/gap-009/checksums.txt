@@ -1,0 +1,2 @@
+algo=SHA256 hash=F866F44305B851F37AF003B65705F7D100C65B3AFF9D02471397B6FC2C1B9F2A file=Forge-Development-Data.template.json
+synth-secret-resources.json generated separately

@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "generated_at": "2026-07-26T21:43:18.615Z",
+    "environment": "development",
+    "aws_account": "511343547817",
+    "aws_region": "us-east-1",
+    "tool_versions": {
+      "awsCli": "aws-cli/2.36.8 Python/3.14.6 Windows/11 exe/AMD64",
+      "node": "v20.20.2"
+    },
+    "control_id": "CC-LOG-01",
+    "risk_id": "R-002",
+    "title": "CloudTrail trail configuration",
+    "classification": "Confidential",
+    "source": "aws cloudtrail describe-trails",
+    "review_status": "ACCEPTED",
+    "reviewed_by": "Jeremy Powell",
+    "reviewed_at": "2026-07-26"
+  },
+  "data": {
+    "Name": "forge-development-cloudtrail-management",
+    "S3BucketName": "forge-development-cloudtrail-511343547817-us-east-1",
+    "IncludeGlobalServiceEvents": true,
+    "IsMultiRegionTrail": true,
+    "HomeRegion": "us-east-1",
+    "TrailARN": "arn:aws:cloudtrail:us-east-1:511343547817:trail/forge-development-cloudtrail-management",
+    "LogFileValidationEnabled": true,
+    "CloudWatchLogsLogGroupArn": "arn:aws:logs:us-east-1:511343547817:log-group:/forge/development/cloudtrail:*",
+    "CloudWatchLogsRoleArn": "arn:aws:iam::511343547817:role/Forge-Development-Audit-CloudTrailManagementTrailLo-aXEBZkRgwFwL",
+    "KmsKeyId": "arn:aws:kms:us-east-1:511343547817:key/5efbe077-1ef5-4e55-aaba-7e6614f35c87",
+    "HasCustomEventSelectors": true,
+    "HasInsightSelectors": false,
+    "IsOrganizationTrail": false
+  }
+}

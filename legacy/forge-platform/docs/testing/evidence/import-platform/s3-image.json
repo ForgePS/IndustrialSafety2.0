@@ -1,0 +1,7 @@
+{
+  "tag": "import-s3-20260729092615",
+  "apiDigest": "sha256:74e311dd98cee2562447c3ec8fa5681966e8e6d94326e65ab7d871a6a2c55b87",
+  "workerDigest": "sha256:d6dd11473484eaaae7e54974cf74994ed447c57b60db373d03acb0b1df937bac",
+  "apiImage": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-platformapi:import-s3-20260729092615",
+  "workerImage": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-workerservice:import-s3-20260729092615"
+}

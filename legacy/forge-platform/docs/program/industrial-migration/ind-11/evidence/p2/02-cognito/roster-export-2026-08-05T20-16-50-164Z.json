@@ -1,0 +1,161 @@
+{
+  "ok": true,
+  "phase": "PRODUCERS-P2-auth-export",
+  "freezeAt": "2026-08-05T20:16:50.164Z",
+  "firebaseProject": "forge-industrial-safety",
+  "firebaseBusinessId": "business-1782553339499",
+  "authorization": {
+    "gate": "FORGE_P2_AUTH_EXPORT_AUTHORIZED",
+    "approval": "evidence/p2/02-cognito/APPROVE-PRODUCERS-AUTH-EXPORT.md",
+    "signed": true
+  },
+  "passwordHashes": "NOT_EXPORTED",
+  "counts": {
+    "authUsersTotal": 10,
+    "producersMatched": 6,
+    "producersDisabled": 0,
+    "producersMissingEmail": 0,
+    "producersMultiBusiness": 1,
+    "duplicateEmails": 0,
+    "producersriceEmailNoClaim": 0
+  },
+  "users": [
+    {
+      "uid": "JQcTmbOoefM7nOgQ1RMc6FMtKdB3",
+      "email": "admin@forgepublicsafety.com",
+      "emailNormalized": "admin@forgepublicsafety.com",
+      "emailVerified": true,
+      "displayName": null,
+      "disabled": false,
+      "providers": [
+        "password"
+      ],
+      "businessIds": [
+        "business-1782553339499",
+        "business-forge-default"
+      ],
+      "roleHints": [],
+      "claimKeys": [
+        "businessIds"
+      ],
+      "createdAt": "Sat, 27 Jun 2026 01:58:13 GMT",
+      "lastSignInAt": "Mon, 03 Aug 2026 21:37:50 GMT"
+    },
+    {
+      "uid": "kd9THbtx4jVkx874a3K4Mlzgcz82",
+      "email": "jlackie@producersrice.com",
+      "emailNormalized": "jlackie@producersrice.com",
+      "emailVerified": true,
+      "displayName": "John Lackie",
+      "disabled": false,
+      "providers": [
+        "password"
+      ],
+      "businessIds": [
+        "business-1782553339499"
+      ],
+      "roleHints": [],
+      "claimKeys": [
+        "businessIds"
+      ],
+      "createdAt": "Thu, 23 Jul 2026 14:20:04 GMT",
+      "lastSignInAt": "Wed, 29 Jul 2026 19:03:35 GMT"
+    },
+    {
+      "uid": "0D6EUP2D8AeIC8BuQZuFbz4s3bb2",
+      "email": "kmcpherson@producersrice.com",
+      "emailNormalized": "kmcpherson@producersrice.com",
+      "emailVerified": false,
+      "displayName": "Kiley McPherson",
+      "disabled": false,
+      "providers": [
+        "password"
+      ],
+      "businessIds": [
+        "business-1782553339499"
+      ],
+      "roleHints": [],
+      "claimKeys": [
+        "businessIds"
+      ],
+      "createdAt": "Wed, 01 Jul 2026 14:58:52 GMT",
+      "lastSignInAt": "Tue, 21 Jul 2026 18:13:53 GMT"
+    },
+    {
+      "uid": "k8h1Ui0LrNcAsFNJiGibz571e653",
+      "email": "safetyadmin@producersrice.com",
+      "emailNormalized": "safetyadmin@producersrice.com",
+      "emailVerified": true,
+      "displayName": "Jamie Vanhouten",
+      "disabled": false,
+      "providers": [
+        "password"
+      ],
+      "businessIds": [
+        "business-1782553339499"
+      ],
+      "roleHints": [],
+      "claimKeys": [
+        "businessIds"
+      ],
+      "createdAt": "Wed, 01 Jul 2026 15:03:19 GMT",
+      "lastSignInAt": "Wed, 05 Aug 2026 15:04:30 GMT"
+    },
+    {
+      "uid": "TOuqrfkcJoTkJQRaldUgetDZNzt2",
+      "email": "sdavis2@producersrice.com",
+      "emailNormalized": "sdavis2@producersrice.com",
+      "emailVerified": false,
+      "displayName": "Shannon Davis",
+      "disabled": false,
+      "providers": [
+        "password"
+      ],
+      "businessIds": [
+        "business-1782553339499"
+      ],
+      "roleHints": [],
+      "claimKeys": [
+        "businessIds"
+      ],
+      "createdAt": "Wed, 01 Jul 2026 15:01:05 GMT",
+      "lastSignInAt": "Tue, 14 Jul 2026 20:26:16 GMT"
+    },
+    {
+      "uid": "6XaBJh0wiEXoO3xse8a8SiXJ0Cb2",
+      "email": "tbogy@producersrice.com",
+      "emailNormalized": "tbogy@producersrice.com",
+      "emailVerified": true,
+      "displayName": null,
+      "disabled": false,
+      "providers": [
+        "password"
+      ],
+      "businessIds": [
+        "business-1782553339499"
+      ],
+      "roleHints": [],
+      "claimKeys": [
+        "businessIds"
+      ],
+      "createdAt": "Sat, 27 Jun 2026 20:09:20 GMT",
+      "lastSignInAt": "Mon, 03 Aug 2026 12:57:46 GMT"
+    }
+  ],
+  "exceptions": {
+    "missingEmail": [],
+    "disabled": [],
+    "multiBusiness": [
+      {
+        "uid": "JQcTmbOoefM7nOgQ1RMc6FMtKdB3",
+        "email": "admin@forgepublicsafety.com",
+        "businessIds": [
+          "business-1782553339499",
+          "business-forge-default"
+        ]
+      }
+    ],
+    "duplicateEmails": [],
+    "producersriceEmailNoClaim": []
+  }
+}

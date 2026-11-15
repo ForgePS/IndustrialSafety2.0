@@ -1,0 +1,813 @@
+openapi: 3.0.3
+info:
+  title: Forge Universal Import API
+  version: 0.6.0-s6
+  description: >
+    S6 import security layer — malware scanning, verdict enforcement, quarantine,
+    sensitive-field masking, protected artifact downloads. Overrides are reserved
+    states only (no override HTTP endpoint). No product adapters. No Import Center UI.
+    Step Functions remains DEFINITION_COMPLETE_DEPLOYMENT_PENDING.
+servers:
+  - url: https://d108fstxdv69bo.cloudfront.net
+    description: development API edge
+tags:
+  - name: ImportUpload
+  - name: ImportDuplicates
+  - name: ImportExecution
+  - name: ImportSecurity
+  - name: ImportJobs
+  - name: ImportProfiles
+  - name: ImportTemplates
+paths:
+  /api/v1/imports/jobs/{jobId}/files/{fileId}/scan-events:
+    get:
+      tags: [ImportSecurity]
+      summary: List immutable malware scan history for a file
+      operationId: listImportFileScanEvents
+      security: [{ forgeAuth: ["import.view"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+        - $ref: "#/components/parameters/FileId"
+      responses:
+        "200":
+          description: Scan events (no raw malware payload content)
+        "401": { description: Unauthorized }
+  /api/v1/imports/jobs/{jobId}/files/{fileId}/rescan:
+    post:
+      tags: [ImportSecurity]
+      summary: Request authorized malware rescan
+      description: >
+        Requires import.validate. Justification required when prior verdict was
+        INFECTED/SUSPICIOUS or file is quarantined. Does not auto-release quarantine.
+        Override endpoint is intentionally absent; OVERRIDE_APPROVED/DENIED are reserved.
+      operationId: rescanImportFile
+      security: [{ forgeAuth: ["import.validate"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+        - $ref: "#/components/parameters/FileId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string, maxLength: 2000 }
+                idempotencyKey: { type: string, maxLength: 255 }
+      responses:
+        "200": { description: Rescan queued }
+        "401": { description: Unauthorized }
+  /api/v1/imports/jobs/{jobId}/results/download:
+    post:
+      tags: [ImportSecurity]
+      summary: Create short-lived presigned download for masked (or privileged) results
+      description: >
+        Default artifacts are MASKED. privileged=true requires import.sensitive.
+        Credentials/secrets remain non-returnable even with import.sensitive.
+        Quarantined source files cannot generate non-security downloads.
+      operationId: downloadImportResults
+      security: [{ forgeAuth: ["import.view"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                privileged: { type: boolean, default: false }
+      responses:
+        "200":
+          description: Presigned URL (short-lived; Cache-Control no-store)
+        "401": { description: Unauthorized }
+  /api/v1/imports/jobs/{jobId}/errors/download:
+    post:
+      tags: [ImportSecurity]
+      summary: Create short-lived presigned download for masked error report
+      operationId: downloadImportErrors
+      security: [{ forgeAuth: ["import.view"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200": { description: Presigned URL }
+        "401": { description: Unauthorized }
+  /api/v1/imports/jobs/{jobId}/security-report/download:
+    post:
+      tags: [ImportSecurity]
+      summary: Create short-lived download for security/scan report
+      operationId: downloadImportSecurityReport
+      security: [{ forgeAuth: ["import.view"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200": { description: Presigned URL }
+        "401": { description: Unauthorized }
+  /api/v1/imports/jobs/{jobId}/execute:
+    post:
+      tags: [ImportExecution]
+      summary: Queue approved job for execution
+      operationId: executeImportJob
+      security: [{ forgeAuth: ["import.execute"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200": { description: Execution accepted (QUEUED) }
+        "401": { description: Unauthorized }
+  /api/v1/imports/jobs/{jobId}/cancel:
+    post:
+      tags: [ImportExecution]
+      summary: Cancel queued or request cancel for processing job
+      operationId: cancelImportJob
+      security: [{ forgeAuth: ["import.execute", "import.upload", "import.approve"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200": { description: Cancelled or cancellation requested }
+  /api/v1/imports/jobs/{jobId}/status:
+    get:
+      tags: [ImportExecution]
+      summary: Execution progress status
+      operationId: getImportJobStatus
+      security: [{ forgeAuth: ["import.view"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200": { description: Status and progress }
+  /api/v1/imports/jobs/{jobId}/results:
+    get:
+      tags: [ImportExecution]
+      summary: Durable execution result summary
+      operationId: getImportJobResults
+      security: [{ forgeAuth: ["import.view"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200": { description: Result summary }
+  /api/v1/imports/jobs/{jobId}/batches:
+    get:
+      tags: [ImportExecution]
+      summary: List execution batches
+      operationId: listImportJobBatches
+      security: [{ forgeAuth: ["import.view"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200": { description: Batches }
+  /api/v1/imports/jobs/{jobId}/batches/{batchId}:
+    get:
+      tags: [ImportExecution]
+      summary: Get execution batch
+      operationId: getImportJobBatch
+      security: [{ forgeAuth: ["import.view"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+        - name: batchId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: Batch }
+  /api/v1/imports/jobs/{jobId}/errors:
+    get:
+      tags: [ImportExecution]
+      summary: List row errors
+      operationId: listImportJobErrors
+      security: [{ forgeAuth: ["import.view"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200": { description: Errors }
+  /api/v1/imports/jobs/{jobId}/errors/{errorId}/retry:
+    post:
+      tags: [ImportExecution]
+      summary: Request safe row-level retry
+      operationId: retryImportJobError
+      security: [{ forgeAuth: ["import.error.reprocess"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+        - name: errorId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: Retry requested }
+  /api/v1/imports/jobs/{jobId}/rollback-request:
+    post:
+      tags: [ImportExecution]
+      summary: Request rollback preparation (no compensation execution in S5)
+      operationId: requestImportRollback
+      security: [{ forgeAuth: ["import.rollback"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200": { description: Rollback pending or refused }
+  /api/v1/imports/duplicates:
+    get:
+      tags: [ImportDuplicates]
+      summary: List duplicate candidates
+      operationId: listImportDuplicates
+      security: [{ forgeAuth: ["import.view"] }]
+      responses:
+        "200": { description: Paginated duplicates }
+  /api/v1/imports/duplicates/{duplicateId}:
+    get:
+      tags: [ImportDuplicates]
+      summary: Get duplicate candidate
+      operationId: getImportDuplicate
+      security: [{ forgeAuth: ["import.view"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200": { description: Candidate detail }
+  /api/v1/imports/duplicates/{duplicateId}/review:
+    post:
+      tags: [ImportDuplicates]
+      summary: Mark duplicate in review
+      operationId: reviewImportDuplicate
+      security: [{ forgeAuth: ["import.preview"] }]
+      responses:
+        "200": { description: IN_REVIEW }
+  /api/v1/imports/duplicates/{duplicateId}/approve:
+    post:
+      tags: [ImportDuplicates]
+      summary: Approve duplicate resolution intent (no commit)
+      operationId: approveImportDuplicate
+      security: [{ forgeAuth: ["import.approve"] }]
+      responses:
+        "200": { description: APPROVED }
+  /api/v1/imports/duplicates/{duplicateId}/reject:
+    post:
+      tags: [ImportDuplicates]
+      summary: Reject duplicate candidate
+      operationId: rejectImportDuplicate
+      security: [{ forgeAuth: ["import.approve"] }]
+      responses:
+        "200": { description: REJECTED }
+  /api/v1/imports/zip/validate:
+    post:
+      tags: [ImportUpload]
+      summary: Validate ZIP migration bundle (no execute)
+      operationId: validateImportZip
+      security: [{ forgeAuth: ["import.validate"] }]
+      responses:
+        "200": { description: Validated }
+  /api/v1/imports/api-sources/validate:
+    post:
+      tags: [ImportProfiles]
+      summary: Validate external API import config
+      operationId: validateImportApiSource
+      security: [{ forgeAuth: ["import.profile.manage"] }]
+      responses:
+        "200": { description: Validated }
+  /api/v1/imports/upload:
+    post:
+      tags: [ImportUpload]
+      summary: Initialize direct-to-S3 import upload (presigned or multipart)
+      operationId: initializeImportUpload
+      security: [{ forgeAuth: ["import.upload"] }]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                [
+                  productKey,
+                  moduleKey,
+                  recordCategory,
+                  displayName,
+                  fileName,
+                  contentType,
+                  byteSize,
+                ]
+              properties:
+                productKey: { type: string }
+                moduleKey: { type: string }
+                recordCategory: { type: string }
+                displayName: { type: string }
+                description: { type: string }
+                profileId: { type: string, format: uuid }
+                fileName: { type: string }
+                contentType: { type: string }
+                byteSize: { type: integer, maximum: 104857600 }
+                format: { type: string, enum: [csv, xlsx, json] }
+                checksumSha256: { type: string }
+                uploadMode: { type: string, enum: [SINGLE, MULTIPART] }
+      responses:
+        "201": { description: Upload initialized; job status UPLOADED }
+  /api/v1/imports/upload/{jobId}/parts:
+    post:
+      tags: [ImportUpload]
+      summary: Get multipart part upload URLs
+      operationId: getImportUploadParts
+      security: [{ forgeAuth: ["import.upload"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200": { description: Part URLs }
+  /api/v1/imports/upload/{jobId}/complete:
+    post:
+      tags: [ImportUpload]
+      summary: Complete upload and enqueue format detection
+      operationId: completeImportUpload
+      security: [{ forgeAuth: ["import.upload"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200": { description: Completed; detection enqueued }
+  /api/v1/imports/upload/{jobId}/abort:
+    post:
+      tags: [ImportUpload]
+      summary: Abort multipart upload
+      operationId: abortImportUpload
+      security: [{ forgeAuth: ["import.upload"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200": { description: Aborted }
+  /api/v1/imports/{jobId}:
+    get:
+      tags: [ImportUpload]
+      summary: Get import job with file metadata
+      operationId: getImportById
+      security: [{ forgeAuth: ["import.view"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200": { description: Job + file }
+  /api/v1/imports/{jobId}/status:
+    get:
+      tags: [ImportUpload]
+      summary: Upload and detection status
+      operationId: getImportStatus
+      security: [{ forgeAuth: ["import.view"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200": { description: Status snapshot }
+  /api/v1/imports/{jobId}/file:
+    get:
+      tags: [ImportUpload]
+      summary: File metadata (raw bytes denied until S6 CLEAN)
+      operationId: getImportFileMetadata
+      security: [{ forgeAuth: ["import.view"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200": { description: Metadata only }
+  /api/v1/imports/{jobId}/cancel:
+    post:
+      tags: [ImportUpload]
+      summary: Cancel import including in-flight upload
+      operationId: cancelImport
+      security: [{ forgeAuth: ["import.upload", "import.approve"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200": { description: Cancelled }
+  /api/v1/imports/jobs:
+    get:
+      tags: [ImportJobs]
+      summary: List import jobs
+      operationId: listImportJobs
+      security: [{ forgeAuth: ["import.view"] }]
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: pageSize
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: productKey
+          schema: { type: string }
+        - in: query
+          name: moduleKey
+          schema: { type: string }
+        - in: query
+          name: recordCategory
+          schema: { type: string }
+        - in: query
+          name: sort
+          schema: { type: string, enum: [createdAt, updatedAt, displayName, status] }
+        - in: query
+          name: sortDir
+          schema: { type: string, enum: [asc, desc] }
+      responses:
+        "200": { description: Paginated job list }
+        "401": { description: Unauthorized }
+        "403": { description: Forbidden }
+    post:
+      tags: [ImportJobs]
+      summary: Create import job (control plane)
+      operationId: createImportJob
+      security: [{ forgeAuth: ["import.upload"] }]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateImportJobRequest"
+      responses:
+        "201": { description: Job created (status READY_FOR_MAPPING) }
+        "403": { description: Permission or entitlement denied }
+        "409": { description: Idempotency conflict }
+  /api/v1/imports/jobs/{jobId}:
+    get:
+      tags: [ImportJobs]
+      summary: Get import job
+      operationId: getImportJob
+      security: [{ forgeAuth: ["import.view"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200": { description: Job detail }
+        "404": { description: IMPORT_JOB_NOT_FOUND }
+    patch:
+      tags: [ImportJobs]
+      summary: Patch job metadata
+      operationId: patchImportJob
+      security: [{ forgeAuth: ["import.upload"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+        - $ref: "#/components/parameters/IdempotencyKeyOptional"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatchImportJobRequest"
+      responses:
+        "200": { description: Updated }
+        "409": { description: IMPORT_INVALID_STATE_TRANSITION }
+  /api/v1/imports/jobs/{jobId}/cancel:
+    post:
+      tags: [ImportJobs]
+      summary: Cancel pre-execution job
+      operationId: cancelImportJob
+      security: [{ forgeAuth: ["import.upload", "import.approve"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201": { description: Cancelled }
+        "409": { description: IMPORT_INVALID_STATE_TRANSITION }
+  /api/v1/imports/jobs/{jobId}/request-validation:
+    post:
+      tags: [ImportJobs]
+      summary: Request validation (orchestration only)
+      operationId: requestImportValidation
+      security: [{ forgeAuth: ["import.validate"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201":
+          description: Accepted with NOT_AVAILABLE_UNTIL_S3
+  /api/v1/imports/jobs/{jobId}/request-preview:
+    post:
+      tags: [ImportJobs]
+      summary: Request preview (orchestration only)
+      operationId: requestImportPreview
+      security: [{ forgeAuth: ["import.preview"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201":
+          description: Accepted with NOT_AVAILABLE_UNTIL_S3
+  /api/v1/imports/jobs/{jobId}/submit-for-approval:
+    post:
+      tags: [ImportJobs]
+      summary: Submit mapped job for approval
+      operationId: submitImportJobForApproval
+      security: [{ forgeAuth: ["import.preview"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201": { description: AWAITING_APPROVAL }
+  /api/v1/imports/jobs/{jobId}/approve:
+    post:
+      tags: [ImportJobs]
+      summary: Approve job
+      operationId: approveImportJob
+      security: [{ forgeAuth: ["import.approve"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201": { description: APPROVED }
+  /api/v1/imports/jobs/{jobId}/reject:
+    post:
+      tags: [ImportJobs]
+      summary: Reject job back to MAPPED
+      operationId: rejectImportJob
+      security: [{ forgeAuth: ["import.approve"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201": { description: MAPPED }
+  /api/v1/imports/jobs/{jobId}/mappings:
+    get:
+      tags: [ImportJobs]
+      summary: List mappings
+      operationId: listImportMappings
+      security: [{ forgeAuth: ["import.view"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200": { description: Mapping list }
+    put:
+      tags: [ImportJobs]
+      summary: Replace mappings atomically
+      operationId: putImportMappings
+      security: [{ forgeAuth: ["import.map"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PutMappingsRequest"
+      responses:
+        "200": { description: Mappings replaced; job MAPPED }
+  /api/v1/imports/jobs/{jobId}/mappings/{mappingId}:
+    delete:
+      tags: [ImportJobs]
+      summary: Delete one mapping
+      operationId: deleteImportMapping
+      security: [{ forgeAuth: ["import.map"] }]
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+        - in: path
+          name: mappingId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: Deleted }
+  /api/v1/imports/profiles:
+    get:
+      tags: [ImportProfiles]
+      summary: List profiles
+      operationId: listImportProfiles
+      security: [{ forgeAuth: ["import.view"] }]
+      responses:
+        "200": { description: Profile list }
+    post:
+      tags: [ImportProfiles]
+      summary: Create profile
+      operationId: createImportProfile
+      security: [{ forgeAuth: ["import.profile.manage"] }]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateImportProfileRequest"
+      responses:
+        "201": { description: Created }
+  /api/v1/imports/profiles/{profileId}:
+    get:
+      tags: [ImportProfiles]
+      summary: Get profile
+      operationId: getImportProfile
+      security: [{ forgeAuth: ["import.view"] }]
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "200": { description: Profile }
+        "404": { description: IMPORT_PROFILE_NOT_FOUND }
+    patch:
+      tags: [ImportProfiles]
+      summary: Patch profile
+      operationId: patchImportProfile
+      security: [{ forgeAuth: ["import.profile.manage"] }]
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "200": { description: Updated }
+  /api/v1/imports/profiles/{profileId}/archive:
+    post:
+      tags: [ImportProfiles]
+      summary: Archive profile
+      operationId: archiveImportProfile
+      security: [{ forgeAuth: ["import.profile.manage"] }]
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201": { description: Archived }
+  /api/v1/imports/profiles/{profileId}/restore:
+    post:
+      tags: [ImportProfiles]
+      summary: Restore profile
+      operationId: restoreImportProfile
+      security: [{ forgeAuth: ["import.profile.manage"] }]
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201": { description: Restored }
+  /api/v1/imports/templates:
+    get:
+      tags: [ImportTemplates]
+      summary: List template metadata
+      operationId: listImportTemplates
+      security: [{ forgeAuth: ["import.view"] }]
+      responses:
+        "200": { description: Template metadata list }
+  /api/v1/imports/templates/{templateKey}:
+    get:
+      tags: [ImportTemplates]
+      summary: Get template metadata
+      operationId: getImportTemplate
+      security: [{ forgeAuth: ["import.view"] }]
+      parameters:
+        - in: path
+          name: templateKey
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Template metadata }
+        "404": { description: IMPORT_TEMPLATE_NOT_FOUND }
+components:
+  securitySchemes:
+    forgeAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    JobId:
+      in: path
+      name: jobId
+      required: true
+      schema: { type: string, format: uuid }
+    FileId:
+      in: path
+      name: fileId
+      required: true
+      schema: { type: string, format: uuid }
+    ProfileId:
+      in: path
+      name: profileId
+      required: true
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      in: header
+      name: Idempotency-Key
+      required: true
+      schema: { type: string, maxLength: 255 }
+    IdempotencyKeyOptional:
+      in: header
+      name: Idempotency-Key
+      required: false
+      schema: { type: string, maxLength: 255 }
+  schemas:
+    CreateImportJobRequest:
+      type: object
+      additionalProperties: false
+      required: [productKey, moduleKey, recordCategory, displayName]
+      properties:
+        productKey: { type: string }
+        moduleKey: { type: string }
+        recordCategory: { type: string }
+        sourceType: { type: string, enum: [csv, xlsx, json, zip, api, manual] }
+        profileId: { type: string, format: uuid }
+        displayName: { type: string, maxLength: 200 }
+        description: { type: string, maxLength: 2000 }
+        requestedMode: { type: string, enum: [CREATE, UPDATE, UPSERT] }
+        clientRequestId: { type: string, maxLength: 64 }
+    PatchImportJobRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        displayName: { type: string }
+        description: { type: string, nullable: true }
+    PutMappingsRequest:
+      type: object
+      additionalProperties: false
+      required: [mappings]
+      properties:
+        mappings:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items:
+            type: object
+            additionalProperties: false
+            required: [sourceColumn, targetField]
+            properties:
+              sourceColumn: { type: string }
+              targetField: { type: string }
+              transform:
+                type: object
+                additionalProperties: false
+                properties:
+                  transformId: { type: string }
+                  defaultValue: {}
+              isRequired: { type: boolean }
+              isSensitive: { type: boolean }
+              ordinal: { type: integer }
+    CreateImportProfileRequest:
+      type: object
+      additionalProperties: false
+      required: [profileKey, displayName, productKey, moduleKey, recordCategory]
+      properties:
+        profileKey: { type: string }
+        displayName: { type: string }
+        productKey: { type: string }
+        moduleKey: { type: string }
+        recordCategory: { type: string }
+        sourceType: { type: string }
+        snapshot: { type: object }
+    ImportError:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - IMPORT_JOB_NOT_FOUND
+                - IMPORT_PROFILE_NOT_FOUND
+                - IMPORT_TEMPLATE_NOT_FOUND
+                - IMPORT_INVALID_STATE_TRANSITION
+                - IMPORT_VALIDATION_REQUEST_NOT_AVAILABLE
+                - IMPORT_PREVIEW_REQUEST_NOT_AVAILABLE
+                - IMPORT_APPROVAL_NOT_AVAILABLE
+                - IMPORT_IDEMPOTENCY_CONFLICT
+                - IMPORT_MAPPING_INVALID
+                - IMPORT_TENANT_CONTEXT_REQUIRED
+                - IMPORT_ENTITLEMENT_REQUIRED
+                - IMPORT_SCAN_REQUIRED
+                - IMPORT_SCAN_PENDING
+                - IMPORT_SCAN_FAILED
+                - IMPORT_SCAN_TIMEOUT
+                - IMPORT_SCAN_INFECTED
+                - IMPORT_SCAN_SUSPICIOUS
+                - IMPORT_SCAN_HASH_MISMATCH
+                - IMPORT_SCAN_STALE_VERDICT
+                - IMPORT_FILE_QUARANTINED
+                - IMPORT_SECURITY_HOLD
+                - IMPORT_SENSITIVE_ACCESS_DENIED
+                - IMPORT_ARTIFACT_ACCESS_DENIED
+                - IMPORT_ARTIFACT_EXPIRED
+                - IMPORT_CROSS_TENANT_DENIED
+                - IMPORT_SCANNER_PROVIDER_UNAVAILABLE
+                - IMPORT_SCANNER_RESPONSE_INVALID
+            message: { type: string }
+            correlationId: { type: string, format: uuid }
+            details: { type: array, items: {} }
+    MalwareVerdict:
+      type: string
+      description: Server-side malware verdict. Only CLEAN and OVERRIDE_APPROVED allow progression.
+      enum:
+        - NOT_SUBMITTED
+        - SUBMITTED
+        - SCANNING
+        - CLEAN
+        - INFECTED
+        - SUSPICIOUS
+        - SCAN_FAILED
+        - SCAN_TIMEOUT
+        - UNSUPPORTED
+        - QUARANTINED
+        - RESCAN_REQUIRED
+        - OVERRIDE_APPROVED
+        - OVERRIDE_DENIED
+    ImportFileSecurityFields:
+      type: object
+      description: >
+        Sensitive imported values are masked by default. import.sensitive permits
+        authorized unmasking except CREDENTIAL/SECRET which never return in full.
+      properties:
+        malwareVerdict: { $ref: "#/components/schemas/MalwareVerdict" }
+        quarantineStatus: { type: string, enum: [NONE, QUARANTINED, RELEASED, DESTROYED] }
+        securityHold: { type: boolean }
+        scanAttemptCount: { type: integer }
+        rescanRequired: { type: boolean }
+        contentHash:
+          type: string
+          description: SHA-256 of scanned content (integrity binding)

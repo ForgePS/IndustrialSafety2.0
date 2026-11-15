@@ -1,0 +1,36 @@
+/*
+ * Forge Academy shell — Sneat tokens via @forge/design-system.
+ */
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--forge-color-bg);
+  color: var(--forge-color-text);
+  font-family: var(--forge-font-sans);
+  font-size: var(--forge-text-md);
+  line-height: var(--forge-line-height);
+}
+
+main {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: var(--forge-space-6) var(--forge-space-4);
+}
+
+h1,
+h2,
+h3 {
+  color: var(--forge-color-heading);
+}
+
+a {
+  color: var(--forge-color-primary);
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--forge-color-primary);
+  outline-offset: 2px;
+}

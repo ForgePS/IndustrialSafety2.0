@@ -1,0 +1,82 @@
+{
+  "v1": {
+    "data": {
+      "object": {
+        "id": "019fa876-84b0-703f-99d6-a40c0346d093",
+        "tenantId": "019f9e06-a0b2-75f4-9e0b-5ae9befd8193",
+        "namespace": "terminology",
+        "objectKey": "default",
+        "displayName": "Terminology Manager",
+        "currentPublishedVersionId": "019fa8f5-0148-714a-8c13-bde1f47fdab1",
+        "recordVersion": 10,
+        "createdAt": "2026-07-28T11:22:47.337Z",
+        "updatedAt": "2026-07-28T13:40:56.783Z"
+      },
+      "version": {
+        "id": "019fa8f4-f518-735c-bfb8-13dbb8a3ae82",
+        "tenantId": "019f9e06-a0b2-75f4-9e0b-5ae9befd8193",
+        "objectId": "019fa876-84b0-703f-99d6-a40c0346d093",
+        "version": 9,
+        "state": "SUPERSEDED",
+        "payloadJson": {
+          "terms": {
+            "unit": "Unit",
+            "station": "Station",
+            "incident": "Incident",
+            "apparatus": "Units",
+            "narrative": "Narrative",
+            "personnel": "Members",
+            "department": "Agency"
+          }
+        },
+        "contentHash": "045a07558163ae0ce57d3f7db4fdf0888d459460ca4b2fdaba0f060de366fd16",
+        "changeSummary": "updated draft",
+        "effectiveFrom": "2026-07-28T13:40:54.318Z",
+        "effectiveTo": "2026-07-28T13:40:55.867Z",
+        "publishedAt": "2026-07-28T13:40:54.318Z",
+        "scheduledFor": null,
+        "createdByUserId": "019f9c33-288e-7171-8d94-b76c4a4658b6",
+        "publishedByUserId": "019f9c33-288e-7171-8d94-b76c4a4658b6",
+        "supersedesVersionId": "019fa879-80e3-766c-a167-4c82ca7b739e",
+        "recordVersion": 2,
+        "createdAt": "2026-07-28T13:40:53.646Z",
+        "updatedAt": "2026-07-28T13:40:55.867Z"
+      }
+    },
+    "meta": {
+      "requestId": "e46cce370360d9a97d7678d976cc33fe",
+      "correlationId": "cf1dc08511b8d30806e7b95fce68c05f"
+    }
+  },
+  "effectivePast": {
+    "data": {
+      "namespace": "terminology",
+      "objectKey": "default",
+      "object": {
+        "id": "019fa876-84b0-703f-99d6-a40c0346d093",
+        "tenantId": "019f9e06-a0b2-75f4-9e0b-5ae9befd8193",
+        "namespace": "terminology",
+        "objectKey": "default",
+        "displayName": "Terminology Manager",
+        "currentPublishedVersionId": "019fa8f5-0148-714a-8c13-bde1f47fdab1",
+        "recordVersion": 10,
+        "createdAt": "2026-07-28T11:22:47.337Z",
+        "updatedAt": "2026-07-28T13:40:56.783Z"
+      },
+      "payload": {
+        "terms": {
+          "incident": "Incident",
+          "narrative": "Narrative",
+          "station": "Station",
+          "unit": "Unit"
+        }
+      },
+      "version": null,
+      "source": "default"
+    },
+    "meta": {
+      "requestId": "c26c6610f55cbf699631d41be4f96dbb",
+      "correlationId": "635f02d00e1c47422854464932842ae2"
+    }
+  }
+}

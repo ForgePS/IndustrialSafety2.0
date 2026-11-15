@@ -1,0 +1,34 @@
+{
+  "ok": true,
+  "at": "2026-08-06T14:51:44.757Z",
+  "cluster": "forge-development-ecs-platform",
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/bc8c3d61e49b4b65bab5bc1f8c73840e",
+  "exitCode": 0,
+  "downloaded": [
+    "C:\\Users\\jerem\\Projects\\forge-platform-p3-master\\docs\\program\\industrial-migration\\ind-11\\evidence\\p2\\03-storage\\s3-remount-prod-twin-objects-2026-08-06T14-51-10-908Z.json",
+    "C:\\Users\\jerem\\Projects\\forge-platform-p3-master\\docs\\program\\industrial-migration\\ind-11\\evidence\\p2\\03-storage\\s3-remount-prod-twin-reconcile.json",
+    "C:\\Users\\jerem\\Projects\\forge-platform-p3-master\\docs\\program\\industrial-migration\\ind-11\\evidence\\p2\\03-storage\\s3-remount-prod-twin-result-2026-08-06T14-51-10-908Z.json",
+    "C:\\Users\\jerem\\Projects\\forge-platform-p3-master\\docs\\program\\industrial-migration\\ind-11\\evidence\\p2\\03-storage\\s3-remount-prod-twin-result.json"
+  ],
+  "resultCounts": {
+    "planned": 9077,
+    "copied": 9057,
+    "skipped_existing": 20,
+    "error": 0
+  },
+  "reconcile": {
+    "ok": true,
+    "at": "2026-08-06T14:51:10.908Z",
+    "expected": {
+      "objects": 9077,
+      "bytes": 16516836986
+    },
+    "observed": {
+      "objects": 9077,
+      "bytes": 16516836986,
+      "prefix": "tenants/5da680d3-50f5-46ac-8b85-6cf454b6a0da/"
+    },
+    "note": "Prod-twin prefix list vs full staging map counts/bytes"
+  },
+  "logTail": "{\"phase\":\"PRODUCERS-P2-storage-s3-remount-prod-twin\",\"mode\":\"sdk\",\"planned\":9077,\"concurrency\":16,\"skipExisting\":true}\n{\n  \"ok\": true,\n  \"counts\": {\n    \"planned\": 9077,\n    \"copied\": 9057,\n    \"skipped_existing\": 20,\n    \"error\": 0\n  },\n  \"reconcile\": {\n    \"ok\": true,\n    \"at\": \"2026-08-06T14:51:10.908Z\",\n    \"expected\": {\n      \"objects\": 9077,\n      \"bytes\": 16516836986\n    },\n    \"observed\": {\n      \"objects\": 9077,\n      \"bytes\": 16516836986,\n      \"prefix\": \"tenants/5da680d3-50f5-46ac-8b85-6cf454b6a0da/\"\n    },\n    \"note\": \"Prod-twin prefix list vs full staging map counts/bytes\"\n  },\n  \"written\": {\n    \"resultPath\": \"/tmp/p2-remount-evid/s3-remount-prod-twin-result-2026-08-06T14-51-10-908Z.json\",\n    \"latest\": \"/tmp/p2-remount-evid/s3-remount-prod-twin-result.json\",\n    \"objectsPath\": \"/tmp/p2-remount-evid/s3-remount-prod-twin-objects-2026-08-06T14-51-10-908Z.json\",\n    \"reconcilePath\": \"/tmp/p2-remount-evid/s3-remount-prod-twin-reconcile.json\"\n  }\n}\n{\"uploaded\":\"s3://forge-development-imports-511343547817-us-east-1/ind11b/p2-remount-prod-twin/2026-08-06T14-47-46-219Z/out/s3-remount-prod-twin-objects-2026-08-06T14-51-10-908Z.json\"}\n{\"uploaded\":\"s3://forge-development-imports-511343547817-us-east-1/ind11b/p2-remount-prod-twin/2026-08-06T14-47-46-219Z/out/s3-remount-prod-twin-reconcile.json\"}\n{\"uploaded\":\"s3://forge-development-imports-511343547817-us-east-1/ind11b/p2-remount-prod-twin/2026-08-06T14-47-46-219Z/out/s3-remount-prod-twin-result-2026-08-06T14-51-10-908Z.json\"}\n{\"uploaded\":\"s3://forge-development-imports-511343547817-us-east-1/ind11b/p2-remount-prod-twin/2026-08-06T14-47-46-219Z/out/s3-remount-prod-twin-result.json\"}"
+}

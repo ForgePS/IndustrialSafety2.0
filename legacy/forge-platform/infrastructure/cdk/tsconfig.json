@@ -1,0 +1,12 @@
+{
+  "extends": "../../packages/typescript-config/node.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": ".",
+    "declaration": false,
+    "declarationMap": false,
+    "exactOptionalPropertyTypes": false
+  },
+  "include": ["bin/**/*.ts", "lib/**/*.ts", "test/**/*.ts"],
+  "exclude": ["node_modules", "dist", "cdk.out", "**/*.test.ts"]
+}

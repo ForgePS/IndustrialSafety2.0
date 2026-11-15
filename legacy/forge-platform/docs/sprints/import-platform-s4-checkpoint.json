@@ -1,0 +1,19 @@
+{
+  "sprint": "S4",
+  "capability": "Universal Import Platform - Duplicates ZIP API",
+  "status": "READY_FOR_REVIEW",
+  "date": "2026-07-29",
+  "migration": "0025_import_platform_s4_duplicates",
+  "apiTaskDefinition": 35,
+  "imageTag": "import-s4-20260729124000",
+  "migrateExitCode": 0,
+  "unitTests": { "package": "@forge/imports", "passed": 27 },
+  "smoke": {
+    "health": 200,
+    "duplicatesUnauth": 401,
+    "zipValidateUnauth": 401,
+    "apiSourceValidateUnauth": 401
+  },
+  "prior": { "S3": "ACCEPTED" },
+  "next": "Await ACCEPTED before S5"
+}

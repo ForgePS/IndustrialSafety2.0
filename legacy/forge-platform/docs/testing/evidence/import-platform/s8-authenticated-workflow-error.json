@@ -1,0 +1,4 @@
+{
+  "error": "Error: scan/detect did not reach READY_FOR_MAPPING: SCANNING",
+  "stack": "Error: scan/detect did not reach READY_FOR_MAPPING: SCANNING\n    at main (file:///C:/Users/jerem/Projects/forge-platform/scripts/import-s8-authenticated-workflow.mjs:168:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+}

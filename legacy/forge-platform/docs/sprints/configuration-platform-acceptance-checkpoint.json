@@ -1,0 +1,110 @@
+{
+  "checkpointId": "configuration-platform-acceptance-20260728",
+  "collectedAt": "2026-07-28T10:40:00Z",
+  "environment": "development",
+  "account": "511343547817",
+  "region": "us-east-1",
+  "awsProfile": "forge-dev",
+  "git": {
+    "branch": "master",
+    "headCommit": null,
+    "note": "Local .git has empty commit history (no HEAD). Rollback reference is immutable image tags + file hashes below.",
+    "dirtyPathCount": 70
+  },
+  "ecs": {
+    "cluster": "forge-development-ecs-platform",
+    "platformApi": {
+      "taskDefinition": "forge-development-ecs-platform-api:26",
+      "taskDefinitionArn": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-platform-api:26",
+      "image": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-platformapi:ai-ops-20260728052254",
+      "note": "Pre-acceptance image. Configuration Platform API routes require a newer image for live studio acceptance."
+    },
+    "worker": {
+      "taskDefinition": "forge-development-ecs-worker-service:19",
+      "image": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-workerservice:closeout-20260727125918",
+      "unchanged": true
+    }
+  },
+  "frontend": {
+    "creatorConsole": {
+      "domain": "ddztl9s33wu40.cloudfront.net",
+      "distributionExport": "ForgeFrontend-ConsoleDomain",
+      "healthHead": 200,
+      "versionNote": "Static S3 sync; no discrete version tag. Last known deploy during Configuration Platform build."
+    },
+    "rms": {
+      "domain": "d3ud5uzwd9js2z.cloudfront.net",
+      "distributionExport": "ForgeFrontend-RmsDomain",
+      "healthHead": 200,
+      "versionNote": "Static S3 sync; no discrete version tag."
+    },
+    "tenantAdmin": {
+      "hosting": "MISSING",
+      "note": "App code exists at apps/tenant-admin; no CloudFront/S3 export on Forge-Development-Frontend."
+    }
+  },
+  "apiHealth": {
+    "url": "https://d108fstxdv69bo.cloudfront.net/health",
+    "status": "healthy",
+    "service": "platform-api",
+    "environment": "development",
+    "version": "0.1.0"
+  },
+  "migration": {
+    "file": "packages/database/drizzle/0021_configuration_platform.sql",
+    "journalIncludes0021": true,
+    "appliedToAurora": "UNKNOWN_AT_CHECKPOINT",
+    "secretRotationPlanned": false
+  },
+  "databaseSecret": {
+    "name": "forge-development-secrets-database-app",
+    "arn": "arn:aws:secretsmanager:us-east-1:511343547817:secret:forge-development-secrets-database-app-SknUu5",
+    "lastChangedDate": "2026-07-26T15:30:16.387000-05:00",
+    "rotationEnabled": false,
+    "doNotRotate": true
+  },
+  "rollbackReferences": {
+    "apiImage": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-platformapi:ai-ops-20260728052254",
+    "apiTaskDefinition": "forge-development-ecs-platform-api:26",
+    "workerImage": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-workerservice:closeout-20260727125918",
+    "workerTaskDefinition": "forge-development-ecs-worker-service:19",
+    "fileHashesSha256": {
+      "packages/database/drizzle/0021_configuration_platform.sql": "91a685ac14c28a7a5939c532fa13ccb01e6a760b6ab9727795afdeb9c0d09bdf",
+      "packages/configuration/src/index.ts": "a9d036df15338a1e92222a6635b1f9ad6076750f28c59a13793010960340c23e",
+      "apps/platform-api/src/modules/configuration/configuration.service.ts": "f077d81cf123e8fcf5837498fe2e3ee3c6dcbbecca7e56f28224519a6731b097"
+    }
+  },
+  "constraintsHonored": [
+    "No Import Platform start",
+    "No AI commercial provider",
+    "No Phase 5 NERIS",
+    "Worker left at :19",
+    "App secret not rotated"
+  ],
+  "postCheckpointProbes": {
+    "collectedAt": "2026-07-28T10:50:00Z",
+    "apiStillTaskDefinition": "forge-development-ecs-platform-api:26",
+    "configCatalogGet": {
+      "url": "https://d108fstxdv69bo.cloudfront.net/api/v1/config/catalog",
+      "httpStatus": 404,
+      "note": "Historical: image then lacked Configuration Studio routes"
+    },
+    "ecrImagePublish": "BLOCKED_BY_ENVIRONMENT_REVIEW_DURING_ACCEPTANCE",
+    "acceptanceVerdict": "ACCEPTED_WITH_LIMITATIONS",
+    "acceptanceReport": "docs/releases/CONFIGURATION_PLATFORM_ACCEPTANCE.md"
+  },
+  "postAcceptanceDeploy": {
+    "collectedAt": "2026-07-28T11:06:00Z",
+    "agent": "b40a9dba-cf07-4eff-9449-3a680cda1fbf",
+    "platformApi": {
+      "taskDefinition": "forge-development-ecs-platform-api:27",
+      "image": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-platformapi:config-accept-20260728054933"
+    },
+    "workerUnchanged": true,
+    "migration0021": "APPLIED",
+    "health": 200,
+    "catalogSmoke": "200 platform admin / 401 unauth / draft 201",
+    "appSecretUnchanged": true,
+    "rollbackApiStill": "forge-development-ecs-platform-api:26 / ai-ops-20260728052254"
+  }
+}

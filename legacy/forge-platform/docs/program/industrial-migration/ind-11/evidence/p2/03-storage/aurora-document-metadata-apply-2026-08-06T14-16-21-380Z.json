@@ -1,0 +1,237 @@
+{
+  "ok": false,
+  "at": "2026-08-06T14:16:21.380Z",
+  "mode": "apply",
+  "cluster": "forge-development-ecs-platform",
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/8c121b843fbd4d2f8bbe8f8f66cb814e",
+  "exitCode": 1,
+  "mapUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p2-doc-meta/2026-08-06T14-15-12-638Z/s3-map-staging.json",
+  "loaderUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p2-doc-meta/2026-08-06T14-15-12-638Z/aurora-document-metadata-ecs-loader.mjs",
+  "result": {
+    "ok": false,
+    "phase": "PRODUCERS-P2-storage-aurora-metadata",
+    "mode": "apply",
+    "startedAt": "2026-08-06T14:15:51.982Z",
+    "finishedAt": "2026-08-06T14:15:52.435Z",
+    "tenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+    "mapUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p2-doc-meta/2026-08-06T14-15-12-638Z/s3-map-staging.json",
+    "counts": {
+      "planned": 9077,
+      "documentsInserted": 0,
+      "documentsUpdated": 0,
+      "versionsInserted": 0,
+      "versionsUpdated": 0,
+      "skipped": 0,
+      "error": 9077
+    },
+    "after": {
+      "platform_documents": 0,
+      "versions_by_status": []
+    },
+    "sample": [],
+    "errors": [
+      {
+        "batchStart": 0,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 100,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 200,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 300,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 400,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 500,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 600,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 700,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 800,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 900,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 1000,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 1100,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 1200,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 1300,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 1400,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 1500,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 1600,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 1700,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 1800,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 1900,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 2000,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 2100,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 2200,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 2300,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 2400,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 2500,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 2600,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 2700,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 2800,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 2900,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 3000,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 3100,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 3200,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 3300,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 3400,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 3500,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 3600,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 3700,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 3800,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      },
+      {
+        "batchStart": 3900,
+        "batchSize": 100,
+        "error": "insert or update on table \"platform_documents\" violates foreign key constraint \"platform_documents_current_version_fk\""
+      }
+    ],
+    "avNote": "AV Option B time-boxed waiver (av-approach-decision.md) expires 2026-09-05; sample re-scan committed"
+  },
+  "logTail": "{\"dbUser\":\"forge_admin\",\"tenant\":{\"id\":\"0882c865-59c2-49a6-ab88-ce6ca89be30c\",\"tenant_key\":\"producers-rice-mill-staging\",\"slug\":\"producers-rice-mill-staging\"},\"mode\":\"apply\",\"planned\":9077}\n{\n  \"ok\": false,\n  \"phase\": \"PRODUCERS-P2-storage-aurora-metadata\",\n  \"mode\": \"apply\",\n  \"startedAt\": \"2026-08-06T14:15:51.982Z\",\n  \"finishedAt\": \"2026-08-06T14:15:52.435Z\",\n  \"tenantId\": \"0882c865-59c2-49a6-ab88-ce6ca89be30c\",\n  \"mapUri\": \"s3://forge-development-imports-511343547817-us-east-1/ind11b/p2-doc-meta/2026-08-06T14-15-12-638Z/s3-map-staging.json\",\n  \"counts\": {\n    \"planned\": 9077,\n    \"documentsInserted\": 0,\n    \"documentsUpdated\": 0,\n    \"versionsInserted\": 0,\n    \"versionsUpdated\": 0,\n    \"skipped\": 0,\n    \"error\": 9077\n  },\n  \"after\": {\n    \"platform_documents\": 0,\n    \"versions_by_status\": []\n  },\n  \"sample\": [],\n  \"errors\": [\n    {\n      \"batchStart\": 0,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 100,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 200,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 300,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 400,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 500,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 600,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 700,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 800,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 900,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 1000,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 1100,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 1200,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 1300,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 1400,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 1500,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 1600,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 1700,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 1800,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 1900,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 2000,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 2100,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 2200,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 2300,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 2400,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 2500,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 2600,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 2700,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 2800,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 2900,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 3000,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 3100,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 3200,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 3300,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 3400,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 3500,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 3600,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 3700,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 3800,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    },\n    {\n      \"batchStart\": 3900,\n      \"batchSize\": 100,\n      \"error\": \"insert or update on table \\\"platform_documents\\\" violates foreign key constraint \\\"platform_documents_current_version_fk\\\"\"\n    }\n  ],\n  \"avNote\": \"AV Option B time-boxed waiver (av-approach-decision.md) expires 2026-09-05; sample re-scan committed\"\n}"
+}

@@ -1,0 +1,1862 @@
+openapi: 3.0.3
+info:
+  title: Forge Platform API
+  version: 1.0.0
+  description: |
+    Platform API Contract v1 (Sprint 1E). Frozen at Wave 9.
+
+    Auth: Cognito Bearer access token, or `x-forge-dev-principal` in local/development/testing.
+
+    Authorization is permission-based; Cognito groups are not evaluated.
+
+    Identity bootstrap uses SECURITY DEFINER functions (ADR-029); see platform-contract-v1.md.
+
+    Related docs: platform-contract-v1.md, platform-errors-v1.md, platform-permissions-v1.md,
+    platform-events-v1.md, platform-versioning-policy.md
+servers:
+  - url: https://api-dev.example.com
+    description: Development (HTTPS when domains block is configured; HTTP until DNS delegated)
+  - url: http://localhost:3000
+    description: Local
+tags:
+  - name: Auth
+  - name: Invitations
+  - name: Tenants
+  - name: Organizations
+  - name: Persons
+  - name: Users
+  - name: Memberships
+  - name: Authorization
+  - name: Catalog
+  - name: Entitlements
+  - name: Subscriptions
+  - name: FeatureFlags
+  - name: Configuration
+  - name: Branding
+  - name: Audit
+  - name: Onboarding
+paths:
+  /api/v1/auth/me:
+    get:
+      tags: [Auth]
+      summary: Current principal and selectable tenants
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      responses:
+        "200":
+          description: Principal summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessAuthMe"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/v1/auth/select-tenant:
+    post:
+      tags: [Auth]
+      summary: Select active tenant context
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tenantId]
+              properties:
+                tenantId:
+                  type: string
+                  format: uuid
+      responses:
+        "200":
+          description: Updated principal summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessAuthMe"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/auth/logout-all:
+    post:
+      tags: [Auth]
+      summary: Revoke all sessions for the current user
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      responses:
+        "200":
+          description: Session version bumped
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccessEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          sessionVersion:
+                            type: integer
+  /api/v1/auth/invitations:
+    post:
+      tags: [Invitations]
+      summary: Create invitation
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInvitationInput"
+      responses:
+        "200":
+          description: Invitation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessInvitation"
+        "409":
+          $ref: "#/components/responses/IdempotencyConflict"
+    get:
+      tags: [Invitations]
+      summary: List invitations
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - name: tenantId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: email
+          in: query
+          schema:
+            type: string
+            format: email
+      responses:
+        "200":
+          description: Invitation list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessInvitationList"
+  /api/v1/auth/invitations/accept:
+    post:
+      tags: [Invitations]
+      summary: Accept invitation (public)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AcceptInvitationInput"
+      responses:
+        "200":
+          description: Invitation accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+  /api/v1/auth/invitations/{invitationId}:
+    get:
+      tags: [Invitations]
+      summary: Get invitation
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/InvitationId"
+        - name: tenantId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Invitation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessInvitation"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/auth/invitations/{invitationId}/resend:
+    post:
+      tags: [Invitations]
+      summary: Resend invitation
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/InvitationId"
+        - name: tenantId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Invitation resent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessInvitation"
+  /api/v1/auth/invitations/{invitationId}/revoke:
+    post:
+      tags: [Invitations]
+      summary: Revoke invitation
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/InvitationId"
+        - name: tenantId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReasonBody"
+      responses:
+        "200":
+          description: Invitation revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessInvitation"
+  /api/v1/platform/tenants:
+    post:
+      tags: [Tenants]
+      summary: Create tenant
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTenantInput"
+      responses:
+        "200":
+          description: Tenant created
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+    get:
+      tags: [Tenants]
+      summary: List tenants
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      responses:
+        "200":
+          description: Tenant list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+  /api/v1/platform/tenants/{tenantId}:
+    get:
+      tags: [Tenants]
+      summary: Get tenant
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Tenant
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+    patch:
+      tags: [Tenants]
+      summary: Update tenant
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IfMatch"
+      responses:
+        "200":
+          description: Updated tenant
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+        "412":
+          $ref: "#/components/responses/PreconditionFailed"
+        "428":
+          $ref: "#/components/responses/PreconditionRequired"
+  /api/v1/platform/tenants/{tenantId}/activate:
+    post:
+      tags: [Tenants]
+      summary: Activate tenant
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IfMatch"
+      responses:
+        "200":
+          description: Tenant activated
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+  /api/v1/platform/tenants/{tenantId}/suspend:
+    post:
+      tags: [Tenants]
+      summary: Suspend tenant
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IfMatch"
+      responses:
+        "200":
+          description: Tenant suspended
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+  /api/v1/platform/tenants/{tenantId}/archive:
+    post:
+      tags: [Tenants]
+      summary: Archive tenant
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IfMatch"
+      responses:
+        "200":
+          description: Tenant archived
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+  /api/v1/platform/products:
+    get:
+      tags: [Catalog]
+      summary: List platform products
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      responses:
+        "200":
+          description: Product catalog
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+  /api/v1/platform/modules:
+    get:
+      tags: [Catalog]
+      summary: List platform modules
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      responses:
+        "200":
+          description: Module catalog
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+  /api/v1/platform/features:
+    get:
+      tags: [FeatureFlags]
+      summary: List feature flag definitions
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      responses:
+        "200":
+          description: Feature definitions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+  /api/v1/tenants/{tenantId}/organizations:
+    post:
+      tags: [Organizations]
+      summary: Create organization
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrganizationInput"
+      responses:
+        "200":
+          description: Organization created
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+    get:
+      tags: [Organizations]
+      summary: List organizations
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Organization list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+  /api/v1/tenants/{tenantId}/organizations/{organizationId}:
+    get:
+      tags: [Organizations]
+      summary: Get organization
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/OrganizationId"
+      responses:
+        "200":
+          description: Organization
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+    patch:
+      tags: [Organizations]
+      summary: Update organization
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/OrganizationId"
+        - $ref: "#/components/parameters/IfMatch"
+      responses:
+        "200":
+          description: Updated organization
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+  /api/v1/tenants/{tenantId}/organizations/{organizationId}/archive:
+    post:
+      tags: [Organizations]
+      summary: Archive organization
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/OrganizationId"
+        - $ref: "#/components/parameters/IfMatch"
+      responses:
+        "200":
+          description: Archived organization
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+  /api/v1/tenants/{tenantId}/persons:
+    post:
+      tags: [Persons]
+      summary: Create person
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePersonInput"
+      responses:
+        "200":
+          description: Person created
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+    get:
+      tags: [Persons]
+      summary: List persons
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: q
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Person list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+  /api/v1/tenants/{tenantId}/persons/merge:
+    post:
+      tags: [Persons]
+      summary: Merge persons
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Merge result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+  /api/v1/tenants/{tenantId}/persons/{personId}:
+    get:
+      tags: [Persons]
+      summary: Get person
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PersonId"
+      responses:
+        "200":
+          description: Person
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+    patch:
+      tags: [Persons]
+      summary: Update person
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PersonId"
+        - $ref: "#/components/parameters/IfMatch"
+      responses:
+        "200":
+          description: Updated person
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+  /api/v1/tenants/{tenantId}/persons/{personId}/archive:
+    post:
+      tags: [Persons]
+      summary: Archive person
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PersonId"
+        - $ref: "#/components/parameters/IfMatch"
+      responses:
+        "200":
+          description: Archived person
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+  /api/v1/tenants/{tenantId}/users:
+    get:
+      tags: [Users]
+      summary: List users
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: User list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+  /api/v1/tenants/{tenantId}/users/invitations:
+    post:
+      tags: [Users]
+      summary: Invite user (legacy tenant-scoped path)
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Invitation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+  /api/v1/tenants/{tenantId}/users/{userId}:
+    get:
+      tags: [Users]
+      summary: Get user
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          description: User
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+    patch:
+      tags: [Users]
+      summary: Update user
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/UserId"
+        - $ref: "#/components/parameters/IfMatch"
+      responses:
+        "200":
+          description: Updated user
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+  /api/v1/tenants/{tenantId}/users/{userId}/disable:
+    post:
+      tags: [Users]
+      summary: Disable user
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/UserId"
+        - $ref: "#/components/parameters/IfMatch"
+      responses:
+        "200":
+          description: User disabled
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+  /api/v1/tenants/{tenantId}/users/{userId}/enable:
+    post:
+      tags: [Users]
+      summary: Enable user
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/UserId"
+        - $ref: "#/components/parameters/IfMatch"
+      responses:
+        "200":
+          description: User enabled
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+  /api/v1/tenants/{tenantId}/memberships:
+    get:
+      tags: [Memberships]
+      summary: List memberships
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [PENDING, ACTIVE, SUSPENDED, EXPIRED, REVOKED, ARCHIVED]
+        - name: userId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Membership list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+    post:
+      tags: [Memberships]
+      summary: Create membership
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMembershipInput"
+      responses:
+        "200":
+          description: Membership created
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+  /api/v1/tenants/{tenantId}/memberships/{membershipId}:
+    get:
+      tags: [Memberships]
+      summary: Get membership
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/MembershipId"
+      responses:
+        "200":
+          description: Membership
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+    patch:
+      tags: [Memberships]
+      summary: Update membership
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/MembershipId"
+        - $ref: "#/components/parameters/IfMatch"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatchMembershipInput"
+      responses:
+        "200":
+          description: Updated membership
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+  /api/v1/tenants/{tenantId}/memberships/{membershipId}/activate:
+    post:
+      tags: [Memberships]
+      summary: Activate membership
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/MembershipId"
+        - $ref: "#/components/parameters/IfMatch"
+      responses:
+        "200":
+          description: Membership activated
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+  /api/v1/tenants/{tenantId}/memberships/{membershipId}/suspend:
+    post:
+      tags: [Memberships]
+      summary: Suspend membership
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/MembershipId"
+        - $ref: "#/components/parameters/IfMatch"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReasonBody"
+      responses:
+        "200":
+          description: Membership suspended
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+  /api/v1/tenants/{tenantId}/memberships/{membershipId}/revoke:
+    post:
+      tags: [Memberships]
+      summary: Revoke membership
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/MembershipId"
+        - $ref: "#/components/parameters/IfMatch"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReasonBody"
+      responses:
+        "200":
+          description: Membership revoked
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+  /api/v1/tenants/{tenantId}/memberships/{membershipId}/roles:
+    get:
+      tags: [Memberships]
+      summary: List membership roles
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/MembershipId"
+      responses:
+        "200":
+          description: Role assignments
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+    put:
+      tags: [Memberships]
+      summary: Set membership roles
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/MembershipId"
+        - $ref: "#/components/parameters/IfMatch"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetMembershipRolesInput"
+      responses:
+        "200":
+          description: Roles updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+  /api/v1/tenants/{tenantId}/memberships/{membershipId}/products:
+    get:
+      tags: [Memberships]
+      summary: Get membership product access
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/MembershipId"
+      responses:
+        "200":
+          description: Product and module access
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+    put:
+      tags: [Memberships]
+      summary: Set membership product access
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/MembershipId"
+        - $ref: "#/components/parameters/IfMatch"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetMembershipProductsInput"
+      responses:
+        "200":
+          description: Access updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+  /api/v1/tenants/{tenantId}/memberships/{membershipId}/history:
+    get:
+      tags: [Memberships]
+      summary: Membership history
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/MembershipId"
+      responses:
+        "200":
+          description: History entries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+  /api/v1/tenants/{tenantId}/permissions:
+    get:
+      tags: [Authorization]
+      summary: List permission catalog
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+  /api/v1/tenants/{tenantId}/roles:
+    post:
+      tags: [Authorization]
+      summary: Create role
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Role created
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+    get:
+      tags: [Authorization]
+      summary: List roles
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Role list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+  /api/v1/authorization/check:
+    post:
+      tags: [Authorization]
+      summary: Programmatic authorization check
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      responses:
+        "200":
+          description: Check result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+  /api/v1/tenants/{tenantId}/entitlements:
+    get:
+      tags: [Entitlements]
+      summary: List tenant entitlements
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Entitlements
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+  /api/v1/tenants/{tenantId}/subscriptions:
+    post:
+      tags: [Subscriptions]
+      summary: Create subscription
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Subscription created
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+    get:
+      tags: [Subscriptions]
+      summary: List subscriptions
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Subscriptions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+  /api/v1/tenants/{tenantId}/subscriptions/current:
+    get:
+      tags: [Subscriptions]
+      summary: Current subscription
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Current subscription
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+  /api/v1/tenants/{tenantId}/features/effective:
+    get:
+      tags: [FeatureFlags]
+      summary: Effective feature flags for tenant
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Effective flags
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+  /api/v1/tenants/{tenantId}/features/{featureKey}:
+    put:
+      tags: [FeatureFlags]
+      summary: Set tenant feature flag
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: featureKey
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Flag set
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+    delete:
+      tags: [FeatureFlags]
+      summary: Remove tenant feature override
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: featureKey
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Override removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+  /api/v1/tenants/{tenantId}/configuration:
+    get:
+      tags: [Configuration]
+      summary: List all configuration
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Configuration entries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+  /api/v1/tenants/{tenantId}/configuration/{namespace}/{key}:
+    put:
+      tags: [Configuration]
+      summary: Set configuration value
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Configuration updated
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+  /api/v1/tenants/{tenantId}/branding:
+    get:
+      tags: [Branding]
+      summary: Get tenant branding
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Branding
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+    put:
+      tags: [Branding]
+      summary: Update tenant branding
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Branding updated
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessVersionedResource"
+  /api/v1/tenants/{tenantId}/audit-events:
+    get:
+      tags: [Audit]
+      summary: List audit events
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 25
+      responses:
+        "200":
+          description: Audit events
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+  /api/v1/platform/onboarding/templates:
+    get:
+      tags: [Onboarding]
+      summary: List starter templates
+      description: Starter templates with resolved onboarding steps (MK-S7).
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      responses:
+        "200":
+          description: Starter templates
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+  /api/v1/platform/onboarding/sessions:
+    post:
+      tags: [Onboarding]
+      summary: Start onboarding session (planned Wave 5)
+      description: Contract target per ADR-027; HTTP handler not yet deployed.
+      security:
+        - bearerAuth: []
+        - devPrincipal: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartOnboardingInput"
+      responses:
+        "200":
+          description: Session started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccessEnvelope"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Amazon Cognito access token
+    devPrincipal:
+      type: apiKey
+      in: header
+      name: x-forge-dev-principal
+      description: JSON {"userId","tenantId"} for local/development/testing only
+  parameters:
+    TenantId:
+      name: tenantId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    InvitationId:
+      name: invitationId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    OrganizationId:
+      name: organizationId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    PersonId:
+      name: personId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    MembershipId:
+      name: membershipId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema:
+        type: string
+        maxLength: 255
+      description: Optional durable idempotency key (ADR-022)
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      schema:
+        type: string
+      description: Weak ETag W/"recordVersion" or * (ADR-023)
+    XRequestId:
+      name: X-Request-Id
+      in: header
+      required: false
+      schema:
+        type: string
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiErrorBody"
+          example:
+            error:
+              code: UNAUTHORIZED
+              message: Invalid or expired access token
+              details: []
+              requestId: req-example
+              correlationId: corr-example
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiErrorBody"
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiErrorBody"
+    IdempotencyConflict:
+      description: Idempotency conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiErrorBody"
+          example:
+            error:
+              code: IDEMPOTENCY_CONFLICT
+              message: Idempotency-Key was already used with a different request body
+              details: []
+              requestId: req-example
+              correlationId: corr-example
+    PreconditionFailed:
+      description: Stale If-Match
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiErrorBody"
+          example:
+            error:
+              code: PRECONDITION_FAILED
+              message: membership was modified by another request
+              details:
+                - resourceType: membership
+                  resourceId: "00000000-0000-4000-8000-000000000001"
+                  expectedVersion: 2
+                  actualVersion: 3
+              requestId: req-example
+              correlationId: corr-example
+    PreconditionRequired:
+      description: If-Match required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiErrorBody"
+          example:
+            error:
+              code: PRECONDITION_REQUIRED
+              message: If-Match is required when updating membership
+              details: []
+              requestId: req-example
+              correlationId: corr-example
+  schemas:
+    ApiMeta:
+      type: object
+      required: [requestId, correlationId]
+      properties:
+        requestId:
+          type: string
+        correlationId:
+          type: string
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+    ApiSuccessEnvelope:
+      type: object
+      required: [data, meta]
+      properties:
+        data: {}
+        meta:
+          $ref: "#/components/schemas/ApiMeta"
+    ApiSuccessVersionedResource:
+      allOf:
+        - $ref: "#/components/schemas/ApiSuccessEnvelope"
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                recordVersion:
+                  type: integer
+                  minimum: 1
+    ApiSuccessAuthMe:
+      allOf:
+        - $ref: "#/components/schemas/ApiSuccessEnvelope"
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+                tenantId:
+                  type: string
+                  format: uuid
+                permissions:
+                  type: array
+                  items:
+                    type: string
+                tenants:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      tenantId:
+                        type: string
+                        format: uuid
+                      membershipStatus:
+                        type: string
+                      selectable:
+                        type: boolean
+    ApiSuccessInvitation:
+      allOf:
+        - $ref: "#/components/schemas/ApiSuccessEnvelope"
+    ApiSuccessInvitationList:
+      allOf:
+        - $ref: "#/components/schemas/ApiSuccessEnvelope"
+    ApiErrorBody:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, details, requestId, correlationId]
+          properties:
+            code:
+              type: string
+              enum:
+                - BAD_REQUEST
+                - UNAUTHORIZED
+                - FORBIDDEN
+                - NOT_FOUND
+                - CONFLICT
+                - VALIDATION_FAILED
+                - TENANT_SUSPENDED
+                - TENANT_INACTIVE
+                - SUBSCRIPTION_INACTIVE
+                - ENTITLEMENT_REQUIRED
+                - IDEMPOTENCY_CONFLICT
+                - IDEMPOTENCY_IN_PROGRESS
+                - PRECONDITION_REQUIRED
+                - PRECONDITION_FAILED
+                - RATE_LIMITED
+                - INTERNAL_ERROR
+            message:
+              type: string
+            details:
+              type: array
+              items: {}
+            requestId:
+              type: string
+            correlationId:
+              type: string
+    ReasonBody:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+    CreateTenantInput:
+      type: object
+      required: [tenantKey, slug, legalName, displayName]
+      properties:
+        tenantKey:
+          type: string
+          pattern: "^[a-z0-9][a-z0-9_-]*$"
+        slug:
+          type: string
+        legalName:
+          type: string
+        displayName:
+          type: string
+        tenantType:
+          type: string
+          default: CUSTOMER
+        timezone:
+          type: string
+          default: America/Chicago
+        defaultLocale:
+          type: string
+          default: en-US
+        dataRegion:
+          type: string
+          default: us-east-1
+    CreateOrganizationInput:
+      type: object
+      required: [organizationTypeCode, slug, legalName, displayName]
+      properties:
+        organizationTypeCode:
+          type: string
+        slug:
+          type: string
+        legalName:
+          type: string
+        displayName:
+          type: string
+        parentOrganizationId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+    CreatePersonInput:
+      type: object
+      required: [firstName, lastName]
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        dateOfBirth:
+          type: string
+          pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+    CreateInvitationInput:
+      type: object
+      required: [tenantId, email]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        organizationId:
+          type: string
+          format: uuid
+        roleCodes:
+          type: array
+          items:
+            type: string
+        productCodes:
+          type: array
+          items:
+            type: string
+        moduleCodes:
+          type: array
+          items:
+            type: string
+        expiresInHours:
+          type: integer
+          default: 168
+        send:
+          type: boolean
+          default: true
+    AcceptInvitationInput:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+          minLength: 16
+        cognitoSubject:
+          type: string
+    CreateMembershipInput:
+      type: object
+      required: [userId]
+      properties:
+        userId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [PENDING, ACTIVE]
+          default: PENDING
+        isDefaultTenant:
+          type: boolean
+          default: false
+        expiresAt:
+          type: string
+          format: date-time
+        roleCodes:
+          type: array
+          items:
+            type: string
+        productCodes:
+          type: array
+          items:
+            type: string
+        moduleCodes:
+          type: array
+          items:
+            type: string
+    PatchMembershipInput:
+      type: object
+      properties:
+        isDefaultTenant:
+          type: boolean
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+    SetMembershipRolesInput:
+      type: object
+      required: [roles]
+      properties:
+        roles:
+          type: array
+          items:
+            type: object
+            required: [roleCode]
+            properties:
+              roleCode:
+                type: string
+              organizationId:
+                type: string
+                format: uuid
+                nullable: true
+    SetMembershipProductsInput:
+      type: object
+      required: [productCodes]
+      properties:
+        productCodes:
+          type: array
+          items:
+            type: string
+        moduleCodes:
+          type: array
+          items:
+            type: string
+    StartOnboardingInput:
+      type: object
+      required: [customerType, tenantKey, slug, legalName, displayName]
+      properties:
+        customerType:
+          type: string
+          enum: [INDUSTRIAL, FIRE_DEPARTMENT, FIRE_ACADEMY, OTHER]
+        templateCode:
+          type: string
+        tenantKey:
+          type: string
+        slug:
+          type: string
+        legalName:
+          type: string
+        displayName:
+          type: string
+        timezone:
+          type: string
+          default: America/Chicago

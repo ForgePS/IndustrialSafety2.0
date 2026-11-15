@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "at": "2026-08-06T15:21:51.931Z",
+  "wave": "wave2a",
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/0e42d71418e04d8186e57b30632d70fb",
+  "exitCode": 0,
+  "payloadUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave2a/payload.json",
+  "loaderUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave2a/ecs-loader.mjs",
+  "remappedSha256": "637ce28af298aa426dc363bd7199d20d2b1e1f85bf12e4e54ead3bb8bd4271e7",
+  "logExcerpt": "{\"dbUser\":\"forge_admin\",\"batchId\":\"0c626d57-90f1-5d02-839b-7a0307e9236f\",\"wave\":\"2a\"}\t{\t  \"ok\": true,\t  \"phase\": \"IND-11B-wave2a\",\t  \"mode\": \"NONPRODUCTION_LOAD\",\t  \"environment\": \"development\",\t  \"migrationBatchId\": \"p4-staging-wave2a-2026-08-06T15-15-28-618Z\",\t  \"dbBatchId\": \"0c626d57-90f1-5d02-839b-7a0307e9236f\",\t  \"counts\": {\t    \"personnel\": 1008,\t    \"rejected\": 0\t  },\t  \"errorCount\": 0,\t  \"errors\": []\t}"
+}

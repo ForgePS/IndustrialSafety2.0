@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "at": "2026-08-06T15:23:00.091Z",
+  "wave": "wave2-remaining",
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/9db82110c74c42c7ad9d6e79818780c3",
+  "exitCode": 0,
+  "payloadUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave2-remaining/payload.json",
+  "loaderUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave2-remaining/ecs-loader.mjs",
+  "remappedSha256": "1d5f9bc1997d43c76c8cd035a1640b0057f70a6c367ac7060357332aa1475e00",
+  "logExcerpt": "{\"dbUser\":\"forge_admin\",\"batchId\":\"c691c114-3497-58c7-a50d-6a1345089b47\",\"wave\":\"2-remaining\"}\t{\t  \"ok\": true,\t  \"phase\": \"IND-11B-wave2-remaining\",\t  \"mode\": \"NONPRODUCTION_LOAD\",\t  \"environment\": \"development\",\t  \"migrationBatchId\": \"p4-staging-wave2-remaining-2026-08-06T15-15-28-618Z\",\t  \"dbBatchId\": \"c691c114-3497-58c7-a50d-6a1345089b47\",\t  \"counts\": {\t    \"trainingCourses\": 16,\t    \"trainingEnrollments\": 1,\t    \"formDefinitions\": 48,\t    \"formSubmissions\": 33,\t    \"inspections\": 5,\t    \"incidents\": 12\t  },\t  \"errorCount\": 0,\t  \"errors\": []\t}"
+}

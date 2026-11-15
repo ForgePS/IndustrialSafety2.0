@@ -1,0 +1,11 @@
+﻿{
+  "worker": {
+    "digest": "sha256:9df1d452ed237bacf2ab35f84c4c0832efd6611798465655b591a107f4c28ab7",
+    "repository": "forge-development-ecr-workerservice"
+  },
+  "api": {
+    "digest": "sha256:ee121aa53a77a8a8cde0a761d3684f77e13a4b44340602ee827c51aa8dc45e9f",
+    "repository": "forge-development-ecr-platformapi"
+  },
+  "tag": "import-s6-20260729202056"
+}

@@ -1,0 +1,10 @@
+{
+  "program": "FX-S0",
+  "motion": {
+    "fast": { "duration": "120ms", "easing": "cubic-bezier(0.2, 0, 0, 1)" },
+    "normal": { "duration": "200ms", "easing": "cubic-bezier(0.2, 0, 0, 1)" },
+    "slow": { "duration": "320ms", "easing": "cubic-bezier(0.2, 0, 0, 1)" },
+    "disabled": { "duration": "0ms", "easing": "linear" }
+  },
+  "reducedMotion": "Use motion.disabled for all non-essential motion when prefers-reduced-motion: reduce."
+}

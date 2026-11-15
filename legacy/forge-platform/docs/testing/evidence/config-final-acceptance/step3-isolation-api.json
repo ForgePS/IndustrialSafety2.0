@@ -1,0 +1,109 @@
+{
+  "tenantA": "019f9e06-a0b2-75f4-9e0b-5ae9befd8193",
+  "tenantB": "019fa5c5-6bd9-734c-ace5-76e0b8da28a0",
+  "userA": "019fa5c5-6bd9-734c-ace5-7eb763a6ad5f",
+  "results": [
+    {
+      "name": "list",
+      "status": 401,
+      "pass": true,
+      "leak": false,
+      "code": "UNAUTHORIZED",
+      "correlationId": "1a09bee3923a60e6ced412fdcb4d372c"
+    },
+    {
+      "name": "versions",
+      "status": 401,
+      "pass": true,
+      "leak": false,
+      "code": "UNAUTHORIZED",
+      "correlationId": "0fb68bb3eecd311f431b6becef13a15b"
+    },
+    {
+      "name": "getVersion",
+      "status": 401,
+      "pass": true,
+      "leak": false,
+      "code": "UNAUTHORIZED",
+      "correlationId": "3cecf1ad768cb82d28e7a3ec7ccbb5e3"
+    },
+    {
+      "name": "compare",
+      "status": 401,
+      "pass": true,
+      "leak": false,
+      "code": "UNAUTHORIZED",
+      "correlationId": "4c0d2d22d74ada98a6cfd6b85de8a24a"
+    },
+    {
+      "name": "patch",
+      "status": 401,
+      "pass": true,
+      "leak": false,
+      "code": "UNAUTHORIZED",
+      "correlationId": "c32e449f2a0103d0ef30e301c1b967f5"
+    },
+    {
+      "name": "publish",
+      "status": 401,
+      "pass": true,
+      "leak": false,
+      "code": "UNAUTHORIZED",
+      "correlationId": "aa3e0944237eeda173fd9890072db44c"
+    },
+    {
+      "name": "schedule",
+      "status": 401,
+      "pass": true,
+      "leak": false,
+      "code": "UNAUTHORIZED",
+      "correlationId": "126bc1241604d0f79e67e5c3c5c1357d"
+    },
+    {
+      "name": "archive",
+      "status": 401,
+      "pass": true,
+      "leak": false,
+      "code": "UNAUTHORIZED",
+      "correlationId": "76333f5e40f221fa3e56cb9c155d76b6"
+    },
+    {
+      "name": "rollback",
+      "status": 401,
+      "pass": true,
+      "leak": false,
+      "code": "UNAUTHORIZED",
+      "correlationId": "86282558a428ebefa8a17f3f375ed204"
+    },
+    {
+      "name": "export",
+      "status": 401,
+      "pass": true,
+      "leak": false,
+      "code": "UNAUTHORIZED",
+      "correlationId": "7d8058e5dde5f61ca9268c784fd4abb2"
+    },
+    {
+      "name": "import",
+      "status": 401,
+      "pass": true,
+      "leak": false,
+      "code": "UNAUTHORIZED",
+      "correlationId": "647b1d7dd5fa919ad3e854f5238e3811"
+    },
+    {
+      "name": "effective",
+      "status": 401,
+      "pass": true,
+      "leak": false,
+      "code": "UNAUTHORIZED",
+      "correlationId": "d65f20fa4c4a03aa4ae4681b6b7ca820"
+    },
+    {
+      "name": "audit",
+      "status": 401,
+      "pass": true,
+      "note": "endpoint may not exist"
+    }
+  ]
+}

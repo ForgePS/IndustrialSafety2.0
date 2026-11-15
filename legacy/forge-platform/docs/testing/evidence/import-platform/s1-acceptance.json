@@ -1,0 +1,18 @@
+{
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/a09f9be4975e4545975ff8b07f5aa482",
+  "exitCode": 0,
+  "logMessages": [
+    "{",
+    "  \"ok\": true,",
+    "  \"tenantKeys\": [",
+    "    \"import-acceptance-tenant-a\",",
+    "    \"import-acceptance-tenant-b\"",
+    "  ],",
+    "  \"fixtureKeys\": [",
+    "    \"import-acceptance-tenant-a\",",
+    "    \"import-acceptance-tenant-b\"",
+    "  ]",
+    "}",
+    "{\"ok\":true,\"tenants\":{\"import-acceptance-tenant-a\":\"019faa15-e558-70b6-adcd-a510c3c995f4\",\"import-acceptance-tenant-b\":\"019faa15-e578-76bd-b269-038d23c03b5e\"},\"fixtures\":{\"import-acceptance-tenant-a\":{\"jobId\":\"019faa9f-e583-74a2-99af-04889d32355a\",\"reused\":\"true\"},\"import-acceptance-tenant-b\":{\"jobId\":\"019faa9f-e602-75a7-9a23-2a69c71ece2a\",\"reused\":\"true\"}}}"
+  ]
+}

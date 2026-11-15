@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 40" role="img" aria-label="Forge">
+  <title>Forge</title>
+  <rect x="0" y="4" width="32" height="32" rx="6" fill="#696cff"/>
+  <path fill="#fff" d="M7 10.5h10.5c.55 0 1 .45 1 1v2.1c0 .55-.45 1-1 1H10.2v2.2H16c.55 0 1 .45 1 1v2c0 .55-.45 1-1 1h-5.8V25c0 .55-.45 1-1 1H7.9c-.55 0-1-.45-1-1V11.5c0-.55.45-1 1-1Z"/>
+  <text x="42" y="27" font-family="Inter, Segoe UI, system-ui, sans-serif" font-size="20" font-weight="700" letter-spacing="0.08em" fill="#384551">FORGE</text>
+</svg>

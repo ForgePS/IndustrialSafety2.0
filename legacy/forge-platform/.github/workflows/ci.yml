@@ -1,0 +1,343 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+      - "feature/**"
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  lint-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.12.1
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Format check
+        run: pnpm format:check
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    needs: lint-format
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.12.1
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Unit tests
+        run: pnpm test:unit
+      - name: Environment schema tests
+        run: pnpm --filter @forge/environment test
+      - name: web-kit unit tests
+        run: pnpm --filter @forge/web-kit test:unit
+
+  migration-validation:
+    runs-on: ubuntu-latest
+    needs: lint-format
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: forge
+          POSTGRES_PASSWORD: forge_local_only
+          POSTGRES_DB: forge_platform_local
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U forge -d forge_platform_local"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.12.1
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Create test database
+        run: |
+          PGPASSWORD=forge_local_only psql -h localhost -U forge -d forge_platform_local -c "CREATE DATABASE forge_platform_test;"
+        env:
+          PGPASSWORD: forge_local_only
+      - name: Apply forge_app role grants
+        run: |
+          PGPASSWORD=forge_local_only psql -h localhost -U forge -d forge_platform_test -f database/docker/init-databases.sql
+        env:
+          PGPASSWORD: forge_local_only
+      - name: Database migrate (local)
+        run: pnpm db:migrate
+        env:
+          DATABASE_URL: postgresql://forge:forge_local_only@localhost:5432/forge_platform_local
+      - name: Database migrate status (local)
+        run: pnpm db:migrate:status
+        env:
+          DATABASE_URL: postgresql://forge:forge_local_only@localhost:5432/forge_platform_local
+      - name: Database migrate (test)
+        run: pnpm db:migrate:test
+      - name: Database migrate status (test)
+        run: pnpm --filter @forge/database db:migrate:status
+        env:
+          DATABASE_URL: postgresql://forge:forge_local_only@localhost:5432/forge_platform_test
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: migration-validation
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: forge
+          POSTGRES_PASSWORD: forge_local_only
+          POSTGRES_DB: forge_platform_local
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U forge -d forge_platform_local"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.12.1
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Prepare databases
+        run: |
+          PGPASSWORD=forge_local_only psql -h localhost -U forge -d forge_platform_local -c "CREATE DATABASE forge_platform_test;"
+          PGPASSWORD=forge_local_only psql -h localhost -U forge -d forge_platform_test -f database/docker/init-databases.sql
+        env:
+          PGPASSWORD: forge_local_only
+      - name: Build database package and its dependencies
+        run: pnpm exec turbo run build --filter=@forge/database...
+      - name: Database migrate and seed
+        run: |
+          pnpm db:migrate:test
+          pnpm --filter @forge/database db:seed
+        env:
+          DATABASE_URL: postgresql://forge:forge_local_only@localhost:5432/forge_platform_test
+      - name: Integration tests
+        run: pnpm test:integration
+        env:
+          DATABASE_ADMIN_URL: postgresql://forge:forge_local_only@localhost:5432/forge_platform_test
+          DATABASE_URL: postgresql://forge_app:forge_local_only@localhost:5432/forge_platform_test
+
+  rls-tests:
+    runs-on: ubuntu-latest
+    needs: migration-validation
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: forge
+          POSTGRES_PASSWORD: forge_local_only
+          POSTGRES_DB: forge_platform_local
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U forge -d forge_platform_local"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.12.1
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Prepare databases
+        run: |
+          PGPASSWORD=forge_local_only psql -h localhost -U forge -d forge_platform_local -c "CREATE DATABASE forge_platform_test;"
+          PGPASSWORD=forge_local_only psql -h localhost -U forge -d forge_platform_test -f database/docker/init-databases.sql
+        env:
+          PGPASSWORD: forge_local_only
+      - name: Database migrate (test)
+        run: pnpm db:migrate:test
+      - name: RLS tests (forge_app)
+        run: pnpm test:rls
+        env:
+          DATABASE_ADMIN_URL: postgresql://forge:forge_local_only@localhost:5432/forge_platform_test
+          DATABASE_URL: postgresql://forge_app:forge_local_only@localhost:5432/forge_platform_test
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: migration-validation
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: forge
+          POSTGRES_PASSWORD: forge_local_only
+          POSTGRES_DB: forge_platform_local
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U forge -d forge_platform_local"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.12.1
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Build workspace
+        run: pnpm build
+        env:
+          # Static exports require it to be set; empty string = same-origin /api proxy.
+          NEXT_PUBLIC_API_URL: ""
+      - name: Prepare databases
+        run: |
+          PGPASSWORD=forge_local_only psql -h localhost -U forge -d forge_platform_local -c "CREATE DATABASE forge_platform_test;"
+          PGPASSWORD=forge_local_only psql -h localhost -U forge -d forge_platform_test -f database/docker/init-databases.sql
+        env:
+          PGPASSWORD: forge_local_only
+      - name: Database migrate (test)
+        run: pnpm db:migrate:test
+      - name: Platform E2E tests
+        run: pnpm test:platform-e2e
+        env:
+          DATABASE_ADMIN_URL: postgresql://forge:forge_local_only@localhost:5432/forge_platform_test
+          DATABASE_URL: postgresql://forge:forge_local_only@localhost:5432/forge_platform_test
+
+  build:
+    runs-on: ubuntu-latest
+    needs: lint-format
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.12.1
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Build
+        run: pnpm build
+        env:
+          # Static exports require it to be set; empty string = same-origin /api proxy.
+          NEXT_PUBLIC_API_URL: ""
+
+  cdk-synth:
+    runs-on: ubuntu-latest
+    needs: lint-format
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.12.1
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: CDK validate
+        run: pnpm infra:validate
+        env:
+          # Production config fails closed without the approved account ID.
+          FORGE_PRODUCTION_ACCOUNT: "511343547817"
+      - name: CDK unit tests
+        run: pnpm infra:test
+      - name: CDK synth
+        run: pnpm infra:synth
+        env:
+          FORGE_PRODUCTION_ACCOUNT: "511343547817"
+          # Matches the availability-zone cache in cdk.context.json, so synth needs no AWS
+          # credentials (a placeholder account forces a live lookup and fails in CI).
+          CDK_DEFAULT_ACCOUNT: "511343547817"
+          CDK_DEFAULT_REGION: us-east-1
+          FORGE_ENV: development
+
+  container-build:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build platform-api container image
+        run: docker build -f apps/platform-api/Dockerfile -t forge-platform-api:ci .
+      - name: Build worker-service container image
+        run: docker build -f apps/worker-service/Dockerfile -t forge-worker-service:ci .
+
+  dependency-scan:
+    runs-on: ubuntu-latest
+    needs: lint-format
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.12.1
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Dependency audit
+        run: pnpm audit:deps
+        continue-on-error: true
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    # gitleaks-action lists the PR's commits through the API, which needs pull-requests: read.
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Secret scanning (gitleaks)
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

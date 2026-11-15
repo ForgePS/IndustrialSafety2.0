@@ -1,0 +1,13 @@
+{
+  "cluster": "forge-development-ecs-platform",
+  "service": "forge-development-ecs-platform-api",
+  "priorRevision": 34,
+  "deployedRevision": 35,
+  "imageTag": "import-s4-20260729124000",
+  "image": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-platformapi:import-s4-20260729124000",
+  "digest": "sha256:6880540581d75cda4369d6c0ec7b6f5c0fef8f47af19087e06f740d67460142e",
+  "rollout": "COMPLETED",
+  "running": 1,
+  "workerUnchanged": "forge-development-ecs-platform-worker:20",
+  "deployedAt": "2026-07-29T17:45:57Z"
+}

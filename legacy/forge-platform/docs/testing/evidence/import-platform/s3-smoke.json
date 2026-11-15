@@ -1,0 +1,8 @@
+{
+  "edge": "https://d108fstxdv69bo.cloudfront.net",
+  "health": { "path": "/health", "status": 200 },
+  "uploadUnauth": { "path": "POST /api/v1/imports/upload", "status": 401 },
+  "templatesUnauth": { "path": "GET /api/v1/imports/templates", "status": 401 },
+  "appSecretLastChangedDate": "2026-07-26T15:30:16.387000-05:00",
+  "checkedAt": "2026-07-29T16:26:00Z"
+}

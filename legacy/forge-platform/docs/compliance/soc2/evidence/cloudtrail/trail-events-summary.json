@@ -1,0 +1,455 @@
+{
+  "meta": {
+    "generated_at": "2026-07-26T21:44:05.916Z",
+    "environment": "development",
+    "aws_account": "511343547817",
+    "aws_region": "us-east-1",
+    "tool_versions": {
+      "awsCli": "aws-cli/2.36.8 Python/3.14.6 Windows/11 exe/AMD64",
+      "node": "v20.20.2"
+    },
+    "control_id": "CC-LOG-01",
+    "risk_id": "R-002",
+    "title": "CloudTrail recent events summary (sanitized)",
+    "classification": "Confidential",
+    "source": "aws cloudtrail lookup-events",
+    "review_status": "ACCEPTED",
+    "reviewed_by": "Jeremy Powell",
+    "reviewed_at": "2026-07-26"
+  },
+  "data": {
+    "trailName": "forge-development-cloudtrail-management",
+    "window": {
+      "start": "2026-07-26T19:44:04.358Z",
+      "end": "2026-07-26T21:44:04.358Z"
+    },
+    "eventCount": 25,
+    "events": [
+      {
+        "EventId": "955fbc8b-7fe0-4324-be70-102738b2780e",
+        "EventName": "DescribeAlarms",
+        "EventSource": "monitoring.amazonaws.com",
+        "EventTime": "2026-07-26T16:43:38-05:00",
+        "Username": "forge-admin",
+        "ReadOnly": "true",
+        "AccessKeyId": "[REDACTED]",
+        "Resources": []
+      },
+      {
+        "EventId": "6f3272af-6b95-3821-b486-60d0e75fd38b",
+        "EventName": "AssumeRole",
+        "EventSource": "sts.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:41-05:00",
+        "ReadOnly": "true",
+        "Resources": [
+          {
+            "ResourceType": "AWS::IAM::AccessKey",
+            "ResourceName": "ASIAXODTTKWU3UY7V5EH"
+          },
+          {
+            "ResourceType": "AWS::STS::AssumedRole",
+            "ResourceName": "arn:aws:sts::511343547817:assumed-role/AWSServiceRoleForApplicationAutoScaling_ECSService/AutoScaling-RetrieveCurrentCapacity"
+          },
+          {
+            "ResourceType": "AWS::STS::AssumedRole",
+            "ResourceName": "AutoScaling-RetrieveCurrentCapacity"
+          },
+          {
+            "ResourceType": "AWS::STS::AssumedRole",
+            "ResourceName": "AROAXODTTKWU65UYZL5R4:AutoScaling-RetrieveCurrentCapacity"
+          },
+          {
+            "ResourceType": "AWS::IAM::Role",
+            "ResourceName": "arn:aws:iam::511343547817:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService"
+          }
+        ]
+      },
+      {
+        "EventId": "d1b0edcd-b939-4273-bad8-9035bc85c7f5",
+        "EventName": "DescribeServices",
+        "EventSource": "ecs.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:41-05:00",
+        "Username": "AutoScaling-RetrieveCurrentCapacity",
+        "ReadOnly": "true",
+        "AccessKeyId": "[REDACTED]",
+        "Resources": []
+      },
+      {
+        "EventId": "0bb3b449-ea8f-3e2f-aa87-9030d6b4c789",
+        "EventName": "AssumeRole",
+        "EventSource": "sts.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:36-05:00",
+        "ReadOnly": "true",
+        "Resources": [
+          {
+            "ResourceType": "AWS::IAM::AccessKey",
+            "ResourceName": "ASIAXODTTKWURBJNQL7X"
+          },
+          {
+            "ResourceType": "AWS::STS::AssumedRole",
+            "ResourceName": "AROAXODTTKWU477RXWWOO:AWSCloudFormation"
+          },
+          {
+            "ResourceType": "AWS::STS::AssumedRole",
+            "ResourceName": "arn:aws:sts::511343547817:assumed-role/cdk-hnb659fds-cfn-exec-role-511343547817-us-east-1/AWSCloudFormation"
+          },
+          {
+            "ResourceType": "AWS::STS::AssumedRole",
+            "ResourceName": "AWSCloudFormation"
+          },
+          {
+            "ResourceType": "AWS::IAM::Role",
+            "ResourceName": "arn:aws:iam::511343547817:role/cdk-hnb659fds-cfn-exec-role-511343547817-us-east-1"
+          }
+        ]
+      },
+      {
+        "EventId": "123e49af-6977-4bbb-afaa-e9bdda845ef5",
+        "EventName": "GetEventSelectors",
+        "EventSource": "cloudtrail.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:36-05:00",
+        "Username": "AWSCloudFormation",
+        "ReadOnly": "true",
+        "AccessKeyId": "[REDACTED]",
+        "Resources": [
+          {
+            "ResourceType": "AWS::CloudTrail::Trail",
+            "ResourceName": "forge-development-cloudtrail-management"
+          }
+        ]
+      },
+      {
+        "EventId": "3d4ea792-97c7-474f-8717-835968ae1110",
+        "EventName": "GetEventConfiguration",
+        "EventSource": "cloudtrail.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:36-05:00",
+        "Username": "AWSCloudFormation",
+        "ReadOnly": "true",
+        "AccessKeyId": "[REDACTED]",
+        "Resources": []
+      },
+      {
+        "EventId": "66417a88-e46e-4178-ac9b-4236557b1b25",
+        "EventName": "GetInsightSelectors",
+        "EventSource": "cloudtrail.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:36-05:00",
+        "Username": "AWSCloudFormation",
+        "ReadOnly": "true",
+        "AccessKeyId": "[REDACTED]",
+        "Resources": [
+          {
+            "ResourceType": "AWS::CloudTrail::Trail",
+            "ResourceName": "forge-development-cloudtrail-management"
+          }
+        ]
+      },
+      {
+        "EventId": "3b687400-d94b-4696-8587-0f834d45d462",
+        "EventName": "GetTrailStatus",
+        "EventSource": "cloudtrail.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:35-05:00",
+        "Username": "AWSCloudFormation",
+        "ReadOnly": "true",
+        "AccessKeyId": "[REDACTED]",
+        "Resources": [
+          {
+            "ResourceType": "AWS::CloudTrail::Trail",
+            "ResourceName": "forge-development-cloudtrail-management"
+          }
+        ]
+      },
+      {
+        "EventId": "49e3912a-f983-30ab-b92a-a6de81c7b309",
+        "EventName": "GenerateDataKey",
+        "EventSource": "kms.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:35-05:00",
+        "ReadOnly": "true",
+        "Resources": [
+          {
+            "ResourceName": "arn:aws:kms:us-east-1:511343547817:key/5efbe077-1ef5-4e55-aaba-7e6614f35c87"
+          }
+        ]
+      },
+      {
+        "EventId": "51ae8405-325e-39b8-aaa4-c39c88804348",
+        "EventName": "GenerateDataKey",
+        "EventSource": "kms.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:35-05:00",
+        "ReadOnly": "true",
+        "Resources": [
+          {
+            "ResourceName": "arn:aws:kms:us-east-1:511343547817:key/5efbe077-1ef5-4e55-aaba-7e6614f35c87"
+          }
+        ]
+      },
+      {
+        "EventId": "6e3fe5dc-473f-4015-92e3-a4c6ad21552f",
+        "EventName": "StartLogging",
+        "EventSource": "cloudtrail.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:35-05:00",
+        "Username": "AWSCloudFormation",
+        "ReadOnly": "false",
+        "AccessKeyId": "[REDACTED]",
+        "Resources": [
+          {
+            "ResourceType": "AWS::CloudTrail::Trail",
+            "ResourceName": "forge-development-cloudtrail-management"
+          }
+        ]
+      },
+      {
+        "EventId": "7605de70-89c4-4379-ab83-1c5ddb5a6871",
+        "EventName": "GetTrail",
+        "EventSource": "cloudtrail.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:35-05:00",
+        "Username": "AWSCloudFormation",
+        "ReadOnly": "true",
+        "AccessKeyId": "[REDACTED]",
+        "Resources": [
+          {
+            "ResourceType": "AWS::CloudTrail::Trail",
+            "ResourceName": "forge-development-cloudtrail-management"
+          }
+        ]
+      },
+      {
+        "EventId": "78bb0832-9f68-3941-9e46-ce58ed87a292",
+        "EventName": "AssumeRole",
+        "EventSource": "sts.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:35-05:00",
+        "ReadOnly": "true",
+        "Resources": [
+          {
+            "ResourceType": "AWS::IAM::AccessKey",
+            "ResourceName": "ASIAXODTTKWUZUQSLEEM"
+          },
+          {
+            "ResourceType": "AWS::STS::AssumedRole",
+            "ResourceName": "arn:aws:sts::511343547817:assumed-role/Forge-Development-Audit-CloudTrailManagementTrailLo-aXEBZkRgwFwL/CloudTrail"
+          },
+          {
+            "ResourceType": "AWS::STS::AssumedRole",
+            "ResourceName": "CloudTrail"
+          },
+          {
+            "ResourceType": "AWS::STS::AssumedRole",
+            "ResourceName": "AROAXODTTKWU34AU5VSH3:CloudTrail"
+          },
+          {
+            "ResourceType": "AWS::IAM::Role",
+            "ResourceName": "arn:aws:iam::511343547817:role/Forge-Development-Audit-CloudTrailManagementTrailLo-aXEBZkRgwFwL"
+          }
+        ]
+      },
+      {
+        "EventId": "7f85318c-ccfc-3b1e-8746-027543755de1",
+        "EventName": "AssumeRole",
+        "EventSource": "sts.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:35-05:00",
+        "ReadOnly": "true",
+        "Resources": [
+          {
+            "ResourceType": "AWS::IAM::AccessKey",
+            "ResourceName": "ASIAXODTTKWUQWZTNXQW"
+          },
+          {
+            "ResourceType": "AWS::STS::AssumedRole",
+            "ResourceName": "AROAXODTTKWU477RXWWOO:AWSCloudFormation"
+          },
+          {
+            "ResourceType": "AWS::STS::AssumedRole",
+            "ResourceName": "arn:aws:sts::511343547817:assumed-role/cdk-hnb659fds-cfn-exec-role-511343547817-us-east-1/AWSCloudFormation"
+          },
+          {
+            "ResourceType": "AWS::STS::AssumedRole",
+            "ResourceName": "AWSCloudFormation"
+          },
+          {
+            "ResourceType": "AWS::IAM::Role",
+            "ResourceName": "arn:aws:iam::511343547817:role/cdk-hnb659fds-cfn-exec-role-511343547817-us-east-1"
+          }
+        ]
+      },
+      {
+        "EventId": "9328d3df-2ab3-4acd-8952-64a805ed6737",
+        "EventName": "ListTags",
+        "EventSource": "cloudtrail.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:35-05:00",
+        "Username": "AWSCloudFormation",
+        "ReadOnly": "true",
+        "AccessKeyId": "[REDACTED]",
+        "Resources": []
+      },
+      {
+        "EventId": "ae233a18-d003-3071-a1aa-f3daee2098d1",
+        "EventName": "GetBucketAcl",
+        "EventSource": "s3.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:35-05:00",
+        "ReadOnly": "true",
+        "Resources": []
+      },
+      {
+        "EventId": "aef34717-fd5e-4061-b88b-d5d797b5e620",
+        "EventName": "CreateTrail",
+        "EventSource": "cloudtrail.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:35-05:00",
+        "Username": "AWSCloudFormation",
+        "ReadOnly": "false",
+        "AccessKeyId": "[REDACTED]",
+        "Resources": [
+          {
+            "ResourceType": "AWS::CloudTrail::Trail",
+            "ResourceName": "forge-development-cloudtrail-management"
+          },
+          {
+            "ResourceType": "AWS::CloudTrail::Trail",
+            "ResourceName": "arn:aws:cloudtrail:us-east-1:511343547817:trail/forge-development-cloudtrail-management"
+          },
+          {
+            "ResourceType": "AWS::S3::Bucket",
+            "ResourceName": "forge-development-cloudtrail-511343547817-us-east-1"
+          },
+          {
+            "ResourceType": "AWS::IAM::Role",
+            "ResourceName": "arn:aws:iam::511343547817:role/Forge-Development-Audit-CloudTrailManagementTrailLo-aXEBZkRgwFwL"
+          },
+          {
+            "ResourceType": "AWS::Logs::LogGroup",
+            "ResourceName": "arn:aws:logs:us-east-1:511343547817:log-group:/forge/development/cloudtrail:*"
+          },
+          {
+            "ResourceType": "AWS::KMS::Key",
+            "ResourceName": "arn:aws:kms:us-east-1:511343547817:key/5efbe077-1ef5-4e55-aaba-7e6614f35c87"
+          }
+        ]
+      },
+      {
+        "EventId": "e8485b04-019b-4e3e-9f10-4647047aa3fd",
+        "EventName": "PutEventSelectors",
+        "EventSource": "cloudtrail.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:35-05:00",
+        "Username": "AWSCloudFormation",
+        "ReadOnly": "false",
+        "AccessKeyId": "[REDACTED]",
+        "Resources": [
+          {
+            "ResourceType": "AWS::CloudTrail::Trail",
+            "ResourceName": "forge-development-cloudtrail-management"
+          },
+          {
+            "ResourceType": "AWS::CloudTrail::Trail",
+            "ResourceName": "arn:aws:cloudtrail:us-east-1:511343547817:trail/forge-development-cloudtrail-management"
+          }
+        ]
+      },
+      {
+        "EventId": "c33bc4a7-0a0d-3a53-b489-401d4b2ce625",
+        "EventName": "AssumeRole",
+        "EventSource": "sts.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:34-05:00",
+        "ReadOnly": "true",
+        "Resources": [
+          {
+            "ResourceType": "AWS::IAM::AccessKey",
+            "ResourceName": "ASIAXODTTKWUTIGB6PXD"
+          },
+          {
+            "ResourceType": "AWS::STS::AssumedRole",
+            "ResourceName": "AROAXODTTKWU477RXWWOO:AWSCloudFormation"
+          },
+          {
+            "ResourceType": "AWS::STS::AssumedRole",
+            "ResourceName": "arn:aws:sts::511343547817:assumed-role/cdk-hnb659fds-cfn-exec-role-511343547817-us-east-1/AWSCloudFormation"
+          },
+          {
+            "ResourceType": "AWS::STS::AssumedRole",
+            "ResourceName": "AWSCloudFormation"
+          },
+          {
+            "ResourceType": "AWS::IAM::Role",
+            "ResourceName": "arn:aws:iam::511343547817:role/cdk-hnb659fds-cfn-exec-role-511343547817-us-east-1"
+          }
+        ]
+      },
+      {
+        "EventId": "1aa60fd9-2e1e-464c-8f09-c11afcb586a7",
+        "EventName": "GetRolePolicy",
+        "EventSource": "iam.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:33-05:00",
+        "Username": "AWSCloudFormation",
+        "ReadOnly": "true",
+        "AccessKeyId": "[REDACTED]",
+        "Resources": []
+      },
+      {
+        "EventId": "a0f4ec85-04d0-4776-abe6-f78d658344c9",
+        "EventName": "ListAttachedRolePolicies",
+        "EventSource": "iam.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:33-05:00",
+        "Username": "AWSCloudFormation",
+        "ReadOnly": "true",
+        "AccessKeyId": "[REDACTED]",
+        "Resources": []
+      },
+      {
+        "EventId": "a7f0d09f-a9d3-4dd5-b1bb-f3b27871da91",
+        "EventName": "ListRolePolicies",
+        "EventSource": "iam.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:33-05:00",
+        "Username": "AWSCloudFormation",
+        "ReadOnly": "true",
+        "AccessKeyId": "[REDACTED]",
+        "Resources": []
+      },
+      {
+        "EventId": "bc997848-1376-343b-91fd-bd9c8a74a96c",
+        "EventName": "AssumeRole",
+        "EventSource": "sts.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:33-05:00",
+        "ReadOnly": "true",
+        "Resources": [
+          {
+            "ResourceType": "AWS::IAM::AccessKey",
+            "ResourceName": "ASIAXODTTKWUSDND6OVO"
+          },
+          {
+            "ResourceType": "AWS::STS::AssumedRole",
+            "ResourceName": "AROAXODTTKWU477RXWWOO:AWSCloudFormation"
+          },
+          {
+            "ResourceType": "AWS::STS::AssumedRole",
+            "ResourceName": "arn:aws:sts::511343547817:assumed-role/cdk-hnb659fds-cfn-exec-role-511343547817-us-east-1/AWSCloudFormation"
+          },
+          {
+            "ResourceType": "AWS::STS::AssumedRole",
+            "ResourceName": "AWSCloudFormation"
+          },
+          {
+            "ResourceType": "AWS::IAM::Role",
+            "ResourceName": "arn:aws:iam::511343547817:role/cdk-hnb659fds-cfn-exec-role-511343547817-us-east-1"
+          }
+        ]
+      },
+      {
+        "EventId": "d27d4c4f-7f4a-4c28-ae45-d3d4a5083f29",
+        "EventName": "GetRole",
+        "EventSource": "iam.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:33-05:00",
+        "Username": "AWSCloudFormation",
+        "ReadOnly": "true",
+        "AccessKeyId": "[REDACTED]",
+        "Resources": []
+      },
+      {
+        "EventId": "246fc5ff-30b9-4b0b-9bbc-f1efdd8a1eee",
+        "EventName": "DescribeStackEvents",
+        "EventSource": "cloudformation.amazonaws.com",
+        "EventTime": "2026-07-26T16:42:27-05:00",
+        "Username": "aws-cdk-Jeremy",
+        "ReadOnly": "true",
+        "AccessKeyId": "[REDACTED]",
+        "Resources": []
+      }
+    ]
+  }
+}
