@@ -3,9 +3,11 @@
 // Third-party Imports
 import { TbLogout } from 'react-icons/tb'
 import { Button } from '@repo/ui/components/ui/button'
-import { useSignOut } from '@repo/supabase/hooks'
+
 import { deleteImpersonationCookies, deletePaymentCookies } from '@repo/auth/action'
 import Trans from '@repo/i18n/Trans'
+
+import { useSignOut } from '@/lib/platform/useSignOut'
 
 const SignOutButton = () => {
   // Hooks

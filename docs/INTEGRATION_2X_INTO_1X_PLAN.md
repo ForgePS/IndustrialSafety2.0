@@ -50,7 +50,7 @@ Because of these choices, 2.0 keeps its own codebase and release cycle. A 2.0 re
 ```
 
 - **One domain.** 2.0 is served under a path prefix (`/v2`, set with 2.0's existing `BASEPATH`). The Cognito session cookie is `__Host-` and SameSite=Strict, so 2.0 has to be on the same host to receive it.
-- **Login.** 2.0 reads the `__Host-forge-session` cookie and verifies the Cognito JWT with the same issuer and keys as `platform-api`. The Cognito `sub` maps to a 2.0 user row. Sign-in, sign-out and password flows stay in 1.0.
+- **Login.** 1.0's `__Host-forge-session` cookie is an opaque session token, not a JWT; 1.0 keeps the Cognito refresh token on its side. 2.0's middleware exchanges the cookie at 1.0's `POST /api/v1/auth/session/refresh`, as 1.0's own pages do, and keeps the returned Cognito access token in its own HttpOnly cookie (`__Secure-forge2-access`, scoped to `/v2`) until it expires. Every request verifies that token with the same issuer, keys and client id as `platform-api`. When 1.0's cookie disappears (signed out in 1.0), 2.0 treats the person as signed out at once. The Cognito `sub` maps to a 2.0 user through `forge_identity_links`. Sign-in, sign-out and password flows stay in 1.0.
 - **Database.** 2.0's migrations run into a `forge2` schema on the same Aurora cluster, under a dedicated database role that cannot write 1.0's tables. 2.0 keeps its own migration ledger, separate from Drizzle's journal. That avoids the journal `when` ordering problem and keeps 2.0 releases independent of 1.0's.
 - **Data access, phase 1.** A PostgREST container runs next to 2.0 against the `forge2` schema. supabase-js talks to PostgREST, so the 1,370 existing queries keep working unchanged. Swapping to a typed data layer can then happen gradually instead of blocking the move.
 - **Files.** A storage adapter replaces `supabase.storage` (12 files) with S3 under a `forge2/` prefix, keeping the bucket names as key prefixes.
@@ -132,6 +132,25 @@ Migrations stay written for Supabase. They are translated at deploy time, so the
 | Manifest | `integration/manifest.json`, `scripts/portability/build-manifest.cjs` | Modules and features (33), permissions (208), menu entries (28, from `forge_experience_elements`), routes (155 pages, 24 API) and scheduled jobs, read from the migrated registries. CI fails if it is out of date |
 
 Still on Supabase after phase 0, by design: the sign-in, sign-up and sign-out screens (inside 1.0 those belong to 1.0), `my-profile` (the boilerplate avatar upload), and the session-refresh middleware.
+
+## Phase 1 as built
+
+`FORGE_AUTH_PROVIDER=cognito` (plus `NEXT_PUBLIC_FORGE_AUTH_PROVIDER=cognito` for the browser) switches sign-in to 1.0. Without it, 2.0 runs on Supabase Auth exactly as before.
+
+| Piece | Where | What it does |
+|---|---|---|
+| Token checks and 1.0 calls | `apps/web/src/lib/platform/cognito.ts` | Verifies Cognito access tokens with the pool's published keys (issuer, client id, `token_use: access`, expiry). Calls 1.0's session refresh and profile endpoints. Works in middleware and server code |
+| Middleware | `apps/web/src/lib/platform/cognitoMiddleware.ts` | Exchanges 1.0's session cookie for an access token when 2.0 has none or it expired. Drops 2.0's cookie when 1.0's is gone. Sends signed-out visitors and 2.0's `/auth` pages to 1.0's sign-in with `next` set. Redirects use `FORGE_APP_ORIGIN` (default `FORGE_PLATFORM_ORIGIN`), because middleware sees the server's own host, not the browser's |
+| Identity driver | `apps/web/src/lib/platform/identity.ts` | `currentUser()` verifies the token again and maps the Cognito `sub` to a 2.0 user, cached for five minutes |
+| User links | migration `20261115120000_forge_identity_links.sql` | `forge_identity_links` (provider, subject → user). `forge_identity_link_user` links an existing 2.0 user by email the first time they arrive, or creates the user and their directory row. It takes a per-subject lock, because a first page load sends several requests at once. Service role only |
+| Sign-out | `apps/web/src/lib/platform/useSignOut.ts` | Ends 1.0's session, then goes to 1.0's sign-in |
+| Local 1.0 stand-in | `scripts/portability/dev-platform.cjs` | Sign-in form, session refresh, profile, logout and a JWKS, issuing RS256 tokens shaped like Cognito's. Prints the env values 2.0 needs. Open both as `localhost` in the browser: Next rewrites loopback addresses in redirects to `localhost` |
+| Tests | `apps/web/tests/platform-cognito.test.cjs`, `apps/web/tests/cognito-signin.spec.cjs` | Token checks against the stand-in (expiry, tampering, wrong issuer or client). The browser contract runs 2.0 in cognito mode and covers redirects, linking by email, new users, tenant separation and sign-out. Both run in CI; Supabase Auth receives no requests during the contract |
+
+2.0 reads data with its service-role client and checks access in the app, as it does today, so no user token reaches PostgREST. Needed from 1.0 before phase 3:
+
+- **Sign-in return.** 1.0's sign-in page should send people back to `next` (a same-origin path). Today it ignores it, so people land on 1.0's home after signing in.
+- **Revocation.** 1.0 rejects tokens issued before a user's `sessions_revoked_at`. 2.0 cannot see that, so a revoked person keeps 2.0 access until their current access token expires (Cognito's default is one hour) unless 1.0's session cookie is also gone. Shorten the access-token lifetime, or have 2.0 ask 1.0 on each refresh.
 
 ## Open items
 

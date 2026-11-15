@@ -45,7 +45,7 @@ jobs:
         run: node scripts/portability/check-portability.cjs
       - run: node scripts/portability/translate-migrations.cjs --check
       - run: node --test scripts/portability/sql.test.cjs
-      - run: node --experimental-strip-types --test apps/web/tests/forge-ai-foundation.test.cjs apps/web/tests/forge-ai-agents.test.cjs apps/web/tests/forge-ai-risk-monitoring.test.cjs apps/web/tests/forge-ai-recommendations.test.cjs apps/web/tests/forge-ai-command-center.test.cjs
+      - run: node --experimental-strip-types --test apps/web/tests/forge-ai-foundation.test.cjs apps/web/tests/forge-ai-agents.test.cjs apps/web/tests/forge-ai-risk-monitoring.test.cjs apps/web/tests/forge-ai-recommendations.test.cjs apps/web/tests/forge-ai-command-center.test.cjs apps/web/tests/platform-cognito.test.cjs
       - run: pnpm --filter forge-industrial-safety-2.0-web type-check
       - run: pnpm --filter forge-industrial-safety-2.0-web build
 
@@ -223,10 +223,53 @@ jobs:
           FORGE_AI_CRON_SECRET: forge-test-cron-secret
         run: pnpm exec playwright test apps/web/tests/forge-ai-security.spec.cjs --reporter=line --workers=1
 
+      # Portability phase 1: 2.0 signed in through a local stand-in for 1.0's Cognito session, with
+      # Supabase Auth unused. NEXT_PUBLIC_* values are fixed at build time, so this needs its own
+      # build. Browser-facing URLs use localhost: Next rewrites loopback redirects to localhost.
+      - name: Build Forge web app in cognito mode
+        env:
+          NEXT_PUBLIC_FORGE_AUTH_PROVIDER: cognito
+          NEXT_PUBLIC_FORGE_PLATFORM_LOGIN_URL: http://localhost:4010/login
+          NEXT_PUBLIC_FORGE_PLATFORM_LOGOUT_URL: http://localhost:4010/api/v1/auth/session/logout
+        run: |
+          kill "$(cat /tmp/forge-smoke.pid)" || true
+          pkill -f 'next start' || true
+          pnpm --filter forge-industrial-safety-2.0-web build
+
+      - name: Start local 1.0 sign-in and Forge web app in cognito mode
+        env:
+          FORGE_AUTH_PROVIDER: cognito
+          FORGE_COGNITO_ISSUER: http://127.0.0.1:4010/local-pool
+          FORGE_COGNITO_CLIENT_ID: forge2-local
+          FORGE_PLATFORM_API_URL: http://127.0.0.1:4010
+          FORGE_PLATFORM_LOGIN_URL: http://localhost:4010/login
+          FORGE_APP_ORIGIN: http://localhost:3000
+        run: |
+          node scripts/portability/dev-platform.cjs --port 4010 --app http://localhost:3000 > /tmp/forge-dev-platform.log 2>&1 &
+          pnpm --filter forge-industrial-safety-2.0-web start --hostname 127.0.0.1 --port 3000 > /tmp/forge-smoke.log 2>&1 &
+
+          for i in $(seq 1 90); do
+            if curl -sS -o /dev/null http://127.0.0.1:3000/ && curl -fsS -o /dev/null http://127.0.0.1:4010/login; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          cat /tmp/forge-smoke.log /tmp/forge-dev-platform.log
+          exit 1
+
+      - name: Run Cognito sign-in contract
+        env:
+          COGNITO_SMOKE: '1'
+          SMOKE_BASE_URL: http://localhost:3000
+          DEV_PLATFORM_URL: http://localhost:4010
+        run: pnpm exec playwright test apps/web/tests/cognito-signin.spec.cjs --reporter=line --workers=1
+
       - name: Print web log on failure
         if: failure()
         run: |
           cat /tmp/forge-smoke.log || true
+          cat /tmp/forge-dev-platform.log || true
           find test-results -name error-context.md -type f -exec cat {} + || true
 
       - name: Upload Playwright failure artifacts

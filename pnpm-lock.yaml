@@ -81,6 +81,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      jose:
+        specifier: ^5.9.6
+        version: 5.10.0
       mammoth:
         specifier: 1.12.3
         version: 1.12.3
