@@ -81,6 +81,37 @@ export const readCookie = (cookies: CookieReader, names: readonly string[]) => {
   return null
 }
 
+// 2.0's cookie holds `<session tag>.<access token>`. The tag is a hash of the 1.0 session cookie the
+// token was exchanged for, so a token is only ever used with that session: if someone signs out of
+// 1.0 and someone else signs in on the same browser, the old token no longer matches and is dropped.
+// 1.0 keeps its session cookie value stable across refreshes, so the tag lasts the whole session.
+const sessionTag = async (session: string) => {
+  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(session)))
+
+  return btoa(String.fromCharCode(...digest)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+/** The cookie value for an access token exchanged for `session`. */
+export const bindToken = async (session: string, token: string) => `${await sessionTag(session)}.${token}`
+
+/**
+ * The cached access token, only if it was exchanged for the 1.0 session cookie present now.
+ * Null when either cookie is missing or they do not belong together. The token still needs
+ * verifying.
+ */
+export const readBoundToken = async (cookies: CookieReader): Promise<{ session: string | null; token: string | null }> => {
+  const session = readCookie(cookies, PLATFORM_SESSION_COOKIES)
+  const stored = readCookie(cookies, ACCESS_COOKIES)
+
+  if (!session || !stored) return { session, token: null }
+
+  const dot = stored.indexOf('.')
+
+  if (dot < 1 || stored.slice(0, dot) !== (await sessionTag(session))) return { session, token: null }
+
+  return { session, token: stored.slice(dot + 1) }
+}
+
 const jwksByIssuer = new Map<string, ReturnType<typeof createRemoteJWKSet>>()
 
 const jwks = (issuer: string) => {

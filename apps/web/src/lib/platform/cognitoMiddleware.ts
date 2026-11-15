@@ -3,11 +3,12 @@ import type { NextRequest } from 'next/server'
 
 import {
   ACCESS_COOKIES,
-  PLATFORM_SESSION_COOKIES,
   accessCookieName,
+  bindToken,
   cognitoConfig,
   exchangePlatformSession,
   loginRedirectUrl,
+  readBoundToken,
   readCookie,
   verifyAccessToken
 } from './cognito'
@@ -36,10 +37,14 @@ export async function updateCognitoSession(request: NextRequest) {
   const { protocol, host } = new URL(origin)
   const secure = protocol === 'https:' && !isLocalHost(host)
   const cookieName = accessCookieName(secure)
-  const session = readCookie(request.cookies, PLATFORM_SESSION_COOKIES)
   const existing = readCookie(request.cookies, ACCESS_COOKIES)
 
-  let token = session && existing && (await verifyAccessToken(existing, config)) ? existing : null
+  // A cached token counts only if it was exchanged for the 1.0 session cookie present now; after a
+  // sign-out and someone else's sign-in on the same browser, the old token is not reused.
+  const bound = await readBoundToken(request.cookies)
+  const session = bound.session
+  let token = bound.token && (await verifyAccessToken(bound.token, config)) ? bound.token : null
+  let cookieValue = token ? readCookie(request.cookies, ACCESS_COOKIES) : null
   let refreshed: { value: string; maxAge: number } | null = null
 
   if (session && !token) {
@@ -48,13 +53,14 @@ export async function updateCognitoSession(request: NextRequest) {
 
     if (exchanged && claims) {
       token = exchanged.accessToken
-      refreshed = { value: token, maxAge: Math.max(60, Math.min(exchanged.expiresIn, (claims.exp || 0) - Math.floor(Date.now() / 1000))) }
+      cookieValue = await bindToken(session, token)
+      refreshed = { value: cookieValue, maxAge: Math.max(60, Math.min(exchanged.expiresIn, (claims.exp || 0) - Math.floor(Date.now() / 1000))) }
     }
   }
 
   // Server code in this request reads the cookie from the request, so update it there too.
   for (const name of ACCESS_COOKIES) request.cookies.delete(name)
-  if (token) request.cookies.set(cookieName, token)
+  if (token && cookieValue) request.cookies.set(cookieName, cookieValue)
 
   const finish = (response: NextResponse) => {
     if (refreshed) {

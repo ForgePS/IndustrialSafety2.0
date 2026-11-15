@@ -5,7 +5,8 @@
  *  - Signed-out visits to app pages go to 1.0's sign-in; 2.0's own /auth pages redirect there too.
  *  - Signing in at 1.0 links an existing 2.0 user by email, and creates one for a new email.
  *  - Each person sees only their own tenant.
- *  - Signing out of 1.0 signs out of 2.0 on the next request.
+ *  - Signing out of 1.0 signs out of 2.0 on the next request, and the next person to sign in on that
+ *    browser never gets the previous person's cached token.
  *
  * Needs the local 1.0 stand-in and 2.0 started in cognito mode:
  *   node scripts/portability/dev-platform.cjs   (prints the env values; use localhost in the browser)
@@ -86,6 +87,24 @@ test('a new email gets a 2.0 user with no tenant access', async ({ page }) => {
 
   expect(link?.user_id).toBeTruthy()
   expect(await rest(`/users?select=name,email&user_id=eq.${link.user_id}`)).toEqual([{ name: 'Casey Newperson', email }])
+})
+
+test('after a sign-out, the next person to sign in on the browser is not given the previous token', async ({ page }) => {
+  await signInAtPlatform(page, 'northstar.admin@forge2.local')
+  await expect(page.getByText('Northstar Manufacturing').first()).toBeVisible({ timeout: 60000 })
+
+  // Sign out and sign someone else in at 1.0 without visiting 2.0 in between, so 2.0's cookie
+  // still holds the first person's unexpired token.
+  await page.evaluate(async url => fetch(url, { method: 'POST', credentials: 'include' }), platformURL + '/api/v1/auth/session/logout')
+  await page.goto(platformURL + '/login?next=/dashboard')
+  await page.getByLabel('Email').fill(`switch.${run}@example.test`)
+  await page.getByRole('button', { name: 'Sign in' }).click()
+  await page.waitForURL(url => url.origin === new URL(baseURL).origin && url.pathname === '/dashboard', { timeout: 60000 })
+
+  await expect(page.getByText('Northstar Manufacturing')).toHaveCount(0)
+  const [link] = await rest(`/forge_identity_links?select=user_id&provider=eq.cognito&email=eq.${encodeURIComponent(`switch.${run}@example.test`)}`)
+
+  expect(link?.user_id).toBeTruthy()
 })
 
 test('signing out of 1.0 signs out of 2.0', async ({ page }) => {

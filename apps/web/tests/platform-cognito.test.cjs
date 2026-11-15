@@ -85,3 +85,13 @@ test('sign-in redirects carry where to come back to', () => {
   assert.equal(url.origin + url.pathname, `${platform}/login`)
   assert.equal(url.searchParams.get('next'), '/v2/incidents?x=1')
 })
+
+test("a cached token is used only with the 1.0 session it was exchanged for", async () => {
+  const jar = values => ({ get: name => (values[name] ? { value: values[name] } : undefined) })
+  const bound = await cognito.bindToken('session-a', 'header.payload.signature')
+
+  assert.deepEqual(await cognito.readBoundToken(jar({ 'forge-session': 'session-a', 'forge2-access': bound })), { session: 'session-a', token: 'header.payload.signature' })
+  assert.deepEqual(await cognito.readBoundToken(jar({ 'forge-session': 'session-b', 'forge2-access': bound })), { session: 'session-b', token: null })
+  assert.deepEqual(await cognito.readBoundToken(jar({ 'forge-session': 'session-a', 'forge2-access': 'header.payload.signature' })), { session: 'session-a', token: null })
+  assert.deepEqual(await cognito.readBoundToken(jar({ 'forge2-access': bound })), { session: null, token: null })
+})

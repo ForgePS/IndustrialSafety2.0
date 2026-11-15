@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { createClient, createServiceRoleClient } from '@repo/supabase/server'
 import { getAuthUser } from '@repo/supabase/serverHelpers'
 
-import { ACCESS_COOKIES, PLATFORM_SESSION_COOKIES, fetchPlatformProfile, readCookie, verifyAccessToken } from './cognito'
+import { fetchPlatformProfile, readBoundToken, verifyAccessToken } from './cognito'
 import type { PlatformUser } from './identityTypes'
 
 export type { PlatformUser } from './identityTypes'
@@ -113,12 +113,9 @@ export const resolveCognitoUser = async (subject: string, accessToken: string): 
 
 const cognitoDriver: IdentityDriver = {
   async currentUser() {
-    const store = await cookies()
-
-    // Signed out in 1.0 means signed out here, whatever 2.0's cookie still holds.
-    if (!readCookie(store, PLATFORM_SESSION_COOKIES)) return null
-
-    const token = readCookie(store, ACCESS_COOKIES)
+    // Signed out in 1.0 means signed out here, and a token counts only for the 1.0 session it was
+    // exchanged for (see readBoundToken), whatever 2.0's cookie still holds.
+    const { token } = await readBoundToken(await cookies())
     const claims = token ? await verifyAccessToken(token) : null
 
     return claims && token ? resolveCognitoUser(claims.sub, token) : null
