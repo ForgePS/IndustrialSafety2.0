@@ -1,5 +1,7 @@
 # Integrating 2.0 into the 1.0 platform
 
+> **Superseded 2026-11-15** by `CONSOLIDATION_1X_INTO_2X_PLAN.md`: 1.0 now moves into 2.0 instead.
+
 Status: plan, not started. Nothing in the 1.0 repository or AWS account has been changed.
 
 ## Decisions
