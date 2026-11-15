@@ -91,7 +91,55 @@ const anonGrants = query(
   { database: DB }
 )
 
+// Supabase's own roles exist on this server cluster-wide, so a grant to them applies here but fails
+// on Aurora. Every grant, default privilege and policy in the forge2 schemas must name a forge2_*
+// role (or PUBLIC, the owner, or the administrator that ran the shim).
+const allowedGrantee = `(r.rolname like 'forge2\\_%' or r.rolname = current_user)`
+const foreignRoles = query(
+  `with acl as (
+     select 'relation ' || c.oid::regclass as what, (aclexplode(c.relacl)).grantee from pg_class c
+       where c.relnamespace in ('forge2'::regnamespace, 'forge2_auth'::regnamespace)
+     union all
+     select 'function ' || p.oid::regprocedure, (aclexplode(p.proacl)).grantee from pg_proc p
+       where p.pronamespace in ('forge2'::regnamespace, 'forge2_auth'::regnamespace)
+     union all
+     select 'schema ' || n.nspname, (aclexplode(n.nspacl)).grantee from pg_namespace n where n.nspname like 'forge2%'
+     union all
+     select 'default privileges in ' || coalesce(d.defaclnamespace::regnamespace::text, 'database'), (aclexplode(d.defaclacl)).grantee
+       from pg_default_acl d where d.defaclnamespace in ('forge2'::regnamespace, 'forge2_auth'::regnamespace, 0)
+     union all
+     select 'policy ' || pol.polname || ' on ' || pol.polrelid::regclass, unnest(pol.polroles) from pg_policy pol
+       where (select relnamespace from pg_class where oid = pol.polrelid) in ('forge2'::regnamespace, 'forge2_auth'::regnamespace)
+   )
+   select distinct r.rolname, a.what from acl a join pg_roles r on r.oid = a.grantee
+   where a.grantee <> 0 and not ${allowedGrantee}
+   order by 1, 2`,
+  { database: DB }
+)
+const [[sequencesWithoutService]] = query(
+  `select count(*) from pg_class c where c.relnamespace = 'forge2'::regnamespace
+     and case when c.relkind = 'S' then not has_sequence_privilege('forge2_service', c.oid, 'usage') else false end`,
+  { database: DB }
+)
+
+const [[tablesWithoutService]] = query(
+  `select count(*) from pg_class c where c.relnamespace = 'forge2'::regnamespace
+     and case when c.relkind in ('r', 'p') and c.relname <> 'schema_migrations'
+       then not has_table_privilege('forge2_service', c.oid, 'select, insert, update, delete') else false end`,
+  { database: DB }
+)
+
 const problems = []
+
+if (Number(tablesWithoutService) > 0) problems.push(`${tablesWithoutService} forge2 tables are not readable and writable by forge2_service`)
+
+if (foreignRoles.length) {
+  const roles = [...new Set(foreignRoles.map(([role]) => role))]
+
+  problems.push(`${foreignRoles.length} grants or policies name roles Aurora will not have (${roles.join(', ')}), e.g. ${foreignRoles.slice(0, 3).map(([role, what]) => `${role} on ${what}`).join('; ')}`)
+}
+
+if (Number(sequencesWithoutService) > 0) problems.push(`${sequencesWithoutService} forge2 sequences are not usable by forge2_service`)
 
 if (Number(outsideSchemas) > 0) problems.push(`${outsideSchemas} objects were created outside the forge2 schemas`)
 if (Number(ledger) !== files.length) problems.push(`ledger has ${ledger} entries for ${files.length} migrations`)
@@ -102,7 +150,7 @@ console.log(
     `Aurora rehearsal: ${files.length} migrations applied to ${DB} as forge2_migrator (${dropped} statements dropped: Supabase-only or provided by the shim).`,
     `  forge2: ${tables} tables, ${functions} functions; ledger ${ledger} entries.`,
     `  Tables without row level security: ${rlsOff}.`,
-    `  Grants to forge2_anon: ${anonGrants.length ? anonGrants.map(row => row.join(':')).join(', ') : 'none'}.`
+    `  Grants to forge2_anon: ${anonGrants.length ? `${anonGrants.length} privileges on ${new Set(anonGrants.map(([table]) => table)).size} tables (${[...new Set(anonGrants.map(([table]) => table))].join(', ')})` : 'none'}; row level security still applies.`
   ].join('\n')
 )
 

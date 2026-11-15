@@ -157,18 +157,34 @@ const translateCode = (text, target) => {
       // Schema-qualified names, quoted or not: public.x, "public"."x", auth.uid(), extensions.vector
       .replace(/(^|[^\w."])(public|auth|extensions)(\s*\.)/gi, (match, lead, name, dot) => lead + schemas[name.toLowerCase()] + dot)
       .replace(/"(public|auth|extensions)"(\s*\.)/gi, (match, name, dot) => `"${schemas[name.toLowerCase()]}"${dot}`)
-      // create schema / with schema extensions
-      .replace(/(\bschema\s+(?:if\s+not\s+exists\s+)?)(extensions|auth)\b/gi, (match, lead, name) => lead + schemas[name.toLowerCase()])
-      // Supabase API roles become this deployment's PostgREST roles.
+      // A schema named after the keyword: create schema auth, with schema extensions,
+      // grant ... on all sequences in schema public, alter default privileges in schema public.
+      .replace(/(\bschema\s+(?:if\s+not\s+exists\s+)?)("?)(extensions|auth|public)\2(?![\w.])/gi, (match, lead, quote, name) => lead + quote + schemas[name.toLowerCase()] + quote)
+      // Supabase API roles become this deployment's PostgREST roles, quoted or not.
       .replace(/(^|[^\w."])(anon|authenticated|service_role)\b(?!\s*\.)/g, (match, lead, role) => lead + roles[role])
+      .replace(/"(anon|authenticated|service_role)"(?!\s*\.)/g, (match, role) => `"${roles[role]}"`)
   )
 }
 
 // Inside string literals only qualified names are translated ('public.forge_x'::regclass);
 // a bare 'public' is data (a visibility value), and stays. format() templates count too:
-// 'public.%I', 'public."x"'.
-const translateString = (text, target) =>
-  text.replace(/\b(public|auth|extensions)\.(?=[\w%"])/g, (match, name) => ({ public: target.schema, auth: target.authSchema, extensions: target.extensionSchema })[name] + '.')
+// 'public.%I', 'public."x"'. Strings that are themselves grant or revoke statements (run with
+// execute) also get their role lists and `schema public` translated; elsewhere a role name in a
+// string is data ('authenticated' as Supabase's aud value) and stays.
+const translateString = (text, target) => {
+  const schemas = { public: target.schema, auth: target.authSchema, extensions: target.extensionSchema }
+  let out = text.replace(/\b(public|auth|extensions)\.(?=[\w%"])/g, (match, name) => schemas[name] + '.')
+
+  if (/\b(grant|revoke)\b/i.test(out)) {
+    out = out
+      .replace(/(\b(?:to|from)\s+)((?:"?\w+"?\s*,\s*)*"?\w+"?)/gi, (match, lead, list) =>
+        lead + list.replace(/("?)\b(anon|authenticated|service_role)\b\1/g, (role, quote, name) => quote + target.roles[name] + quote)
+      )
+      .replace(/(\bschema\s+)("?)(public|auth|extensions)\2(?![\w.])/gi, (match, lead, quote, name) => lead + quote + schemas[name.toLowerCase()] + quote)
+  }
+
+  return out
+}
 
 const translateSegments = (sql, target) =>
   lex(sql)

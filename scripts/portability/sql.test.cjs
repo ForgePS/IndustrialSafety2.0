@@ -66,3 +66,23 @@ test('format() templates with qualified names are translated', () => {
   assert.match(sql, /'alter table forge2\.%I enable row level security'/)
   assert.match(sql, /'select \* from forge2\."y"'/)
 })
+
+test('quoted roles and schema-name grants are translated; the PUBLIC pseudo-role stays', () => {
+  const { sql } = translateMigration('grant select on table "public"."billing" to "anon";\ngrant usage, select on all sequences in schema public to service_role;\nalter default privileges in schema "public" grant select on tables to authenticated;\nrevoke all on schema public from public;')
+
+  assert.match(sql, /grant select on table "forge2"\."billing" to "forge2_anon";/)
+  assert.match(sql, /grant usage, select on all sequences in schema forge2 to forge2_service;/)
+  assert.match(sql, /alter default privileges in schema "forge2" grant select on tables to forge2_authenticated;/)
+  assert.match(sql, /revoke all on schema forge2 from public;/)
+})
+
+test('grant and revoke strings run with execute get their roles translated; role names as data stay', () => {
+  const { sql } = translateMigration(
+    "do $$ begin execute format('revoke all on public.%I from anon, authenticated', 't'); execute format('revoke all on function %s from public, anon', 'f'); execute 'grant usage on all sequences in schema public to service_role'; insert into public.a (aud) values ('authenticated'); end $$;"
+  )
+
+  assert.match(sql, /'revoke all on forge2\.%I from forge2_anon, forge2_authenticated'/)
+  assert.match(sql, /'revoke all on function %s from public, forge2_anon'/)
+  assert.match(sql, /'grant usage on all sequences in schema forge2 to forge2_service'/)
+  assert.match(sql, /values \('authenticated'\)/)
+})

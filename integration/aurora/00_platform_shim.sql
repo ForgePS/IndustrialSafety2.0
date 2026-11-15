@@ -50,6 +50,13 @@ alter schema forge2_auth owner to forge2_migrator;
 grant usage, create on schema forge2_ext to forge2_migrator;
 grant usage on schema forge2, forge2_auth, forge2_ext to forge2_anon, forge2_authenticated, forge2_service;
 
+-- Supabase grants service_role every new table, sequence and function in public by default, and
+-- 2.0's migrations rely on that. Here only forge2_service gets those defaults: 2.0's server reads
+-- and writes as it, and the anon and signed-in roles get only what migrations grant explicitly.
+alter default privileges for role forge2_migrator in schema forge2 grant all on tables to forge2_service;
+alter default privileges for role forge2_migrator in schema forge2 grant all on sequences to forge2_service;
+alter default privileges for role forge2_migrator in schema forge2 grant execute on functions to forge2_service;
+
 create extension if not exists pgcrypto with schema forge2_ext;
 create extension if not exists vector with schema forge2_ext;
 create extension if not exists btree_gist with schema forge2_ext;
