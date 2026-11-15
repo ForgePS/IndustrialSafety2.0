@@ -26,24 +26,24 @@ Always run `cdk diff <Stack>` first and read it.
 
 ## Safe (deployed through CDK on 2026-11-10, or no drift seen)
 
-| Stack | Notes |
-|---|---|
-| ForgeNetwork | Deployed 2026-11-10 (1 NAT gateway). |
-| ForgeSecurity | Deployed 2026-11-10. |
-| ForgeIdentity | Deployed 2026-11-10. Custom-message Lambda is `...-cognito-custom-message-cdk`. The hand-deployed one was deleted. |
-| ForgeData | Deployed 2026-11-10 (min 1 ACU, no reader). |
-| ForgeAlerting | No differences in the 2026-11-10 diff. |
-| ForgeObservability | No differences in the 2026-11-10 diff. |
+| Stack              | Notes                                                                                                              |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| ForgeNetwork       | Deployed 2026-11-10 (1 NAT gateway).                                                                               |
+| ForgeSecurity      | Deployed 2026-11-10.                                                                                               |
+| ForgeIdentity      | Deployed 2026-11-10. Custom-message Lambda is `...-cognito-custom-message-cdk`. The hand-deployed one was deleted. |
+| ForgeData          | Deployed 2026-11-10 (min 1 ACU, no reader).                                                                        |
+| ForgeAlerting      | No differences in the 2026-11-10 diff.                                                                             |
+| ForgeObservability | No differences in the 2026-11-10 diff.                                                                             |
 
 ## Drifted (blocked)
 
-| Stack | Known drift |
-|---|---|
-| ForgeCompute | API and worker task definitions are registered by scripts (API rev 484+, worker rev 14+). The live API uses secret `FORGE_AUTH_SESSION_ENCRYPTION_KEY`, **which CDK does not define**. Deploying would revert to CDK's task definitions and likely break sessions. The secret `forge-production-secrets-reporting-sweep-token` was created by hand. |
-| ForgeMessaging | `forge-production-sqs-reporting-schedules`, its DLQ, and rule `forge-production-events-reporting-schedules` were created by hand, so the deploy fails on name collisions. |
-| ForgeImportMalware | Role `forge-production-iam-guardduty-import-malware` and the GuardDuty malware protection plan on the imports bucket were created by hand (`scripts/bootstrap-production-import-malware.mjs`). |
-| ForgeFrontend | CloudFront aliases, origins and functions are changed by `cf-*.mjs` scripts. The stack is in `UPDATE_ROLLBACK_COMPLETE` since 2026-09-23. |
-| ForgeFieldFrontend, ForgeMonitoring, ForgeBackup, ForgeAudit | Not reviewed. Treat as drifted until a `cdk diff` is read. |
+| Stack                                                        | Known drift                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ForgeCompute                                                 | API and worker task definitions are registered by scripts (API rev 484+, worker rev 14+). The live API uses secret `FORGE_AUTH_SESSION_ENCRYPTION_KEY`, **which CDK does not define**. Deploying would revert to CDK's task definitions and likely break sessions. The secret `forge-production-secrets-reporting-sweep-token` was created by hand. |
+| ForgeMessaging                                               | `forge-production-sqs-reporting-schedules`, its DLQ, and rule `forge-production-events-reporting-schedules` were created by hand, so the deploy fails on name collisions.                                                                                                                                                                           |
+| ForgeImportMalware                                           | Role `forge-production-iam-guardduty-import-malware` and the GuardDuty malware protection plan on the imports bucket were created by hand (`scripts/bootstrap-production-import-malware.mjs`).                                                                                                                                                      |
+| ForgeFrontend                                                | CloudFront aliases, origins and functions are changed by `cf-*.mjs` scripts. The stack is in `UPDATE_ROLLBACK_COMPLETE` since 2026-09-23.                                                                                                                                                                                                           |
+| ForgeFieldFrontend, ForgeMonitoring, ForgeBackup, ForgeAudit | Not reviewed. Treat as drifted until a `cdk diff` is read.                                                                                                                                                                                                                                                                                          |
 
 ## Overriding (one stack, deliberately)
 
