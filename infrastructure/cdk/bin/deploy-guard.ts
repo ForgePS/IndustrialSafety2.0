@@ -272,7 +272,10 @@ function readGitPorcelain(): string {
 function main(): void {
   try {
     const result = assertDeployAllowed();
-    if (result.environmentName === "production" || result.environmentName === "govcloud-production") {
+    if (
+      result.environmentName === "production" ||
+      result.environmentName === "govcloud-production"
+    ) {
       assertProductionStacksAllowed(process.argv.slice(2));
     }
     console.warn(
