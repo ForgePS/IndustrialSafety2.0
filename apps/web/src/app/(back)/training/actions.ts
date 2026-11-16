@@ -5,6 +5,7 @@ import { createServiceRoleClient } from '@repo/supabase/server'
 import { getEffectiveForm } from '@/lib/forgeForms'
 import { personnelRecordWithinScope } from '@/lib/forgeScope'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
+import { notifyTrainingAssigned } from '@/lib/forgeTrainingNotify'
 
 export type TrainingFormValues = Record<string, string | boolean | null>
 
@@ -306,6 +307,8 @@ export const assignTraining = async (values: TrainingFormValues) => {
     after: assignment
   })
 
+  await notifyTrainingAssigned(organizationId, [assignment.id])
+
   revalidatePath('/training')
   revalidatePath('/my-training')
   return { id: assignment.id, message: 'Training assigned.' }
@@ -423,6 +426,7 @@ export const approveTrainingCompletion = async (completionId: string) => {
     .select('*, forge_personnel(*)')
     .eq('id', completionId)
     .eq('organization_id', organizationId)
+    .is('archived_at', null)
     .maybeSingle()
 
   if (!before) return { error: 'Training completion not found.' }
@@ -451,6 +455,7 @@ export const approveTrainingCompletion = async (completionId: string) => {
     })
     .eq('id', completionId)
     .eq('organization_id', organizationId)
+    .is('archived_at', null)
     .select('*')
     .single()
 

@@ -1,5 +1,5 @@
 // React Imports
-import type { ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
 
 // Next Imports
 import { cookies } from 'next/headers'
@@ -24,6 +24,7 @@ import { getTenantContext } from '@/lib/forgeTenantContext'
 import { getEffectiveExperience } from '@/lib/forgeExperience'
 import { getHelpdeskStaffAccess } from '@/lib/forgeHelpdeskAccess'
 import { getForgeAiHeaderState } from '@/lib/forgeAiHeader'
+import NavigationProgress from '@components/layout/NavigationProgress'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -64,6 +65,9 @@ const AdminLayout = async ({ children }: { children: ReactNode }) => {
 
   return (
     <SidebarProvider defaultOpen={sidebarCookie ? JSON.parse(sidebarCookie.value) : appConfig.layout === 'vertical'}>
+      <Suspense fallback={null}>
+        <NavigationProgress />
+      </Suspense>
       <VerticalLayout
         navigation={
           <Sidebar

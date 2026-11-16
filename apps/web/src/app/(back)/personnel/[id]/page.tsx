@@ -1,11 +1,15 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
+import { TbFileCertificate, TbSteeringWheel } from 'react-icons/tb'
 import { Badge } from '@repo/ui/components/ui/badge'
+import { Button } from '@repo/ui/components/ui/button'
 import { createServiceRoleClient } from '@repo/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
 
 import PersonnelRecordForm from '../PersonnelRecordForm'
 import PersonnelSensitivePanel from '../PersonnelSensitivePanel'
+import RestorePersonnelButton from '../RestorePersonnelButton'
 import type { PersonnelFormValues } from '../actions'
 import { getEffectiveForm } from '@/lib/forgeForms'
 import { getEffectiveLookup } from '@/lib/forgeLookups'
@@ -13,6 +17,7 @@ import { getPersonnelStructureOptions, personnelDisplayName } from '@/lib/forgeP
 import { personnelRecordWithinScope } from '@/lib/forgeScope'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import ForgeAiContextButton from '@/components/forge-ai/ForgeAiContextButton'
+import PersonnelTrainingCard from '@/components/training/PersonnelTrainingCard'
 
 export const metadata: Metadata = { title: 'Personnel Profile' }
 
@@ -58,7 +63,7 @@ const PersonnelDetailPage = async ({ params }: { params: Promise<{ id: string }>
       })
     : false
 
-  const canArchive = archivePermission && !record.archived_at
+  const archiveInScope = archivePermission
     ? await personnelRecordWithinScope({
         organizationId,
         userId: context.user.id,
@@ -66,6 +71,36 @@ const PersonnelDetailPage = async ({ params }: { params: Promise<{ id: string }>
         record
       })
     : false
+
+  const canArchive = archiveInScope && !record.archived_at
+  const canRestore = archiveInScope && Boolean(record.archived_at)
+
+  // DOT links: the driver file (open one first, else the latest archived) and the company driver roster row.
+  const dotViewPermission = context.access.effective.find(item => item.permissionKey === 'dot.view' && item.allowed)
+
+  const canSeeDot = dotViewPermission
+    ? await personnelRecordWithinScope({ organizationId, userId: context.user.id, scope: dotViewPermission.scope, record })
+    : false
+
+  const [{ data: dotFiles }, { data: companyDriver }] = canSeeDot
+    ? await Promise.all([
+        supabase
+          .from('forge_dot_driver_files')
+          .select('id, archived_at')
+          .eq('organization_id', organizationId)
+          .eq('personnel_id', record.id)
+          .order('archived_at', { ascending: false, nullsFirst: true })
+          .limit(1),
+        supabase
+          .from('forge_dot_company_drivers')
+          .select('id, status')
+          .eq('organization_id', organizationId)
+          .eq('personnel_id', record.id)
+          .maybeSingle()
+      ])
+    : [{ data: [] }, { data: null }]
+
+  const dotFile = ((dotFiles || []) as Array<{ id: string; archived_at: string | null }>)[0] || null
 
   const initialValues: PersonnelFormValues = {
     first_name: record.first_name,
@@ -106,6 +141,16 @@ const PersonnelDetailPage = async ({ params }: { params: Promise<{ id: string }>
   const canEditSensitive = canViewSensitive && editSensitivePermission && !record.archived_at
     ? await personnelRecordWithinScope({ organizationId, userId: context.user.id, scope: editSensitivePermission.scope, record })
     : false
+
+  // Training history: Training View (or Record Completion) within this person's scope; attaching needs Record Completion.
+  const trainingInScope = async (key: string) => {
+    const permission = context.access.effective.find(item => item.permissionKey === key && item.allowed)
+
+    return permission ? personnelRecordWithinScope({ organizationId, userId: context.user.id, scope: permission.scope, record }) : false
+  }
+
+  const canAttachTraining = await trainingInScope('training.record_completion')
+  const canSeeTraining = canAttachTraining || (await trainingInScope('training.view'))
 
   const [sensitiveResult, contactsResult, sexLookup, eventsResult] = await Promise.all([
     canViewSensitive
@@ -169,19 +214,47 @@ const PersonnelDetailPage = async ({ params }: { params: Promise<{ id: string }>
           <div className='mt-1 flex flex-wrap items-center gap-3'>
             <h1 className='text-textPrimary text-3xl font-bold'>{personnelDisplayName(record)}</h1>
             {record.archived_at ? <Badge size='sm' variant='secondary'>Archived</Badge> : null}
+            {record.is_dot_driver ? <Badge size='sm' variant='tonalPrimary'>DOT Driver</Badge> : null}
+            {record.is_company_driver ? <Badge size='sm' variant='outline'>Company Driver</Badge> : null}
           </div>
           <p className='text-textSecondary mt-2'>
             {canEdit ? 'Edit fields allowed by the tenant Form Builder.' : 'Read-only based on your current access.'}
           </p>
         </div>
-        {canUseAi ? (
-          <ForgeAiContextButton
-            contextType='personnel'
-            recordId={record.id}
-            recordLabel={record.employee_number || record.first_name + ' ' + record.last_name}
-          />
-        ) : null}
+        <div className='flex flex-wrap items-center gap-3'>
+          {canSeeDot && dotFile ? (
+            <Button variant='outline' asChild>
+              <Link href={`/dot/drivers/${dotFile.id}`} data-testid='personnel-dot-file-link'>
+                <TbFileCertificate />
+                {dotFile.archived_at ? 'Driver File (archived)' : 'Driver File'}
+              </Link>
+            </Button>
+          ) : null}
+          {canSeeDot && companyDriver ? (
+            <Button variant='outline' asChild>
+              <Link href={`/dot/company-drivers/${companyDriver.id}`} data-testid='personnel-company-driver-link'>
+                <TbSteeringWheel />
+                {companyDriver.status === 'removed' ? 'Company Driver (removed)' : 'Company Driver'}
+              </Link>
+            </Button>
+          ) : null}
+          {canRestore ? <RestorePersonnelButton personnelId={record.id} /> : null}
+          {canUseAi ? (
+            <ForgeAiContextButton
+              contextType='personnel'
+              recordId={record.id}
+              recordLabel={record.employee_number || record.first_name + ' ' + record.last_name}
+            />
+          ) : null}
+        </div>
       </div>
+
+      {record.archived_at ? (
+        <div role='status' data-testid='personnel-archived-notice' className='bg-muted text-textSecondary rounded-md border px-4 py-3 text-sm'>
+          This person is archived and hidden from the active roster. Training and form history is retained.
+          {canRestore ? ' Use Restore to roster to put them back.' : ''}
+        </div>
+      ) : null}
 
       <PersonnelRecordForm
         form={form}
@@ -220,6 +293,8 @@ const PersonnelDetailPage = async ({ params }: { params: Promise<{ id: string }>
           }))}
         />
       ) : null}
+
+      {canSeeTraining ? <PersonnelTrainingCard organizationId={organizationId} personnelId={record.id} canAttach={canAttachTraining} /> : null}
 
       <Card data-testid='personnel-employment-history'>
         <CardHeader>

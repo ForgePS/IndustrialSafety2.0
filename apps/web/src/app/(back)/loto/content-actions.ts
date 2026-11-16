@@ -167,6 +167,83 @@ export const moveLotoComponent = async ({
   return { message: 'Order saved.' }
 }
 
+/**
+ * Copy a step into a new step right after it (1.0's "Duplicate"). Steps carry text only in 2.0
+ * (photos belong to the equipment or an energy source), so there is nothing else to copy.
+ */
+export const duplicateLotoStep = async ({ procedureId, stepId }: { procedureId: string; stepId: string }): Promise<Result> => {
+  const loaded = await editableProcedure(procedureId)
+
+  if ('error' in loaded) return { error: loaded.error }
+
+  const { context, organizationId, supabase, procedure } = loaded
+
+  if (procedure.status !== 'draft') return { error: 'Steps can only be duplicated while the procedure is a Draft.' }
+
+  const { data: rows } = await supabase
+    .from('forge_loto_steps')
+    .select('*')
+    .eq('organization_id', organizationId)
+    .eq('procedure_id', procedureId)
+    .order('sort_order')
+    .order('created_at')
+
+  const list = (rows || []) as any[]
+  const index = list.findIndex(row => row.id === stepId)
+
+  if (index < 0) return { error: 'Procedure step not found.' }
+
+  const source = list[index]
+
+  const { data: copy, error } = await supabase
+    .from('forge_loto_steps')
+    .insert({
+      organization_id: organizationId,
+      procedure_id: procedureId,
+      step_type: source.step_type,
+      title: source.title,
+      instructions: source.instructions,
+      warning_text: source.warning_text,
+      verification_required: source.verification_required,
+      verification_instructions: source.verification_instructions,
+      sort_order: source.sort_order,
+      created_by: context.user.id,
+      updated_by: context.user.id
+    })
+    .select('*')
+    .single()
+
+  if (error || !copy) return { error: error?.message || 'Unable to duplicate the step.' }
+
+  // Renumber so the copy sits directly after the original.
+  const ordered = [...list.slice(0, index + 1), copy, ...list.slice(index + 1)]
+
+  for (const [position, row] of ordered.entries()) {
+    const sortOrder = (position + 1) * 10
+
+    if (row.id === copy.id || row.sort_order !== sortOrder) {
+      const { error: orderError } = await supabase.from('forge_loto_steps').update({ sort_order: sortOrder, updated_by: context.user.id }).eq('id', row.id)
+
+      if (orderError) return { error: orderError.message }
+    }
+  }
+
+  await audit({
+    supabase,
+    actorUserId: context.user.id,
+    organizationId,
+    action: 'loto.step_duplicated',
+    entityType: 'loto_step',
+    entityId: copy.id,
+    before: { source_step_id: stepId },
+    after: { ...copy, sort_order: (index + 2) * 10 }
+  })
+
+  revalidatePath('/loto/' + procedureId)
+
+  return { id: copy.id, message: 'Step duplicated.' }
+}
+
 export const updateLotoPhoto = async ({
   procedureId,
   photoId,

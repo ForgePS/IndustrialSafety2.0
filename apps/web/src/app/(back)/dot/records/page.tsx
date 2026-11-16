@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import DotHeader, { allowedFrom } from '@/components/dot/DotHeader'
 import DotStatusPill from '@/components/dot/DotStatusPill'
 import { DOT_RECORD_CATEGORY_LABELS, getScopedDotRecords, personName } from '@/lib/forgeDot'
-import { formatUsDate } from '@/lib/forgeDotRules'
+import { dotDueOverdueLabel, formatUsDate } from '@/lib/forgeDotRules'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 
 export const metadata: Metadata = { title: 'DOT Records' }
@@ -20,6 +20,7 @@ const DotRecordsPage = async ({ searchParams }: { searchParams: Promise<{ catego
   const context = await requireTenantPermission('dot.view')
   const allowed = allowedFrom(context)
   const { category, status } = await searchParams
+  const today = new Date().toISOString().slice(0, 10)
 
   const records = (
     await getScopedDotRecords({ organizationId: context.activeOrganization.id, userId: context.user.id, permission: context.permission })
@@ -87,6 +88,7 @@ const DotRecordsPage = async ({ searchParams }: { searchParams: Promise<{ catego
               <TableHead>Driver</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Due</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -106,11 +108,18 @@ const DotRecordsPage = async ({ searchParams }: { searchParams: Promise<{ catego
                   <TableCell>
                     <DotStatusPill tone={record.status === 'open' ? 'pending' : 'muted'}>{record.status === 'open' ? 'Open' : 'Closed'}</DotStatusPill>
                   </TableCell>
+                  <TableCell data-dot-record-due>
+                    {(() => {
+                      const due = dotDueOverdueLabel(record, today)
+
+                      return due ? <DotStatusPill tone={due.overdue ? 'critical' : 'muted'}>{due.text}</DotStatusPill> : '—'
+                    })()}
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className='py-10 text-center'>
+                <TableCell colSpan={7} className='py-10 text-center'>
                   {category || status ? 'No DOT records match these filters.' : 'No DOT records yet.'}
                 </TableCell>
               </TableRow>

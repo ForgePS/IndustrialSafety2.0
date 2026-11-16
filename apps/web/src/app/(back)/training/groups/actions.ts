@@ -6,6 +6,7 @@ import { createServiceRoleClient } from '@repo/supabase/server'
 
 import { writeForgeAudit } from '@/lib/forgeAudit'
 import { assignGroupRequirements, trainingErrorMessage } from '@/lib/forgeTrainingLms'
+import { notifyTrainingAssigned } from '@/lib/forgeTrainingNotify'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 
 type Result = { error?: string; message?: string; id?: string }
@@ -118,6 +119,11 @@ export const addGroupRequirement = async ({ groupId, courseId }: { groupId: stri
 
   if ('error' in target) return { error: target.error }
 
+  // Archived courses cannot become new requirements (they would never be assigned).
+  const { data: course } = await target.supabase.from('forge_training_courses').select('id').eq('organization_id', target.organizationId).eq('id', courseId).eq('is_active', true).maybeSingle()
+
+  if (!course) return { error: 'Choose an active course.' }
+
   const { error } = await target.supabase
     .from('forge_training_group_requirements')
     .upsert({ group_id: groupId, course_id: courseId, organization_id: target.organizationId, added_by: target.context.user.id }, { onConflict: 'group_id,course_id', ignoreDuplicates: true })
@@ -165,6 +171,8 @@ export const assignGroupTraining = async ({ groupId, dueDate }: { groupId: strin
     actorUserId: target.context.user.id,
     scope: assign.scope
   })
+
+  await notifyTrainingAssigned(target.organizationId, result.ids)
 
   await writeForgeAudit({
     actorUserId: target.context.user.id,

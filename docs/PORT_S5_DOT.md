@@ -91,7 +91,8 @@ Shared code:
 - **Digital forms.** 1.0 could link a DQF document to a filled-in digital form. 2.0 takes uploads and dates only.
 - **Reports catalog.** The DOT entries in 1.0's reports catalog are not in 2.0's report builder yet. The compliance report has its own page.
 - **Forge AI context.** Forge AI does not read DOT data yet.
-- **Scheduled reminders and insurer emails.** Expirations are flagged on screen. Nothing is emailed yet, including the roster notice to the insurer; same scheduler gap as slices 3 and 4.
+- **Scheduled reminders.** Expirations are flagged on screen but nothing is emailed yet; same scheduler gap as slices 3 and 4. (1.0 never emailed the insurer either; it only stored the insurer's name and email.)
+- **Batch 1 additions:** roster search/sort/license follow-ups, filtering dashboard cards, related records, record due dates. See `docs/PORT_B1_PARITY_FIXES.md`.
 
 ## Tests
 

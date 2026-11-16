@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import DotHeader, { allowedFrom } from '@/components/dot/DotHeader'
 import DotStatusPill from '@/components/dot/DotStatusPill'
 import { getScopedDriverFiles } from '@/lib/forgeDot'
-import { formatUsDate } from '@/lib/forgeDotRules'
+import { DOT_DQF_ATTENTION_KINDS, DOT_ISSUE_LABELS, driverMatchesAttentionFilter, formatUsDate, type DotIssueKind } from '@/lib/forgeDotRules'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 
 export const metadata: Metadata = { title: 'DOT Driver Files' }
@@ -19,11 +19,14 @@ const ARCHIVE_REASONS: Record<string, string> = {
   personnel_inactive: 'No longer active'
 }
 
-const DriverFilesPage = async ({ searchParams }: { searchParams: Promise<{ view?: string; q?: string }> }) => {
+const DriverFilesPage = async ({ searchParams }: { searchParams: Promise<{ view?: string; q?: string; attention?: string }> }) => {
   const context = await requireTenantPermission('dot.view')
   const allowed = allowedFrom(context)
-  const { view, q } = await searchParams
+  const { view, q, attention: attentionParam } = await searchParams
   const archived = view === 'archived'
+
+  // Only the DQF kinds apply here; anything else is ignored rather than emptying the list.
+  const attention = DOT_DQF_ATTENTION_KINDS.includes(attentionParam as DotIssueKind) ? (attentionParam as DotIssueKind) : null
   const search = String(q || '').trim().toLowerCase()
 
   const files = (
@@ -37,6 +40,7 @@ const DriverFilesPage = async ({ searchParams }: { searchParams: Promise<{ view?
         file.file_number.toLowerCase().includes(search) ||
         String(file.person?.employee_number || '').toLowerCase().includes(search)
     )
+    .filter(file => driverMatchesAttentionFilter(file, attention))
 
   return (
     <div className='flex flex-col gap-6'>
@@ -63,11 +67,25 @@ const DriverFilesPage = async ({ searchParams }: { searchParams: Promise<{ view?
           className='border-input bg-card h-[38px] w-72 rounded-md border px-3 text-sm'
         />
         {archived ? <input type='hidden' name='view' value='archived' /> : null}
+        {attention ? <input type='hidden' name='attention' value={attention} /> : null}
         <Button type='submit' size='sm' variant='outline'>Search</Button>
         <Link className='text-primary text-sm hover:underline' href={archived ? '/dot/drivers' : '/dot/drivers?view=archived'}>
           {archived ? 'Show open files' : 'Show archived files'}
         </Link>
       </form>
+
+      {attention ? (
+        <div className='flex flex-wrap items-center gap-2 text-sm' data-attention-filter={attention}>
+          <span className='text-textSecondary'>Showing drivers with:</span>
+          <DotStatusPill tone={attention === 'expiring' ? 'pending' : 'critical'}>{DOT_ISSUE_LABELS[attention]}</DotStatusPill>
+          <Link
+            className='text-primary hover:underline'
+            href={'/dot/drivers' + (q || archived ? '?' + new URLSearchParams({ ...(q ? { q } : {}), ...(archived ? { view: 'archived' } : {}) }).toString() : '')}
+          >
+            Clear filter
+          </Link>
+        </div>
+      ) : null}
 
       <Card>
         <Table>
@@ -126,7 +144,7 @@ const DriverFilesPage = async ({ searchParams }: { searchParams: Promise<{ view?
             ) : (
               <TableRow>
                 <TableCell colSpan={6} className='py-10 text-center'>
-                  {archived ? 'No archived driver files.' : 'No driver files yet.'}
+                  {attention || search ? 'No driver files match.' : archived ? 'No archived driver files.' : 'No driver files yet.'}
                 </TableCell>
               </TableRow>
             )}

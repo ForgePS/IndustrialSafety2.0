@@ -7,6 +7,7 @@ import DotFileSlot from '@/components/dot/DotFileSlot'
 import DotHeader, { allowedFrom } from '@/components/dot/DotHeader'
 import DotStatusPill from '@/components/dot/DotStatusPill'
 import { DOT_RECORD_CATEGORY_LABELS, personName } from '@/lib/forgeDot'
+import { dotDueOverdueLabel } from '@/lib/forgeDotRules'
 import { loadDotRecordInScope } from '@/lib/forgeDotServer'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import DotRecordForm from '../DotRecordForm'
@@ -30,6 +31,7 @@ const DotRecordPage = async ({ params }: { params: Promise<{ id: string }> }) =>
 
   const { row: record, supabase } = loaded
   const canEdit = allowed('dot.edit')
+  const due = dotDueOverdueLabel(record, new Date().toISOString().slice(0, 10))
 
   const { data: uploads } = await supabase
     .from('forge_dot_files')
@@ -69,6 +71,11 @@ const DotRecordPage = async ({ params }: { params: Promise<{ id: string }> }) =>
             <span className='self-center'>
               <DotStatusPill tone={record.status === 'open' ? 'pending' : 'muted'}>{record.status === 'open' ? 'Open' : 'Closed'}</DotStatusPill>
             </span>
+            {due ? (
+              <span className='self-center' data-dot-record-due>
+                <DotStatusPill tone={due.overdue ? 'critical' : 'muted'}>{due.text}</DotStatusPill>
+              </span>
+            ) : null}
             {canEdit ? <RecordStatusButton recordId={record.id} status={record.status} /> : null}
             <Link className='text-primary self-center text-sm hover:underline' href='/dot/records'>
               All records
@@ -92,6 +99,7 @@ const DotRecordPage = async ({ params }: { params: Promise<{ id: string }> }) =>
                 category: record.category,
                 title: record.title || '',
                 record_date: record.record_date || '',
+                due_on: record.due_on || '',
                 personnel_id: record.personnel_id || '',
                 location_id: record.location_id || '',
                 description: record.description || '',

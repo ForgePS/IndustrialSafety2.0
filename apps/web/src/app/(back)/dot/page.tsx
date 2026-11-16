@@ -4,8 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo
 
 import DotHeader, { allowedFrom } from '@/components/dot/DotHeader'
 import DotStatusPill, { issueTone } from '@/components/dot/DotStatusPill'
-import { getScopedCompanyDrivers, getScopedDriverFiles } from '@/lib/forgeDot'
-import { DOT_ISSUE_LABELS, type DotIssueKind } from '@/lib/forgeDotRules'
+import { DOT_RECORD_CATEGORY_LABELS, getScopedCompanyDrivers, getScopedDotRecords, getScopedDriverFiles } from '@/lib/forgeDot'
+import { DOT_ISSUE_LABELS, buildDotAttentionCards, summarizeDotRecords, type DotIssueKind } from '@/lib/forgeDotRules'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 
 export const metadata: Metadata = { title: 'DOT Compliance' }
@@ -15,10 +15,14 @@ const DotDashboardPage = async () => {
   const organizationId = context.activeOrganization.id
   const allowed = allowedFrom(context)
 
-  const [files, drivers] = await Promise.all([
+  const [files, drivers, records] = await Promise.all([
     getScopedDriverFiles({ organizationId, userId: context.user.id, permission: context.permission }),
-    getScopedCompanyDrivers({ organizationId, userId: context.user.id, permission: context.permission })
+    getScopedCompanyDrivers({ organizationId, userId: context.user.id, permission: context.permission }),
+    getScopedDotRecords({ organizationId, userId: context.user.id, permission: context.permission })
   ])
+
+  const attentionCards = buildDotAttentionCards(files, drivers)
+  const recordSummary = summarizeDotRecords(records, Object.keys(DOT_RECORD_CATEGORY_LABELS))
 
   const compliant = files.filter(file => !file.issues.some(issue => issue.kind !== 'expiring')).length
   const score = files.length ? Math.round((compliant / files.length) * 100) : null
@@ -82,6 +86,52 @@ const DotDashboardPage = async () => {
           </Card>
         ))}
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Follow-ups by type</CardTitle>
+          <CardDescription>Each card opens the list filtered to the drivers it counts.</CardDescription>
+        </CardHeader>
+        <CardContent className='grid gap-3 sm:grid-cols-2 lg:grid-cols-4'>
+          {attentionCards.map(card => (
+            <Link
+              key={card.kind}
+              href={card.href}
+              className='hover:bg-secondary/50 flex items-center justify-between gap-2 rounded-lg border p-3'
+              data-attention-card={card.kind}
+            >
+              <span>
+                <span className='block text-sm font-medium'>{card.label}</span>
+                <span className='text-textSecondary text-xs'>{card.source === 'dqf' ? 'Driver files' : 'Company drivers'}</span>
+              </span>
+              <span className={'text-2xl font-bold ' + (card.count ? (card.kind === 'expiring' || card.kind === 'sampleDue' ? 'text-pink-600' : 'text-destructive') : 'text-textSecondary')}>
+                {card.count}
+              </span>
+            </Link>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>DOT records</CardTitle>
+          <CardDescription>
+            {recordSummary.total} record{recordSummary.total === 1 ? '' : 's'} · {recordSummary.open} open
+          </CardDescription>
+        </CardHeader>
+        <CardContent className='grid gap-3 sm:grid-cols-3 xl:grid-cols-6'>
+          <Link href='/dot/records?status=open' className='hover:bg-secondary/50 rounded-lg border p-3' data-dot-record-tile='open'>
+            <span className='text-textSecondary block text-xs'>Open</span>
+            <span className='text-2xl font-bold'>{recordSummary.open}</span>
+          </Link>
+          {Object.entries(DOT_RECORD_CATEGORY_LABELS).map(([key, label]) => (
+            <Link key={key} href={'/dot/records?category=' + key} className='hover:bg-secondary/50 rounded-lg border p-3' data-dot-record-tile={key}>
+              <span className='text-textSecondary block text-xs'>{label}</span>
+              <span className='text-2xl font-bold'>{recordSummary.byCategory[key] || 0}</span>
+            </Link>
+          ))}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

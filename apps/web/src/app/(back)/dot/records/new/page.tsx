@@ -4,15 +4,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo
 import DotHeader, { allowedFrom } from '@/components/dot/DotHeader'
 import { DOT_RECORD_CATEGORY_LABELS } from '@/lib/forgeDot'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
-import DotRecordForm, { EMPTY_DOT_RECORD } from '../DotRecordForm'
+import DotRecordForm from '../DotRecordForm'
+import { EMPTY_DOT_RECORD } from '../dotRecordDefaults'
 import { recordFormOptions } from '../recordOptions'
 
 export const metadata: Metadata = { title: 'New DOT Record' }
 
-const NewDotRecordPage = async ({ searchParams }: { searchParams: Promise<{ category?: string }> }) => {
+const NewDotRecordPage = async ({ searchParams }: { searchParams: Promise<{ category?: string; personnel?: string }> }) => {
   const context = await requireTenantPermission('dot.edit')
-  const { category } = await searchParams
+  const { category, personnel } = await searchParams
   const options = await recordFormOptions(context)
+
+  // Only preselect a driver the form already offers (in dot.edit scope).
+  const initialPerson = personnel && options.people.some(person => person.id === personnel) ? personnel : ''
   const initialCategory = category && category in DOT_RECORD_CATEGORY_LABELS ? category : EMPTY_DOT_RECORD.category
 
   return (
@@ -27,7 +31,7 @@ const NewDotRecordPage = async ({ searchParams }: { searchParams: Promise<{ cate
         </CardHeader>
         <CardContent>
           <DotRecordForm
-            initial={{ ...EMPTY_DOT_RECORD, category: initialCategory, record_date: new Date().toISOString().slice(0, 10) }}
+            initial={{ ...EMPTY_DOT_RECORD, category: initialCategory, record_date: new Date().toISOString().slice(0, 10), personnel_id: initialPerson }}
             categories={DOT_RECORD_CATEGORY_LABELS}
             canEdit
             {...options}

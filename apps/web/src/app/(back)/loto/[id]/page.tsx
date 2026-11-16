@@ -372,6 +372,7 @@ const LotoProcedurePage = async ({ params }: { params: Promise<{ id: string }> }
                   values={stepValues(step)}
                   isFirst={index === 0}
                   isLast={index === detail.steps.length - 1}
+                  canDuplicate={procedure.status === 'draft'}
                 >
                   {body}
                 </LotoEditableItem>

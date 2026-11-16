@@ -11,16 +11,6 @@ import { toast } from '@repo/ui/utils/toast'
 
 import { createDotRecord, updateDotRecord, type DotRecordValues } from '../actions'
 
-export const EMPTY_DOT_RECORD: DotRecordValues = {
-  category: 'roadside_inspection',
-  title: '',
-  record_date: '',
-  personnel_id: '',
-  location_id: '',
-  description: '',
-  outcome: ''
-}
-
 const SELECT = 'border-input bg-card mt-1 h-[38px] w-full rounded-md border px-3'
 
 const DotRecordForm = ({
@@ -63,6 +53,17 @@ const DotRecordForm = ({
         <div>
           <Label htmlFor='dot-record-date'>Date</Label>
           <Input id='dot-record-date' className='mt-1' type='date' max={today} value={values.record_date} onChange={event => set('record_date', event.target.value)} />
+        </div>
+        <div>
+          <Label htmlFor='dot-record-due'>Due date (optional)</Label>
+          <Input
+            id='dot-record-due'
+            className='mt-1'
+            type='date'
+            min={values.record_date || undefined}
+            value={values.due_on}
+            onChange={event => set('due_on', event.target.value)}
+          />
         </div>
         <div className='md:col-span-2'>
           <Label htmlFor='dot-record-title'>Title</Label>

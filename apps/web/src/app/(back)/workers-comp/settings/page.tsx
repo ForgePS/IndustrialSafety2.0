@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo
 import { createServiceRoleClient } from '@repo/supabase/server'
 
 import WcFormTemplatesCard from './WcFormTemplatesCard'
+import WcSendNowButton from './WcSendNowButton'
 import WcSettingsForm from './WcSettingsForm'
 import { getActiveWcFormTemplates } from '@/lib/forgeWcForms'
 import { WC_FORM_DEFINITIONS, WC_FORM_KEYS } from '@/lib/forgeWcFormsRules'
@@ -12,7 +13,7 @@ import { renderNotificationEmail } from '@/lib/forgeNotifications'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import { wcTodayIso } from '@/lib/forgeWorkersComp'
 import { WC_WEEKLY_NOTICE_LINK, reportWeekOf } from '@/lib/forgeWorkersCompEmail'
-import { buildWcWeeklyNoticeFor, getWcRecipientCandidates, wcViewPermissionFor } from '@/lib/forgeWorkersCompNotify'
+import { buildWcWeeklyNoticeFor, getWcRecipientCandidates, wcViewPermissionFor, wcWeekOfNow } from '@/lib/forgeWorkersCompNotify'
 
 export const metadata: Metadata = { title: 'Workers\' Comp Settings' }
 
@@ -68,6 +69,12 @@ const WcSettingsPage = async () => {
           weekday: settings?.weekly_email_weekday ?? 5,
           hour: settings?.weekly_email_hour ?? 7
         }}
+      />
+
+      <WcSendNowButton
+        enabled={Boolean(settings?.weekly_email_enabled && selected.length)}
+        weekOf={wcWeekOfNow(settings?.time_zone)}
+        lastSentWeek={settings?.last_weekly_email_week || null}
       />
 
       <WcFormTemplatesCard

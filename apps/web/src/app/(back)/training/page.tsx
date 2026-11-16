@@ -4,12 +4,15 @@ import TrainingOverview from './TrainingOverview'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import { getTrainingOverview } from '@/lib/forgeTraining'
 import { getEffectiveLookup } from '@/lib/forgeLookups'
+import { trainingTodayIso } from '@/lib/forgeTrainingLms'
+import { assignmentFiltersFrom } from '@/lib/forgeTrainingManageRules'
 
 export const metadata: Metadata = { title: 'Training' }
 
-const TrainingPage = async () => {
+const TrainingPage = async ({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) => {
   const context = await requireTenantPermission('training.view')
   const organizationId = context.activeOrganization.id
+  const params = await searchParams
 
   const [data, categoryLookup, deliveryLookup, statusLookup, resultLookup, approvalLookup] = await Promise.all([
     getTrainingOverview({
@@ -30,6 +33,11 @@ const TrainingPage = async () => {
   return (
     <TrainingOverview
       courses={data.courses}
+      archivedCourses={data.archivedCourses}
+      groups={data.groups}
+      initialFilters={assignmentFiltersFrom(params)}
+      initialCourseList={params.courses === 'archived' ? 'archived' : 'active'}
+      todayIso={trainingTodayIso()}
       assignments={data.assignments}
       completions={data.completions}
       categoryLabels={Object.fromEntries(categoryLookup.options.map(option => [option.key, option.label]))}
@@ -46,7 +54,10 @@ const TrainingPage = async () => {
         { href: '/training/groups', label: 'Groups', allowed: has('training.manage_groups') },
         { href: '/training/paper', label: 'Paper Quizzes', allowed: has('training.record_completion') },
         { href: '/training/portal', label: 'Kiosk Links', allowed: has('training.manage_portal') },
-        { href: '/training/settings', label: 'Certificates', allowed: has('training.issue_certificate') }
+        { href: '/training/settings', label: 'Certificates', allowed: has('training.issue_certificate') },
+        { href: '/training/reports', label: 'Reports', allowed: has('training.reports') },
+        { href: '/training/library', label: 'Library', allowed: has('training.manage_content') },
+        { href: '/training/notices', label: 'Notices & Retraining', allowed: has('training.manage_groups') }
       ].filter(link => link.allowed).map(({ href, label }) => ({ href, label }))}
     />
   )

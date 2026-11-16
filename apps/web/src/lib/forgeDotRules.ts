@@ -534,6 +534,170 @@ export const reportCsv = (rows: ReportRow[], hiddenDocuments: string[]) => {
 }
 
 // ---------------------------------------------------------------------------
+// Attention cards and list filters (Batch 1)
+// ---------------------------------------------------------------------------
+
+/** DQF kinds the driver list can filter by; the roster kinds filter the company-driver list. */
+export const DOT_DQF_ATTENTION_KINDS: DotIssueKind[] = ['expired', 'expiring', 'missingDocuments', 'missingLicenseCopy', 'missingLicenseExpiry']
+export const DOT_ROSTER_ATTENTION_KINDS: DotIssueKind[] = ['pendingMvr', 'missingMvrConsent', 'sampleDue']
+
+export const isDotIssueKind = (value: unknown): value is DotIssueKind =>
+  typeof value === 'string' && Object.prototype.hasOwnProperty.call(DOT_ISSUE_LABELS, value)
+
+/** 1.0 driverMatchesAttentionFilter, on the issues 2.0 already works out per file or roster row. */
+export const driverMatchesAttentionFilter = (item: { issues: Array<{ kind: string }> }, kind: DotIssueKind | null | undefined) =>
+  !kind || item.issues.some(issue => issue.kind === kind)
+
+export type DotAttentionCard = { kind: DotIssueKind; label: string; count: number; href: string; source: 'dqf' | 'roster' }
+
+/** 1.0 buildDotAttentionCards: one card per kind, counting drivers (not issues), each linking to its filtered list. */
+export const buildDotAttentionCards = (
+  files: Array<{ issues: Array<{ kind: string }> }>,
+  roster: Array<{ issues: Array<{ kind: string }> }>
+): DotAttentionCard[] => [
+  ...DOT_DQF_ATTENTION_KINDS.map(kind => ({
+    kind,
+    label: DOT_ISSUE_LABELS[kind],
+    count: files.filter(item => driverMatchesAttentionFilter(item, kind)).length,
+    href: '/dot/drivers?attention=' + kind,
+    source: 'dqf' as const
+  })),
+  ...DOT_ROSTER_ATTENTION_KINDS.map(kind => ({
+    kind,
+    label: DOT_ISSUE_LABELS[kind],
+    count: roster.filter(item => driverMatchesAttentionFilter(item, kind)).length,
+    href: '/dot/company-drivers?attention=' + kind,
+    source: 'roster' as const
+  }))
+]
+
+// ---------------------------------------------------------------------------
+// Company-driver roster search, sort and license follow-ups (Batch 1)
+// ---------------------------------------------------------------------------
+
+export type LicenseFollowUp = 'expired' | 'expiring' | 'noCopy'
+
+export const LICENSE_FOLLOW_UP_LABELS: Record<LicenseFollowUp, string> = {
+  expired: 'License expired',
+  expiring: 'License expiring (30 days)',
+  noCopy: 'No license copy'
+}
+
+/**
+ * 1.0 driversWithLicenseIssues: expired, expiring within 30 days, or (2.0) no license copy uploaded.
+ * Removed drivers never need a follow-up. A missing expiry date stays its own issue (missingLicenseExpiry).
+ */
+export const licenseFollowUps = (
+  driver: Pick<CompanyDriver, 'status' | 'license_expires_on'>,
+  licenseUploads: number,
+  todayIso: string
+): LicenseFollowUp[] => {
+  if (driver.status === 'removed') return []
+
+  const state = expiryState(driver.license_expires_on, todayIso)
+  const out: LicenseFollowUp[] = []
+
+  if (state === 'expired') out.push('expired')
+  else if (state === 'expiring') out.push('expiring')
+  if (!(licenseUploads > 0)) out.push('noCopy')
+
+  return out
+}
+
+/** 1.0 matchesCompanyDriverQuery: every word must match the name, employee # or license #. */
+export const companyDriverMatchesQuery = (
+  driver: { driver_name?: string | null; employee_number?: string | null; license_number?: string | null },
+  query: string | null | undefined
+) => {
+  const tokens = String(query || '')
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+
+  if (!tokens.length) return true
+
+  const haystack = [driver.driver_name, driver.employee_number, driver.license_number].map(value => String(value || '').toLowerCase()).join(' ')
+
+  return tokens.every(token => haystack.includes(token))
+}
+
+export const COMPANY_DRIVER_SORT_KEYS = ['name', 'status', 'next_mvr', 'consent'] as const
+export type CompanyDriverSortKey = (typeof COMPANY_DRIVER_SORT_KEYS)[number]
+
+const STATUS_RANK: Record<string, number> = { on_insurance: 0, pending_mvr: 1, suspended: 2, removed: 3 }
+
+const lastNameKey = (name: string) => {
+  const words = name.trim().toLowerCase().split(/\s+/).filter(Boolean)
+
+  return (words[words.length - 1] || '') + ' ' + words.slice(0, -1).join(' ')
+}
+
+/**
+ * Sorts roster rows. Name sorts by last name like 1.0. Empty dates sort last in either direction,
+ * so next MVR due ascending puts the most urgent first and blanks at the bottom.
+ */
+export const sortCompanyDrivers = <T extends { name: string; driver: { status: string; next_mvr_due_on?: string | null; mvr_consent_on?: string | null } }>(
+  items: T[],
+  key: CompanyDriverSortKey,
+  direction: 'asc' | 'desc' = 'asc'
+): T[] => {
+  const sign = direction === 'desc' ? -1 : 1
+  const byName = (a: T, b: T) => lastNameKey(a.name).localeCompare(lastNameKey(b.name))
+
+  const dateCompare = (a: string | null | undefined, b: string | null | undefined) => {
+    if (!a && !b) return 0
+    if (!a) return 1
+    if (!b) return -1
+
+    return sign * a.localeCompare(b)
+  }
+
+  return [...items].sort((a, b) => {
+    let result: number
+
+    if (key === 'status') result = sign * ((STATUS_RANK[a.driver.status] ?? 9) - (STATUS_RANK[b.driver.status] ?? 9))
+    else if (key === 'next_mvr') result = dateCompare(a.driver.next_mvr_due_on, b.driver.next_mvr_due_on)
+    else if (key === 'consent') result = dateCompare(a.driver.mvr_consent_on, b.driver.mvr_consent_on)
+    else result = sign * byName(a, b)
+
+    return result || byName(a, b)
+  })
+}
+
+// ---------------------------------------------------------------------------
+// DOT record due dates and dashboard counts (Batch 1)
+// ---------------------------------------------------------------------------
+
+/** Whole days from one ISO date to another (b minus a). */
+export const isoDayDiff = (a: string, b: string) =>
+  Math.round((Date.parse(b.slice(0, 10) + 'T00:00:00Z') - Date.parse(a.slice(0, 10) + 'T00:00:00Z')) / 86_400_000)
+
+/**
+ * 1.0 dotDueOverdueLabel. Open records with a due date read "Due MM/DD/YYYY", or "Overdue Nd" once
+ * the date has passed. Closed records and records without a due date show nothing.
+ */
+export const dotDueOverdueLabel = (
+  record: { status?: string | null; due_on?: string | null },
+  todayIso: string
+): { text: string; overdue: boolean } | null => {
+  const due = String(record.due_on || '').slice(0, 10)
+
+  if (record.status === 'closed' || !ISO_DATE.test(due)) return null
+  if (due >= todayIso) return { text: 'Due ' + formatUsDate(due), overdue: false }
+
+  return { text: `Overdue ${isoDayDiff(due, todayIso)}d`, overdue: true }
+}
+
+/** Record counts per category plus the open count, for the dashboard tiles. */
+export const summarizeDotRecords = (records: Array<{ category: string; status: string }>, categories: string[]) => {
+  const byCategory: Record<string, number> = Object.fromEntries(categories.map(key => [key, 0]))
+
+  for (const record of records) byCategory[record.category] = (byCategory[record.category] || 0) + 1
+
+  return { total: records.length, open: records.filter(record => record.status === 'open').length, byCategory }
+}
+
+// ---------------------------------------------------------------------------
 // Uploads
 // ---------------------------------------------------------------------------
 

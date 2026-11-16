@@ -3,7 +3,11 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Button } from '@repo/ui/components/ui/button'
 
+import { createServiceRoleClient } from '@repo/supabase/server'
+
 import ContentManager from './ContentManager'
+import MaterialLibraryPanel from './MaterialLibraryPanel'
+import QuestionImportPanel from './QuestionImportPanel'
 import { getCourseContent } from '@/lib/forgeTrainingLms'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 
@@ -19,6 +23,14 @@ const CourseContentPage = async ({ params }: { params: Promise<{ id: string }> }
   if (!content) notFound()
 
   const { course, versions, editing, published, sections, questions, materials } = content
+
+  const { data: folders } = await (createServiceRoleClient() as any)
+    .from('forge_training_material_folders')
+    .select('id, name')
+    .eq('organization_id', context.activeOrganization.id)
+    .eq('course_id', id)
+    .order('sort_order')
+    .order('name')
 
   return (
     <div className='flex min-w-0 flex-col gap-6'>
@@ -56,6 +68,14 @@ const CourseContentPage = async ({ params }: { params: Promise<{ id: string }> }
         sections={sections}
         questions={questions}
         materials={materials.map((item: any) => ({ id: item.id, title: item.title, file_name: item.file_name, content_type: item.content_type, size_bytes: item.size_bytes }))}
+      />
+
+      {editing ? <QuestionImportPanel versionId={editing.id} isDraft={editing.status === 'draft'} /> : null}
+
+      <MaterialLibraryPanel
+        courseId={id}
+        folders={(folders || []).map((item: any) => ({ id: item.id, name: item.name }))}
+        materials={materials.map((item: any) => ({ id: item.id, title: item.title, file_name: item.file_name, folder_id: item.folder_id, topic: item.topic }))}
       />
     </div>
   )

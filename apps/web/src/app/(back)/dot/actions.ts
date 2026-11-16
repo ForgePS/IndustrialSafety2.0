@@ -448,6 +448,7 @@ export type DotRecordValues = {
   category: string
   title: string
   record_date: string
+  due_on: string
   personnel_id: string
   location_id: string
   description: string
@@ -457,7 +458,10 @@ export type DotRecordValues = {
 const recordPatch = (values: DotRecordValues) => {
   const date = cleanDate(values.record_date)
 
-  if (date === undefined) return { error: 'Use a YYYY-MM-DD date.' } as const
+  const dueOn = cleanDate(values.due_on)
+
+  if (date === undefined || dueOn === undefined) return { error: 'Use a YYYY-MM-DD date.' } as const
+  if (dueOn && date && dueOn < date) return { error: 'The due date cannot be before the record date.' } as const
   if (!['roadside_inspection', 'accident', 'drug_alcohol', 'company', 'other'].includes(values.category)) return { error: 'Pick a category.' } as const
 
   const title = cleanText(values.title)
@@ -469,6 +473,7 @@ const recordPatch = (values: DotRecordValues) => {
       category: values.category,
       title,
       record_date: date,
+      due_on: dueOn,
       personnel_id: values.personnel_id || null,
       location_id: values.location_id || null,
       description: cleanText(values.description),

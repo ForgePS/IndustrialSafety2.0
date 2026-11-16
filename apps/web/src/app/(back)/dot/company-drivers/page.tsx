@@ -8,31 +8,71 @@ import DotHeader, { allowedFrom } from '@/components/dot/DotHeader'
 import DotStatusPill, { issueTone } from '@/components/dot/DotStatusPill'
 import { getDotSettings, getScopedCompanyDrivers, personName } from '@/lib/forgeDot'
 import { getScopedPersonnel } from '@/lib/forgePersonnel'
-import { COMPANY_DRIVER_STATUS_LABELS, DOT_ISSUE_LABELS, formatUsDate, mvrSampleEligible, mvrSampleSize, type CompanyDriverStatus } from '@/lib/forgeDotRules'
+import {
+  COMPANY_DRIVER_SORT_KEYS,
+  COMPANY_DRIVER_STATUS_LABELS,
+  DOT_ISSUE_LABELS,
+  DOT_ROSTER_ATTENTION_KINDS,
+  LICENSE_FOLLOW_UP_LABELS,
+  companyDriverMatchesQuery,
+  driverMatchesAttentionFilter,
+  formatUsDate,
+  licenseFollowUps,
+  mvrSampleEligible,
+  mvrSampleSize,
+  sortCompanyDrivers,
+  type CompanyDriverSortKey,
+  type CompanyDriverStatus,
+  type DotIssueKind
+} from '@/lib/forgeDotRules'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import AddCompanyDriverForm from './AddCompanyDriverForm'
 import MvrSampleButton from './MvrSampleButton'
 
 export const metadata: Metadata = { title: 'Company Drivers' }
 
-const CompanyDriversPage = async ({ searchParams }: { searchParams: Promise<{ status?: string; consent?: string; unlinked?: string; sample?: string }> }) => {
+const CompanyDriversPage = async ({ searchParams }: { searchParams: Promise<{
+    status?: string
+    consent?: string
+    unlinked?: string
+    sample?: string
+    q?: string
+    sort?: string
+    dir?: string
+    license?: string
+    attention?: string
+  }> }) => {
   const context = await requireTenantPermission('dot.view')
   const organizationId = context.activeOrganization.id
   const allowed = allowedFrom(context)
   const filters = await searchParams
   const year = new Date().getFullYear()
+  const today = new Date().toISOString().slice(0, 10)
+  const sortKey: CompanyDriverSortKey = COMPANY_DRIVER_SORT_KEYS.includes(filters.sort as CompanyDriverSortKey) ? (filters.sort as CompanyDriverSortKey) : 'name'
+  const sortDir = filters.dir === 'desc' ? 'desc' : 'asc'
+  const attention = DOT_ROSTER_ATTENTION_KINDS.includes(filters.attention as DotIssueKind) ? (filters.attention as DotIssueKind) : null
 
   const [all, settings] = await Promise.all([
     getScopedCompanyDrivers({ organizationId, userId: context.user.id, permission: context.permission }),
     getDotSettings(organizationId)
   ])
 
-  const drivers = all.filter(
-    item =>
-      (!filters.status || filters.status === 'all' ? item.driver.status !== 'removed' || filters.status === 'all' : item.driver.status === filters.status) &&
-      (!filters.consent || item.issues.some(issue => issue.kind === 'missingMvrConsent')) &&
-      (!filters.unlinked || !item.driver.personnel_id) &&
-      (!filters.sample || item.driver.sample_year === year)
+  const withFollowUps = all.map(item => ({ ...item, followUps: licenseFollowUps(item.driver, item.licenseUploads, today) }))
+  const licenseFollowUpCount = withFollowUps.filter(item => item.followUps.length).length
+
+  const drivers = sortCompanyDrivers(
+    withFollowUps.filter(
+      item =>
+        (!filters.status || filters.status === 'all' ? item.driver.status !== 'removed' || filters.status === 'all' : item.driver.status === filters.status) &&
+        (!filters.consent || item.issues.some(issue => issue.kind === 'missingMvrConsent')) &&
+        (!filters.unlinked || !item.driver.personnel_id) &&
+        (!filters.sample || item.driver.sample_year === year) &&
+        (!filters.license || item.followUps.length > 0) &&
+        driverMatchesAttentionFilter(item, attention) &&
+        companyDriverMatchesQuery(item.driver, filters.q)
+    ),
+    sortKey,
+    sortDir
   )
 
   const eligible = all.filter(item => mvrSampleEligible(item.driver)).length
@@ -59,6 +99,26 @@ const CompanyDriversPage = async ({ searchParams }: { searchParams: Promise<{ st
 
     return '/dot/company-drivers' + (next.toString() ? '?' + next.toString() : '')
   }
+
+  /** Column header: click to sort, click again to flip the direction. */
+  const sortHeader = (key: CompanyDriverSortKey, label: string) => {
+    const active = sortKey === key
+    const nextDir = active && sortDir === 'asc' ? 'desc' : 'asc'
+
+    return (
+      <Link
+        href={link({ sort: key === 'name' ? undefined : key, dir: nextDir === 'asc' ? undefined : 'desc' })}
+        className={'inline-flex items-center gap-1 hover:underline ' + (active ? 'text-primary' : '')}
+        data-sort={key}
+        aria-sort={active ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined}
+      >
+        {label}
+        {active ? <span aria-hidden>{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span> : null}
+      </Link>
+    )
+  }
+
+  const hiddenFilters = Object.entries(filters).filter(([key, value]) => key !== 'q' && value) as Array<[string, string]>
 
   return (
     <div className='flex flex-col gap-6'>
@@ -116,16 +176,52 @@ const CompanyDriversPage = async ({ searchParams }: { searchParams: Promise<{ st
         <Link href={link({ unlinked: filters.unlinked ? undefined : '1' })} className={'rounded-full border px-3 py-1 ' + (filters.unlinked ? 'border-primary text-primary' : 'text-textSecondary')}>
           Not in personnel
         </Link>
+        <Link
+          href={link({ license: filters.license ? undefined : '1' })}
+          className={'rounded-full border px-3 py-1 ' + (filters.license ? 'border-primary text-primary' : 'text-textSecondary')}
+          data-license-follow-ups={licenseFollowUpCount}
+        >
+          License follow-ups ({licenseFollowUpCount})
+        </Link>
+        {attention ? (
+          <Link href={link({ attention: undefined })} className='border-primary text-primary rounded-full border px-3 py-1' data-attention-filter={attention}>
+            {DOT_ISSUE_LABELS[attention]} (clear)
+          </Link>
+        ) : null}
       </div>
+
+      <form className='flex flex-wrap items-center gap-3' action='/dot/company-drivers'>
+        <input
+          type='search'
+          name='q'
+          defaultValue={filters.q || ''}
+          placeholder='Search name, employee # or license #'
+          aria-label='Search company drivers'
+          className='border-input bg-card h-[38px] w-72 rounded-md border px-3 text-sm'
+        />
+        {hiddenFilters.map(([key, value]) => (
+          <input key={key} type='hidden' name={key} value={value} />
+        ))}
+        <Button type='submit' size='sm' variant='outline'>
+          Search
+        </Button>
+        {filters.q ? (
+          <Link className='text-primary text-sm hover:underline' href={link({ q: undefined })}>
+            Clear search
+          </Link>
+        ) : null}
+      </form>
 
       <Card>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Driver</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>{sortHeader('name', 'Driver')}</TableHead>
+              <TableHead>{sortHeader('status', 'Status')}</TableHead>
               <TableHead>License expires</TableHead>
               <TableHead>Last MVR</TableHead>
+              <TableHead>{sortHeader('next_mvr', 'Next MVR due')}</TableHead>
+              <TableHead>{sortHeader('consent', 'Consent')}</TableHead>
               <TableHead>Needs attention</TableHead>
               <TableHead className='text-right'>Record</TableHead>
             </TableRow>
@@ -148,6 +244,8 @@ const CompanyDriversPage = async ({ searchParams }: { searchParams: Promise<{ st
                   </TableCell>
                   <TableCell>{formatUsDate(item.driver.license_expires_on) || '—'}</TableCell>
                   <TableCell>{formatUsDate(item.driver.last_mvr_on) || '—'}</TableCell>
+                  <TableCell>{formatUsDate(item.driver.next_mvr_due_on) || '—'}</TableCell>
+                  <TableCell>{formatUsDate(item.driver.mvr_consent_on) || (item.consentUploads ? 'On file' : '—')}</TableCell>
                   <TableCell>
                     <div className='flex flex-wrap gap-1'>
                       {item.issues.map(issue => (
@@ -155,6 +253,9 @@ const CompanyDriversPage = async ({ searchParams }: { searchParams: Promise<{ st
                           {issue.kind === 'expired' || issue.kind === 'expiring' ? issue.detail : DOT_ISSUE_LABELS[issue.kind]}
                         </DotStatusPill>
                       ))}
+                      {item.followUps.includes('noCopy') ? (
+                        <DotStatusPill tone='critical'>{LICENSE_FOLLOW_UP_LABELS.noCopy}</DotStatusPill>
+                      ) : null}
                     </div>
                   </TableCell>
                   <TableCell className='text-right'>
@@ -166,7 +267,7 @@ const CompanyDriversPage = async ({ searchParams }: { searchParams: Promise<{ st
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className='py-10 text-center'>No company drivers match.</TableCell>
+                <TableCell colSpan={8} className='py-10 text-center'>No company drivers match.</TableCell>
               </TableRow>
             )}
           </TableBody>

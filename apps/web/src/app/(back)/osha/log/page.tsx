@@ -4,10 +4,12 @@ import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@repo/ui/components/ui/table'
 
+import OshaLogExport from './OshaLogExport'
 import OshaFilters from '../OshaFilters'
+import OshaPrintIssues from '../OshaPrintIssues'
 import { parseOshaParams } from '../params'
 import { getOshaLocations, getOshaYearSummary, getScopedOshaCases, oshaLocationIdsInScope } from '@/lib/forgeOsha'
-import { OSHA_CASE_TYPES, form300EmployeeName } from '@/lib/forgeOshaRules'
+import { OSHA_CASE_TYPES, form300EmployeeName, form300PrintIssues } from '@/lib/forgeOshaRules'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 
 export const metadata: Metadata = { title: 'OSHA Form 300 Log' }
@@ -29,6 +31,7 @@ const OshaLogPage = async ({ searchParams }: { searchParams: Promise<Record<stri
 
   // The log lists recordable cases only (pending and not-recordable decisions stay off the form).
   const rows = cases.filter((row: any) => row.recordability === 'recordable')
+  const printIssues = form300PrintIssues(cases)
   const canExport = context.access.effective.some(item => item.permissionKey === 'osha.export' && item.allowed)
   const totals = summary.combined.totals
   const query = `year=${year}${locationId ? `&location=${locationId}` : ''}`
@@ -43,15 +46,15 @@ const OshaLogPage = async ({ searchParams }: { searchParams: Promise<Record<stri
         </div>
         <div className='flex flex-wrap gap-3'>
           {canExport ? (
-            <Button variant='outline' asChild>
-              <a href={`/api/osha/log?${query}`} data-testid='osha-log-csv'>Download CSV</a>
-            </Button>
+            <OshaLogExport href={`/api/osha/log?${query}`} establishmentSelected={Boolean(locationId)} issueCount={printIssues.length} />
           ) : null}
           <Button variant='tonalDefault' asChild><Link href={`/osha?${query}`}>Back to OSHA</Link></Button>
         </div>
       </div>
 
       <OshaFilters action='/osha/log' year={year} years={years} locationId={locationId} locations={locations} />
+
+      <OshaPrintIssues issues={printIssues} year={year} />
 
       {/* contain: inline-size keeps the wide 18-column log scrolling inside the card instead of widening the page. */}
       <Card className='min-w-0 [contain:inline-size]'>

@@ -259,6 +259,7 @@ export type CompanyDriverSummary = {
   name: string
   consentUploads: number
   reportUploads: number
+  licenseUploads: number
   issues: DotIssue[]
 }
 
@@ -304,6 +305,7 @@ export const getScopedCompanyDrivers = async ({
       name: driver.driver_name,
       consentUploads,
       reportUploads: Number(fileCounts.mvr_report || 0),
+      licenseUploads: Number(fileCounts.license || 0),
       issues: companyDriverIssues(driver, { consentUploads, todayIso, year })
     }
   })
@@ -369,6 +371,24 @@ export const getScopedDotRecords = async ({
   const ids = new Set(people.map((person: any) => person.id))
 
   return (data || []).filter((record: any) => record.personnel_id && ids.has(record.personnel_id))
+}
+
+/**
+ * DOT records about one person, newest first. Records with a driver inherit that driver's scope,
+ * so callers check the person is within dot.view scope first.
+ */
+export const getDotRecordsForPerson = async ({ organizationId, personnelId }: { organizationId: string; personnelId: string }) => {
+  const { data, error } = await (createServiceRoleClient() as any)
+    .from('forge_dot_records')
+    .select('id, record_number, category, title, record_date, due_on, status')
+    .eq('organization_id', organizationId)
+    .eq('personnel_id', personnelId)
+    .order('record_date', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false })
+
+  if (error) throw new Error('Unable to load DOT records: ' + error.message)
+
+  return data || []
 }
 
 /** Loads a person with the fields the scope check needs. */

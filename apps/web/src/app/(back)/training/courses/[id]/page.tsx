@@ -2,12 +2,14 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createServiceRoleClient } from '@repo/supabase/server'
+import { Badge } from '@repo/ui/components/ui/badge'
 
 import TrainingRecordForm from '../../TrainingRecordForm'
 import type { TrainingFormValues } from '../../actions'
 import { getEffectiveForm } from '@/lib/forgeForms'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import ForgeAiContextButton from '@/components/forge-ai/ForgeAiContextButton'
+import CourseLifecycleButton from '@/components/training/CourseLifecycleButton'
 
 export const metadata: Metadata = { title: 'Training Course' }
 
@@ -52,10 +54,18 @@ const TrainingCoursePage = async ({ params }: { params: Promise<{ id: string }> 
       <div className='flex flex-wrap items-end justify-between gap-4'>
         <div>
           <p className='text-primary text-sm font-semibold uppercase tracking-wide'>{context.activeOrganization.name} / Training Course</p>
-          <h1 className='text-textPrimary mt-1 text-3xl font-bold'>{course.title}</h1>
+          <h1 className='text-textPrimary mt-1 text-3xl font-bold'>
+            {course.title}
+            {course.is_active ? null : (
+              <Badge variant='outline' className='ml-3 align-middle' data-testid='course-archived'>
+                Archived
+              </Badge>
+            )}
+          </h1>
           <p className='text-textSecondary mt-2'>{canEdit ? 'Edit the course using the tenant-configured Training form.' : 'Your role has view-only access to this course.'}</p>
         </div>
         <div className='flex flex-wrap items-center gap-3'>
+          {canEdit ? <CourseLifecycleButton courseId={course.id} active={course.is_active} /> : null}
           {context.access.effective.some(item => item.permissionKey === 'training.manage_content' && item.allowed) ? (
             <Link className='text-primary font-semibold hover:underline' href={`/training/courses/${course.id}/content`}>Content &amp; Quiz</Link>
           ) : null}

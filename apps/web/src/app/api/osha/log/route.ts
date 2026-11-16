@@ -1,3 +1,5 @@
+import { NextResponse } from 'next/server'
+
 import { parseOshaParams } from '@/app/(back)/osha/params'
 import { writeForgeAudit } from '@/lib/forgeAudit'
 import { csvResponse } from '@/lib/forgeCsv'
@@ -13,6 +15,14 @@ export const GET = async (request: Request) => {
   const locations = await getOshaLocations({ organizationId, locationIds: scopeIds })
   const searchParams = Object.fromEntries(new URL(request.url).searchParams.entries())
   const { year, locationId } = parseOshaParams(searchParams, locations.map((item: any) => item.id))
+
+  // 29 CFR 1904.30: each establishment keeps its own Form 300 log, so the export covers exactly one.
+  if (!locationId) {
+    return NextResponse.json(
+      { error: 'Select an establishment to export. OSHA requires a separate Form 300 log for each establishment.' },
+      { status: 400 }
+    )
+  }
 
   const cases = (
     await getScopedOshaCases({ organizationId, userId: context.user.id, permission: context.permission, year, locationId })
@@ -46,5 +56,7 @@ export const GET = async (request: Request) => {
     afterValue: { year, location_id: locationId, rows: lines.length }
   })
 
-  return csvResponse(`osha-300-log-${year}.csv`, header, lines)
+  const establishment = locations.find((item: any) => item.id === locationId)
+
+  return csvResponse(`osha-300-log-${year}-${establishment?.code || establishment?.name || 'establishment'}.csv`, header, lines)
 }

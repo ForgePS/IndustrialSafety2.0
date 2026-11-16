@@ -3,12 +3,12 @@
 import { useState, useTransition } from 'react'
 
 import { useRouter } from 'next/navigation'
-import { TbArrowDown, TbArrowUp, TbEdit } from 'react-icons/tb'
+import { TbArrowDown, TbArrowUp, TbCopy, TbEdit } from 'react-icons/tb'
 import { Button } from '@repo/ui/components/ui/button'
 import { toast } from '@repo/ui/utils/toast'
 
 import type { LotoFormValues } from './actions'
-import { moveLotoComponent } from './content-actions'
+import { duplicateLotoStep, moveLotoComponent } from './content-actions'
 import LotoComponentDeleteButton from './LotoComponentDeleteButton'
 import LotoSubrecordForm from './LotoSubrecordForm'
 
@@ -22,6 +22,7 @@ const LotoEditableItem = ({
   values,
   isFirst,
   isLast,
+  canDuplicate = false,
   children
 }: {
   procedureId: string
@@ -32,6 +33,9 @@ const LotoEditableItem = ({
   values: LotoFormValues
   isFirst: boolean
   isLast: boolean
+
+  /** Steps only, while the procedure is a Draft. */
+  canDuplicate?: boolean
   children: React.ReactNode
 }) => {
   const router = useRouter()
@@ -44,6 +48,17 @@ const LotoEditableItem = ({
 
       if (result.error) toast('error', result.error)
       else router.refresh()
+    })
+
+  const duplicate = () =>
+    startTransition(async () => {
+      const result = await duplicateLotoStep({ procedureId, stepId: componentId })
+
+      if (result.error) toast('error', result.error)
+      else {
+        toast('success', result.message || 'Step duplicated.')
+        router.refresh()
+      }
     })
 
   if (editing && form) {
@@ -72,6 +87,11 @@ const LotoEditableItem = ({
         <Button size='sm' variant='outline' disabled={pending} onClick={() => setEditing(true)}>
           <TbEdit />Edit
         </Button>
+        {canDuplicate ? (
+          <Button size='sm' variant='outline' aria-label={'Duplicate: ' + label} disabled={pending} onClick={duplicate}>
+            <TbCopy />Duplicate
+          </Button>
+        ) : null}
         <LotoComponentDeleteButton procedureId={procedureId} componentType={componentType} componentId={componentId} label={label} />
       </div>
     </div>

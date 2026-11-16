@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo
 import DotFileSlot, { type DotUpload } from '@/components/dot/DotFileSlot'
 import DotHeader, { allowedFrom } from '@/components/dot/DotHeader'
 import DotStatusPill from '@/components/dot/DotStatusPill'
-import { getDotSettings, getDriverFileDetail, personName, personWithinScope } from '@/lib/forgeDot'
+import { DOT_RECORD_CATEGORY_LABELS, getDotRecordsForPerson, getDotSettings, getDriverFileDetail, personName, personWithinScope } from '@/lib/forgeDot'
 import {
   DOT_CREDENTIAL_SLOTS,
   DOT_DOCUMENT_GROUP_LABELS,
@@ -15,6 +15,7 @@ import {
   cdlNumberRequired,
   diabeticEyeExamRequired,
   dqfIssues,
+  dotDueOverdueLabel,
   dqfWorksheet,
   formatUsDate,
   medicalCertificateRequired,
@@ -40,7 +41,12 @@ const DriverFilePage = async ({ params }: { params: Promise<{ id: string }> }) =
   if (!detail || !(await personWithinScope({ organizationId, userId: context.user.id, scope: context.permission.scope, person: detail.person }))) notFound()
 
   const { file, person, documents, uploads, roster } = detail
-  const settings = await getDotSettings(organizationId)
+
+  const [settings, relatedRecords] = await Promise.all([
+    getDotSettings(organizationId),
+    getDotRecordsForPerson({ organizationId, personnelId: file.personnel_id })
+  ])
+
   const today = new Date().toISOString().slice(0, 10)
   const fileCounts: Record<string, number> = {}
 
@@ -197,6 +203,48 @@ const DriverFilePage = async ({ params }: { params: Promise<{ id: string }> }) =
           </Card>
         ) : null
       )}
+
+      <Card data-related-dot-records>
+        <CardHeader>
+          <CardTitle>Related DOT records</CardTitle>
+          <CardDescription>Roadside inspections, accidents, drug and alcohol events and other records for this driver.</CardDescription>
+        </CardHeader>
+        <CardContent className='flex flex-col divide-y'>
+          {relatedRecords.length ? (
+            relatedRecords.map((record: any) => {
+              const due = dotDueOverdueLabel(record, today)
+
+              return (
+                <Link
+                  key={record.id}
+                  href={'/dot/records/' + record.id}
+                  className='hover:bg-secondary/50 flex flex-wrap items-center justify-between gap-2 py-2'
+                  data-related-dot-record={record.record_number}
+                >
+                  <span>
+                    <span className='font-semibold'>{record.title}</span>
+                    <span className='text-textSecondary ml-2 text-xs'>
+                      {record.record_number} · {DOT_RECORD_CATEGORY_LABELS[record.category] || record.category}
+                      {record.record_date ? ' · ' + formatUsDate(record.record_date) : ''}
+                    </span>
+                  </span>
+                  <span className='flex items-center gap-2'>
+                    {due ? <DotStatusPill tone={due.overdue ? 'critical' : 'muted'}>{due.text}</DotStatusPill> : null}
+                    <DotStatusPill tone={record.status === 'open' ? 'pending' : 'muted'}>{record.status === 'open' ? 'Open' : 'Closed'}</DotStatusPill>
+                  </span>
+                </Link>
+              )
+            })
+          ) : (
+            <p className='text-textSecondary py-2 text-sm'>No DOT records for this driver.</p>
+          )}
+          {allowed('dot.edit') ? (
+            <Link className='text-primary pt-2 text-sm hover:underline' href={'/dot/records/new?personnel=' + file.personnel_id}>
+              New DOT record
+            </Link>
+          ) : null}
+        </CardContent>
+      </Card>
 
       {settings.hidden_document_types.length ? (
         <p className='text-textSecondary text-xs'>

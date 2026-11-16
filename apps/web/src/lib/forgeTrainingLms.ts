@@ -106,6 +106,7 @@ export const getLearnerView = async (organizationId: string, assignmentId: strin
       .eq('organization_id', organizationId)
       .eq('assignment_id', assignmentId)
       .eq('approval_status', 'approved')
+      .is('archived_at', null)
       .order('completed_at', { ascending: false })
       .limit(1)
       .maybeSingle()
@@ -383,15 +384,19 @@ export const assignGroupRequirements = async ({
   groupId,
   dueDate,
   actorUserId,
-  scope
+  scope,
+  note = 'Assigned from training group requirements.'
 }: {
   organizationId: string
   groupId: string
   dueDate: string | null
-  actorUserId: string
+
+  /** Who assigned it; null for the automatic retraining job. */
+  actorUserId: string | null
 
   /** The assigner's Assign Training scope; members outside it are skipped. A scheduled job passes 'organization'. */
   scope: string | null
+  note?: string
 }) => {
   const supabase = createServiceRoleClient() as any
   const today = trainingTodayIso()
@@ -402,7 +407,9 @@ export const assignGroupRequirements = async ({
       .select('personnel_id, forge_personnel!inner(organization_id, archived_at, location_id, division_id, auth_user_id, supervisor_user_id)')
       .eq('group_id', groupId)
       .eq('organization_id', organizationId),
-    supabase.from('forge_training_group_requirements').select('course_id').eq('group_id', groupId).eq('organization_id', organizationId)
+
+    // Archived courses are never auto-assigned.
+    supabase.from('forge_training_group_requirements').select('course_id, forge_training_courses!inner(is_active)').eq('group_id', groupId).eq('organization_id', organizationId).eq('forge_training_courses.is_active', true)
   ])
 
   const active = (members || []).filter((row: any) => !row.forge_personnel?.archived_at)
@@ -410,7 +417,7 @@ export const assignGroupRequirements = async ({
   const checked = await Promise.all(
     active.map(async (row: any) => ({
       personnelId: row.personnel_id as string,
-      allowed: await personnelRecordWithinScope({ organizationId, userId: actorUserId, scope, record: row.forge_personnel })
+      allowed: await personnelRecordWithinScope({ organizationId, userId: actorUserId || '', scope, record: row.forge_personnel })
     }))
   )
 
@@ -418,7 +425,7 @@ export const assignGroupRequirements = async ({
   const outOfScope = checked.length - people.length
   const courses = (requirements || []).map((row: any) => row.course_id)
 
-  if (!people.length || !courses.length) return { created: 0, skipped: 0, outOfScope }
+  if (!people.length || !courses.length) return { created: 0, skipped: 0, outOfScope, ids: [] as string[] }
 
   const [{ data: assignments }, { data: completions }] = await Promise.all([
     supabase.from('forge_training_assignments').select('personnel_id, course_id, status, due_date').eq('organization_id', organizationId).in('personnel_id', people).in('course_id', courses),
@@ -428,6 +435,7 @@ export const assignGroupRequirements = async ({
       .eq('organization_id', organizationId)
       .in('personnel_id', people)
       .in('course_id', courses)
+      .is('archived_at', null)
   ])
 
   const rows: any[] = []
@@ -451,7 +459,7 @@ export const assignGroupRequirements = async ({
           status: 'assigned',
           due_date: dueDate,
           assigned_by: actorUserId,
-          notes: 'Assigned from training group requirements.'
+          notes: note
         })
       } else {
         skipped += 1
@@ -459,13 +467,16 @@ export const assignGroupRequirements = async ({
     }
   }
 
+  let ids: string[] = []
+
   if (rows.length) {
-    const { error } = await supabase.from('forge_training_assignments').insert(rows)
+    const { data: inserted, error } = await supabase.from('forge_training_assignments').insert(rows).select('id')
 
     if (error) throw new Error(`Unable to create assignments: ${error.message}`)
+    ids = (inserted || []).map((row: any) => row.id)
   }
 
-  return { created: rows.length, skipped, outOfScope }
+  return { created: rows.length, skipped, outOfScope, ids }
 }
 
 export type MatrixRow = {
@@ -545,7 +556,8 @@ export const getComplianceMatrix = async ({
           .select('personnel_id, course_id, completed_at, expires_at, approval_status, result')
           .eq('organization_id', organizationId)
           .in('personnel_id', personIds)
-          .in('course_id', courseIds),
+          .in('course_id', courseIds)
+          .is('archived_at', null),
         supabase
           .from('forge_training_assignments')
           .select('personnel_id, course_id, status, due_date')

@@ -2,6 +2,7 @@ import { createServiceRoleClient } from '@repo/supabase/server'
 
 import type { EffectivePermission } from '@/lib/forgeEffectiveAccess'
 import { assetWithinScope, getScopedAssets } from '@/lib/forgeAssets'
+import { lockHolderFromKey, lockHolderKey, searchTermForIlike, type LockoutSearch } from '@/lib/forgeLotoList'
 import { getScopedPersonnel } from '@/lib/forgePersonnel'
 import { storage } from '@/lib/platform/storage'
 
@@ -257,16 +258,19 @@ export const getScopedLockouts = async ({
   organizationId,
   userId,
   permission,
-  view
+  view,
+  search
 }: {
   organizationId: string
   userId: string
   permission: EffectivePermission
   view: 'open' | 'history'
+  search?: LockoutSearch
 }) => {
   const assets = await getScopedAssets({ organizationId, userId, permission, includeRetired: true })
-  const assetIds = assets.map((asset: any) => asset.id)
+  let assetIds: string[] = assets.map((asset: any) => asset.id)
 
+  if (search?.asset) assetIds = assetIds.filter(id => id === search.asset)
   if (!assetIds.length) return []
 
   const supabase = createServiceRoleClient() as any
@@ -278,6 +282,65 @@ export const getScopedLockouts = async ({
     .in('asset_id', assetIds)
     .order('started_at', { ascending: false })
 
+  if (search?.procedure) query = query.eq('procedure_id', search.procedure)
+
+  // Lock holder: lockouts where that person (or typed name) held a lock at any point.
+  const holder = search?.holder ? lockHolderFromKey(search.holder) : null
+
+  if (holder) {
+    let locks = supabase.from('forge_loto_application_locks').select('application_id').eq('organization_id', organizationId)
+
+    locks = 'personnelId' in holder ? locks.eq('personnel_id', holder.personnelId) : locks.is('personnel_id', null).ilike('holder_name', holder.name.replace(/\*/g, '').replace(/[\\%_]/g, match => '\\' + match))
+
+    const { data: lockRows, error: lockError } = await locks
+
+    if (lockError) throw new Error('Unable to search lockouts: ' + lockError.message)
+
+    const ids = Array.from(new Set((lockRows || []).map((row: any) => row.application_id as string)))
+
+    if (!ids.length) return []
+    query = query.in('id', ids)
+  }
+
+  // Text: lockout number, work, equipment, procedure, holder name or lock / tag ID.
+  const term = search?.q ? searchTermForIlike(search.q) : ''
+
+  if (term) {
+    const like = `%${term}%`
+
+    const [{ data: lockRows }, { data: procedureRows }] = await Promise.all([
+      supabase
+        .from('forge_loto_application_locks')
+        .select('application_id')
+        .eq('organization_id', organizationId)
+        .or(`holder_name.ilike.${like},lock_tag_id.ilike.${like}`)
+        .limit(1000),
+      supabase
+        .from('forge_loto_procedures')
+        .select('id')
+        .eq('organization_id', organizationId)
+        .in('asset_id', assetIds)
+        .or(`procedure_number.ilike.${like},title.ilike.${like}`)
+        .limit(1000)
+    ])
+
+    const lower = term.toLowerCase()
+
+    const matchingAssets = assets
+      .filter((asset: any) => assetIds.includes(asset.id))
+      .filter((asset: any) => [asset.name, asset.asset_number].some(value => String(value || '').toLowerCase().includes(lower)))
+      .map((asset: any) => asset.id as string)
+
+    const clauses = [`lockout_number.ilike.${like}`, `work_description.ilike.${like}`]
+    const lockIds = Array.from(new Set((lockRows || []).map((row: any) => row.application_id as string)))
+
+    if (lockIds.length) clauses.push(`id.in.(${lockIds.join(',')})`)
+    if (procedureRows?.length) clauses.push(`procedure_id.in.(${procedureRows.map((row: any) => row.id).join(',')})`)
+    if (matchingAssets.length) clauses.push(`asset_id.in.(${matchingAssets.join(',')})`)
+
+    query = query.or(clauses.join(','))
+  }
+
   query = view === 'open' ? query.in('status', ['in_progress', 'verified']) : query.in('status', ['completed', 'canceled']).limit(200)
 
   const { data, error } = await query
@@ -285,6 +348,59 @@ export const getScopedLockouts = async ({
   if (error) throw new Error('Unable to load lockouts: ' + error.message)
 
   return data || []
+}
+
+/** Choices for the lockout search: lock holders, equipment and procedures that have had lockouts in scope. */
+export const getLockoutSearchOptions = async ({
+  organizationId,
+  userId,
+  permission
+}: {
+  organizationId: string
+  userId: string
+  permission: EffectivePermission
+}) => {
+  const empty = { holders: [], assets: [], procedures: [] } as {
+    holders: Array<{ id: string; name: string }>
+    assets: Array<{ id: string; name: string }>
+    procedures: Array<{ id: string; name: string }>
+  }
+
+  const assets = await getScopedAssets({ organizationId, userId, permission, includeRetired: true })
+  const assetIds = assets.map((asset: any) => asset.id)
+
+  if (!assetIds.length) return empty
+
+  const supabase = createServiceRoleClient() as any
+
+  const { data, error } = await supabase
+    .from('forge_loto_applications')
+    .select('id, asset_id, forge_assets(asset_number, name), forge_loto_procedures(id, procedure_number, title), forge_loto_application_locks(personnel_id, holder_name)')
+    .eq('organization_id', organizationId)
+    .in('asset_id', assetIds)
+    .limit(5000)
+
+  if (error) throw new Error('Unable to load lockout search options: ' + error.message)
+
+  const holders = new Map<string, string>()
+  const assetMap = new Map<string, string>()
+  const procedureMap = new Map<string, string>()
+
+  for (const row of data || []) {
+    if (row.forge_assets) assetMap.set(row.asset_id, [row.forge_assets.asset_number, row.forge_assets.name].filter(Boolean).join(' · '))
+    if (row.forge_loto_procedures) procedureMap.set(row.forge_loto_procedures.id, `${row.forge_loto_procedures.procedure_number} · ${row.forge_loto_procedures.title}`)
+
+    for (const lock of row.forge_loto_application_locks || []) {
+      const key = lockHolderKey(lock)
+
+      if (!holders.has(key)) holders.set(key, lock.holder_name || 'Unnamed')
+    }
+  }
+
+  const sorted = (map: Map<string, string>) =>
+    Array.from(map, ([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }))
+
+  return { holders: sorted(holders), assets: sorted(assetMap), procedures: sorted(procedureMap) }
 }
 
 export const getLockoutDetail = async ({ organizationId, lockoutId }: { organizationId: string; lockoutId: string }) => {
@@ -366,6 +482,7 @@ export const getLockHolderOptions = async ({
       .eq('organization_id', organizationId)
       .eq('course_id', settings.authorized_course_id)
       .eq('approval_status', 'approved')
+      .is('archived_at', null)
       .in('result', ['passed', 'completed'])
       .in('personnel_id', active.map((person: any) => person.id))
 

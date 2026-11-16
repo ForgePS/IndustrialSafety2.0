@@ -9,6 +9,7 @@ export const loadCertificate = async (organizationId: string, completionId: stri
     .select('*, forge_training_courses(title, course_code), forge_personnel(id, first_name, last_name, employee_number, auth_user_id, location_id, division_id, organization_id, supervisor_user_id)')
     .eq('organization_id', organizationId)
     .eq('id', completionId)
+    .is('archived_at', null)
     .maybeSingle()
 
   if (!completion || completion.approval_status !== 'approved' || !['passed', 'completed'].includes(completion.result)) return null
