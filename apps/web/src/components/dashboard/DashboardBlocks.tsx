@@ -4,6 +4,7 @@ import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
 import { cn } from '@repo/ui/lib/utils'
 
+import IncidentTrendChart from '@/components/dashboard/IncidentTrendChart'
 import type { DashboardData, QuickAction } from '@/lib/forgeDashboard'
 import type { AttentionItem, AttentionTone } from '@/lib/forgeDashboardRules'
 import type { EffectiveExperienceElement } from '@/lib/forgeExperience'
@@ -161,31 +162,22 @@ const BarList = ({ rows, empty = 'Nothing to show yet.' }: { rows: Array<{ label
 }
 
 export const IncidentTrendBlock = ({ months }: { months: NonNullable<DashboardData['incidentTrend']> }) => {
-  const max = Math.max(1, ...months.map(month => month.total))
   const total = months.reduce((sum, month) => sum + month.total, 0)
 
   return (
     <Card className='h-full' data-testid='dashboard-incident-trend'>
       <CardHeader>
-        <CardTitle>Incident Trend</CardTitle>
-        <CardDescription>
-          {total} reported in the last 12 months. <span className='text-destructive'>■</span> injuries <span className='text-primary'>■</span> other
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className='flex h-40 items-end gap-1' role='img' aria-label={`Incidents per month: ${months.map(month => `${month.label} ${month.total}`).join(', ')}`}>
-          {months.map(month => (
-            <div key={month.month} className='flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1'>
-              <span className='text-textSecondary text-[10px]'>{month.total || ''}</span>
-              <div className='flex w-full max-w-8 flex-col justify-end overflow-hidden rounded-t' style={{ height: `${(month.total / max) * 100}%` }} title={`${month.label}: ${month.injuries} injuries, ${month.other} other`}>
-                <div className='bg-destructive/80 w-full' style={{ flexGrow: month.injuries }} />
-                <div className='bg-primary/70 w-full' style={{ flexGrow: month.other }} />
-              </div>
-              <span className='text-textSecondary text-[10px]'>{month.label}</span>
-            </div>
-          ))}
+        <div className='flex flex-wrap items-start justify-between gap-2'>
+          <div>
+            <CardTitle>Incident Trend</CardTitle>
+            <CardDescription>{total} reported in the last 12 months.</CardDescription>
+          </div>
+          <Link href='/incidents' className='text-primary text-sm font-semibold'>
+            View incidents →
+          </Link>
         </div>
-      </CardContent>
+      </CardHeader>
+      <CardContent>{total ? <IncidentTrendChart months={months} /> : <p className='text-textSecondary text-sm'>No incidents in the last 12 months.</p>}</CardContent>
     </Card>
   )
 }

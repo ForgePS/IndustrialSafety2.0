@@ -24,7 +24,8 @@ const SetupSystemMode = ({ modeFallback }: { modeFallback: SystemMode }) => {
   useEffect(() => {
     const appMode = isDark ? 'dark' : 'light'
 
-    updateCookieColorPref(appMode)
+    // The server reads this to render System mode without a flash, so it outlives the browser session too.
+    updateCookieColorPref(appMode, { expires: 365, path: '/', sameSite: 'lax' })
 
     if (settings.mode === 'system') {
       // We need to change the mode in settings context to apply the mode change in the components

@@ -37,6 +37,8 @@ type Props = {
   }
 }
 
+export const SETTINGS_COOKIE_OPTIONS = { expires: 365, path: '/', sameSite: 'lax' as const }
+
 // Initial Settings Context
 export const SettingsContext = createContext<SettingsContextProps | null>(null)
 
@@ -58,7 +60,10 @@ export const SettingsProvider = (props: Props) => {
   // Cookies
   const [settingsCookie, updateSettingsCookie] = useObjectCookie<Settings>(
     appConfig.settingsCookieName,
-    JSON.stringify(props.settingsCookie) !== '{}' ? props.settingsCookie : updatedInitialSettings
+    JSON.stringify(props.settingsCookie) !== '{}' ? props.settingsCookie : updatedInitialSettings,
+
+    // Kept for a year so the light / dark choice survives closing the browser (a session cookie fell back to light).
+    SETTINGS_COOKIE_OPTIONS
   )
 
   // State

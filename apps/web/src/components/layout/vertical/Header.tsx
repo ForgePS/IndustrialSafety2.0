@@ -16,6 +16,7 @@ import type { SearchDataItem } from '@/assets/data/searchData'
 
 // Component Imports
 import LanguageDropdown from '@components/LanguageDropdown'
+import ModeDropdown from '@/components/layout/ModeDropdown'
 import UserDropdown from './UserDropdown'
 import TenantSwitcher from './TenantSwitcher'
 import ForgeAiGlobalAssistant from '@/components/forge-ai/ForgeAiGlobalAssistant'
@@ -90,6 +91,7 @@ const Header = async ({
               ) : null}
             </Link>
           </Button>
+          <ModeDropdown />
           <LanguageDropdown />
           <UserDropdown user={user} roles={userRoles} />
         </div>

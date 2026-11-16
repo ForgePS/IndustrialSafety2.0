@@ -18,7 +18,7 @@ Every block reads its data through the module's own scoped loader with the viewe
 | Tasks Due | `tasks.view` | Open tasks assigned to you, overdue first. |
 | Safety Index | `incidents.view`, `inspections.view`, `training.view` or `dot.view` | 1.0's 0–100 score and A–F grade for the last 6 or 12 months, with the inputs, plus the share of DOT driver files that are compliant. |
 | Task Scheduler | `tasks.view` | Open tasks overdue, due this week, later and undated, plus counts by status. |
-| Incident Trend | `incidents.view` | Incidents per month for 12 months, injuries and other. Drafts are not counted. |
+| Incident Trend | `incidents.view` | 1.0's smooth area (wave) chart of incidents per month for 12 months, with a hover crosshair and a tooltip splitting injuries and other. Drafts are not counted. |
 | Injury History | `incidents.view` or `osha.view` | Five years of injury incidents, plus OSHA recordables, DART cases and days away with `osha.view`. |
 | Inspections by Location | `inspections.view` | Inspections in the last 12 months per location. |
 | Injury Body Map | `workers_comp.view`, `osha.view` or `incidents.view` | Where on the body injuries happen, for 6 months, 12 months or all time (`?bodyMap=`). |
@@ -64,7 +64,7 @@ Every block reads its data through the module's own scoped loader with the viewe
   - 2.0 stores body parts as text, so they are matched to 1.0's 31 regions by keyword.
   - An injury on a workers' comp case, an OSHA case and an incident counts once. A WC case and an OSHA case merge when they share the incident and the worker.
   - Labels show case or incident numbers, never employee names.
-- **Charts** are plain bars. No chart library is loaded.
+- **Charts** are hand-drawn SVG (the incident wave, as in 1.0) and plain bars. No chart library is loaded.
 
 ## Code
 
@@ -72,7 +72,7 @@ Every block reads its data through the module's own scoped loader with the viewe
 - `apps/web/src/lib/forgeDashboard.ts`: `getDashboardData`, `getDashboardLayout`.
 - `apps/web/src/lib/forgeBodyMapRules.ts`, `apps/web/src/lib/forgeBodyMap.ts`, `apps/web/public/img/incident-body-map.png`: the body map.
 - `apps/web/src/app/(back)/dashboard/`: `page.tsx`, `actions.ts` (`saveDashboardLayout`, `resetDashboardLayout`).
-- `apps/web/src/components/dashboard/`: `DashboardBlocks.tsx`, `DashboardCustomize.tsx`, `SafetyIndexCard.tsx`, `BodyMapCard.tsx`.
+- `apps/web/src/components/dashboard/`: `DashboardBlocks.tsx`, `IncidentTrendChart.tsx`, `DashboardCustomize.tsx`, `SafetyIndexCard.tsx`, `BodyMapCard.tsx`.
 
 ## Tests
 
