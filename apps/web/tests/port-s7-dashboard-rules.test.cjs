@@ -191,3 +191,36 @@ test('sortAttention puts items with work first, by tone then count', () => {
     ['d', 'c', 'b', 'a']
   )
 })
+
+test('incidentYearComparison: calendar months per year, newest first, future months empty, same-period totals', () => {
+  const rows = rules.incidentYearComparison(
+    [
+      { occurred_at: '2026-01-10T10:00:00Z', involves_injury: true, status: 'submitted' },
+      { occurred_at: '2026-11-02T10:00:00Z', incident_type: 'near_miss', status: 'closed' },
+      { occurred_at: '2026-11-03T10:00:00Z', involves_injury: true, status: 'draft' },
+      { occurred_at: '2025-01-20T10:00:00Z', incident_type: 'injury', status: 'closed' },
+      { occurred_at: '2025-12-20T10:00:00Z', incident_type: 'property', status: 'closed' },
+      { occurred_at: '2022-06-01T10:00:00Z', incident_type: 'property', status: 'closed' },
+      { occurred_at: '2021-06-01T10:00:00Z', incident_type: 'property', status: 'closed' }
+    ],
+    TODAY,
+    5
+  )
+
+  assert.deepEqual(
+    rows.map(row => row.year),
+    [2026, 2025, 2024, 2023, 2022]
+  )
+  // This year: January and November counted, December not reached yet, the draft skipped.
+  assert.equal(rows[0].months[0], 1)
+  assert.equal(rows[0].months[10], 1)
+  assert.equal(rows[0].months[11], null)
+  assert.equal(rows[0].injuries[0], 1)
+  assert.deepEqual([rows[0].total, rows[0].samePeriod], [2, 2])
+  // Last year: the December incident is in the full year but not in Jan–Nov.
+  assert.equal(rows[1].months[11], 1)
+  assert.deepEqual([rows[1].total, rows[1].samePeriod], [2, 1])
+  assert.equal(rows[2].total, 0)
+  assert.equal(rows[4].months[5], 1)
+  assert.equal(rules.incidentYearComparison([], TODAY, 3).length, 3)
+})

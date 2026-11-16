@@ -59,7 +59,7 @@ const DashboardPage = async ({ searchParams }: { searchParams: Promise<Record<st
     'tasks-due': data.tasksDue ? <TasksDueBlock tasks={data.tasksDue} /> : null,
     'safety-index': data.safetyIndex ? <SafetyIndexCard periods={data.safetyIndex.periods} dotCompliance={data.safetyIndex.dotCompliance} /> : null,
     'task-scheduler': data.taskScheduler ? <TaskSchedulerBlock schedule={data.taskScheduler} /> : null,
-    'incident-trend': data.incidentTrend ? <IncidentTrendBlock months={data.incidentTrend} /> : null,
+    'incident-trend': data.incidentTrend ? <IncidentTrendBlock months={data.incidentTrend} years={data.incidentYears} todayIso={data.todayIso} /> : null,
     'injury-history': data.injuryHistory ? <InjuryHistoryBlock rows={data.injuryHistory} hasOsha={data.injuryHistory.some(row => row.recordables !== null)} /> : null,
     'inspections-by-site': data.inspectionsBySite ? <InspectionsBySiteBlock rows={data.inspectionsBySite} /> : null,
     'body-map': data.bodyMap ? <BodyMapCard data={data.bodyMap} initialPeriod={parseBodyMapPeriod(params.bodyMap)} title='Injury Body Map' /> : null,

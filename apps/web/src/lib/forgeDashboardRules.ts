@@ -213,6 +213,56 @@ export const incidentTrend = (incidents: TrendIncident[], todayIso: string, coun
   return [...buckets.values()]
 }
 
+export type YearComparison = {
+  year: number
+
+  /** Incidents per calendar month, January first. Months after the current one are null for this year. */
+  months: Array<number | null>
+  injuries: Array<number | null>
+  total: number
+
+  /** January through the current month: the same stretch of every year, so years compare fairly. */
+  samePeriod: number
+}
+
+/** Incidents per calendar month for this year and the `years - 1` before it, newest first (1.0 dashboard comparison). Drafts are not counted. */
+export const incidentYearComparison = (incidents: TrendIncident[], todayIso: string, years = 5): YearComparison[] => {
+  const currentYear = Number(todayIso.slice(0, 4))
+  const currentMonth = Number(todayIso.slice(5, 7))
+
+  const rows = Array.from({ length: years }, (_, index) => {
+    const year = currentYear - index
+    const open = (month: number) => year < currentYear || month <= currentMonth
+
+    return {
+      year,
+      months: Array.from({ length: 12 }, (_, month) => (open(month + 1) ? 0 : null)) as Array<number | null>,
+      injuries: Array.from({ length: 12 }, (_, month) => (open(month + 1) ? 0 : null)) as Array<number | null>,
+      total: 0,
+      samePeriod: 0
+    }
+  })
+
+  const byYear = new Map(rows.map(row => [row.year, row]))
+
+  for (const incident of incidents) {
+    if (incident.status === 'draft') continue
+
+    const date = isoDay(incident.occurred_at)
+    const row = byYear.get(Number(date.slice(0, 4)))
+    const month = Number(date.slice(5, 7))
+
+    if (!row || !month || row.months[month - 1] === null) continue
+
+    row.months[month - 1] = (row.months[month - 1] || 0) + 1
+    if (incident.involves_injury || incident.incident_type === 'injury') row.injuries[month - 1] = (row.injuries[month - 1] || 0) + 1
+    row.total += 1
+    if (month <= currentMonth) row.samePeriod += 1
+  }
+
+  return rows
+}
+
 export type HistoryOshaCase = {
   injury_date: string
   status: string

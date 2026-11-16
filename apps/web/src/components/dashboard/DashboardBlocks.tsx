@@ -161,8 +161,17 @@ const BarList = ({ rows, empty = 'Nothing to show yet.' }: { rows: Array<{ label
   )
 }
 
-export const IncidentTrendBlock = ({ months }: { months: NonNullable<DashboardData['incidentTrend']> }) => {
+export const IncidentTrendBlock = ({
+  months,
+  years,
+  todayIso
+}: {
+  months: NonNullable<DashboardData['incidentTrend']>
+  years: DashboardData['incidentYears']
+  todayIso: string
+}) => {
   const total = months.reduce((sum, month) => sum + month.total, 0)
+  const anyYears = (years || []).some(year => year.total > 0)
 
   return (
     <Card className='h-full' data-testid='dashboard-incident-trend'>
@@ -177,7 +186,13 @@ export const IncidentTrendBlock = ({ months }: { months: NonNullable<DashboardDa
           </Link>
         </div>
       </CardHeader>
-      <CardContent>{total ? <IncidentTrendChart months={months} /> : <p className='text-textSecondary text-sm'>No incidents in the last 12 months.</p>}</CardContent>
+      <CardContent>
+        {total || anyYears ? (
+          <IncidentTrendChart months={months} years={years} currentMonth={Number(todayIso.slice(5, 7))} />
+        ) : (
+          <p className='text-textSecondary text-sm'>No incidents in the last 5 years.</p>
+        )}
+      </CardContent>
     </Card>
   )
 }

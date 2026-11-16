@@ -114,6 +114,18 @@ test('the dashboard shows every block, attention counts, my overdue task and the
   await expect(safety).toContainText('Last 6 months')
   await expect(page.getByTestId('safety-grade')).toHaveText(/^[ABCDF]$/)
 
+  // Incident Trend compares this year with the last 3 and 5 years, Jan–Dec, with a legend table.
+  const trend = page.getByTestId('dashboard-incident-trend')
+
+  await trend.getByRole('button', { name: '5 years' }).click()
+  await expect(trend.locator('[data-trend-year]')).toHaveCount(5)
+  await expect(trend.locator('[data-trend-year-row]')).toHaveCount(5)
+  await expect(trend.locator('[data-trend-year-row]').first()).toContainText(String(new Date().getFullYear()))
+  await trend.getByRole('button', { name: '3 years' }).click()
+  await expect(trend.locator('[data-trend-year]')).toHaveCount(3)
+  await trend.getByRole('button', { name: '12 months' }).click()
+  await expect(trend.locator('[data-trend-area]')).toHaveCount(1)
+
   // An attention card opens its module.
   await page.locator('[data-attention="tasks-mine"]').click()
   await page.waitForURL(/\/tasks$/)

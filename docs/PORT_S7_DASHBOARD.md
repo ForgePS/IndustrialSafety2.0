@@ -18,7 +18,7 @@ Every block reads its data through the module's own scoped loader with the viewe
 | Tasks Due | `tasks.view` | Open tasks assigned to you, overdue first. |
 | Safety Index | `incidents.view`, `inspections.view`, `training.view` or `dot.view` | 1.0's 0–100 score and A–F grade for the last 6 or 12 months, with the inputs, plus the share of DOT driver files that are compliant. |
 | Task Scheduler | `tasks.view` | Open tasks overdue, due this week, later and undated, plus counts by status. |
-| Incident Trend | `incidents.view` | 1.0's smooth area (wave) chart of incidents per month for 12 months, with a hover crosshair and a tooltip splitting injuries and other. Drafts are not counted. |
+| Incident Trend | `incidents.view` | **12 months:** 1.0's smooth area (wave) chart of incidents per month, with a hover crosshair and a tooltip splitting injuries and other. **3 years / 5 years:** one wave line per year, January to December, this year on top. The tooltip lists every year for the month, and a table gives each year's January-to-this-month total (a fair comparison) and full-year total. Drafts are not counted. |
 | Injury History | `incidents.view` or `osha.view` | Five years of injury incidents, plus OSHA recordables, DART cases and days away with `osha.view`. |
 | Inspections by Location | `inspections.view` | Inspections in the last 12 months per location. |
 | Injury Body Map | `workers_comp.view`, `osha.view` or `incidents.view` | Where on the body injuries happen, for 6 months, 12 months or all time (`?bodyMap=`). |
@@ -65,6 +65,7 @@ Every block reads its data through the module's own scoped loader with the viewe
   - An injury on a workers' comp case, an OSHA case and an incident counts once. A WC case and an OSHA case merge when they share the incident and the worker.
   - Labels show case or incident numbers, never employee names.
 - **Charts** are hand-drawn SVG (the incident wave, as in 1.0) and plain bars. No chart library is loaded.
+- **Year comparison colors** are the first five categorical slots of the reference chart palette, with their own dark-mode steps. They were checked for color-blind separation on this app's light and dark card colors. Three light-mode colors are under 3:1 contrast, so the table under the chart always names each year with its numbers.
 
 ## Code
 

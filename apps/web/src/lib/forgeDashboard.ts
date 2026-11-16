@@ -23,6 +23,7 @@ import {
   computeSafetyIndex,
   countByLabel,
   incidentTrend,
+  incidentYearComparison,
   injuryHistory,
   normalizeDashboardLayout,
   safetyGrade,
@@ -77,6 +78,7 @@ export type DashboardData = {
   taskScheduler: ReturnType<typeof taskSchedule> | null
   safetyIndex: { periods: SafetyIndexPeriod[]; dotCompliance: number | null } | null
   incidentTrend: ReturnType<typeof incidentTrend> | null
+  incidentYears: ReturnType<typeof incidentYearComparison> | null
   injuryHistory: ReturnType<typeof injuryHistory> | null
   inspectionsBySite: Array<{ label: string; count: number }> | null
   bodyMap: Awaited<ReturnType<typeof getBodyMapCardData>>
@@ -318,6 +320,7 @@ export const getDashboardData = async ({
     taskScheduler: tasks ? taskSchedule(tasks as any[], todayIso) : null,
     safetyIndex,
     incidentTrend: incidents ? incidentTrend(incidents as any[], todayIso) : null,
+    incidentYears: incidents ? incidentYearComparison(incidents as any[], todayIso, 5) : null,
     injuryHistory: incidents || oshaCases ? injuryHistory({ incidents: (incidents || []) as any[], oshaCases: (oshaCases as any[]) || null, todayIso }) : null,
     inspectionsBySite: inspections
       ? countByLabel(inspections.filter((item: any) => item.status !== 'draft' && day(item.inspection_date || item.created_at) >= twelveMonthsAgo).map((item: any) => item.locations?.name)).slice(0, 12)
