@@ -50,7 +50,7 @@ const CardDescription = forwardRef<HTMLParagraphElement, HTMLAttributes<HTMLPara
 CardDescription.displayName = 'CardDescription'
 
 const CardContent = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn('pbs-0 p-6 text-base text-inherit', className)} {...props} />
+  <div ref={ref} className={cn('p-6 text-base text-inherit [&:not(:first-child)]:pbs-0', className)} {...props} />
 ))
 
 CardContent.displayName = 'CardContent'
