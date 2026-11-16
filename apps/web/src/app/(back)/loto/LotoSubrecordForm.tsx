@@ -1,12 +1,14 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
+
 import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
 import { Input } from '@repo/ui/components/ui/input'
 import { Label } from '@repo/ui/components/ui/label'
 import { Textarea } from '@repo/ui/components/ui/textarea'
 import { toast } from '@repo/ui/utils/toast'
+
 import { addLotoEnergySource, addLotoStep, recordLotoReview } from './actions'
 import type { LotoFormValues } from './actions'
 
@@ -48,27 +50,39 @@ const LotoSubrecordForm = ({
   procedureId,
   form,
   mode,
-  onCancel
+  onCancel,
+  componentId,
+  initialValues
 }: {
   procedureId: string
   form: FormDefinition
   mode: 'energy' | 'step' | 'review'
   onCancel?: () => void
+
+  /** Editing an existing energy source or step. */
+  componentId?: string
+  initialValues?: LotoFormValues
 }) => {
   const [pending, startTransition] = useTransition()
+
   const [values, setValues] = useState<LotoFormValues>(() => {
     const next: LotoFormValues = {}
-    for (const field of form.fields) next[field.key] = ''
-    return next
+
+    for (const field of form.fields) next[field.key] = initialValues?.[field.key] ?? ''
+    
+return next
   })
 
   const sections = useMemo(() => {
     const map = new Map<string, { label: string; fields: Field[] }>()
+
     for (const field of form.fields) {
       if (!map.has(field.sectionKey)) map.set(field.sectionKey, { label: field.sectionLabel, fields: [] })
       map.get(field.sectionKey)?.fields.push(field)
     }
-    return Array.from(map.entries())
+
+    
+return Array.from(map.entries())
   }, [form.fields])
 
   const render = (field: Field) => {
@@ -115,14 +129,15 @@ const LotoSubrecordForm = ({
     startTransition(async () => {
       const result =
         mode === 'energy'
-          ? await addLotoEnergySource({ procedureId, values })
+          ? await addLotoEnergySource({ procedureId, values, componentId })
           : mode === 'step'
-            ? await addLotoStep({ procedureId, values })
+            ? await addLotoStep({ procedureId, values, componentId })
             : await recordLotoReview({ procedureId, values })
 
       if ('error' in result) {
         toast('error', result.error || 'Unable to save LOTO record.')
-        return
+        
+return
       }
 
       toast('success', 'message' in result ? String(result.message) : 'LOTO record saved.')
@@ -156,7 +171,7 @@ const LotoSubrecordForm = ({
         ))}
 
         <div className='flex gap-2'>
-          <Button onClick={save} disabled={pending}>{pending ? 'Saving...' : form.submitLabel}</Button>
+          <Button onClick={save} disabled={pending}>{pending ? 'Saving...' : componentId ? 'Save Changes' : form.submitLabel}</Button>
           {onCancel ? <Button variant='outline' onClick={onCancel} disabled={pending}>Cancel</Button> : null}
         </div>
       </CardContent>

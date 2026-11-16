@@ -1,8 +1,9 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+
 import Link from 'next/link'
-import { TbLock, TbPlus, TbSearch } from 'react-icons/tb'
+import { TbLock, TbPlus, TbPrinter, TbSearch } from 'react-icons/tb'
 import { Badge } from '@repo/ui/components/ui/badge'
 import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
@@ -21,19 +22,25 @@ export type LotoListItem = {
   assetNumber: string | null
   locationName: string | null
   divisionName: string | null
+  lockedOut: boolean
 }
+
+const MAX_BATCH_PRINT = 100
 
 const LotoList = ({
   procedures,
   canCreate,
-  statusLabels
+  statusLabels,
+  tabs
 }: {
   procedures: LotoListItem[]
   canCreate: boolean
   statusLabels: Record<string, string>
+  tabs: React.ReactNode
 }) => {
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('all')
+  const [selected, setSelected] = useState<string[]>([])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -60,10 +67,21 @@ const LotoList = ({
       <div className='flex flex-wrap items-end justify-between gap-4'>
         <div>
           <h1 className='text-textPrimary flex items-center gap-3 text-3xl font-bold'><TbLock />Lockout / Tagout</h1>
-          <p className='text-textSecondary mt-2'>Equipment-specific hazardous energy-control procedures, reviews, revision history, and field-use records.</p>
+          <p className='text-textSecondary mt-2'>Equipment-specific hazardous energy-control procedures, reviews, revision history and lockouts.</p>
         </div>
-        {canCreate ? <Button asChild><Link href='/loto/create'><TbPlus />Create Procedure</Link></Button> : null}
+        <div className='flex flex-wrap gap-2'>
+          {selected.length ? (
+            <Button variant='outline' asChild>
+              <Link href={'/loto-print?ids=' + selected.join(',')} target='_blank' rel='noopener'>
+                <TbPrinter />Print {selected.length} selected
+              </Link>
+            </Button>
+          ) : null}
+          {canCreate ? <Button asChild><Link href='/loto/create'><TbPlus />Create Procedure</Link></Button> : null}
+        </div>
       </div>
+
+      {tabs}
 
       <Card>
         <CardContent className='grid gap-4 p-5 md:grid-cols-[1fr_220px]'>
@@ -82,6 +100,14 @@ const LotoList = ({
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className='w-10'>
+                <input
+                  type='checkbox'
+                  aria-label='Select all shown for printing'
+                  checked={Boolean(filtered.length) && filtered.every(item => selected.includes(item.id))}
+                  onChange={event => setSelected(event.target.checked ? filtered.slice(0, MAX_BATCH_PRINT).map(item => item.id) : [])}
+                />
+              </TableHead>
               <TableHead>Procedure</TableHead>
               <TableHead>Equipment</TableHead>
               <TableHead>Status</TableHead>
@@ -101,6 +127,17 @@ const LotoList = ({
 
               return (
                 <TableRow key={procedure.id}>
+                  <TableCell>
+                    <input
+                      type='checkbox'
+                      aria-label={'Select ' + procedure.procedure_number + ' for printing'}
+                      checked={selected.includes(procedure.id)}
+                      disabled={!selected.includes(procedure.id) && selected.length >= MAX_BATCH_PRINT}
+                      onChange={event =>
+                        setSelected(current => (event.target.checked ? [...current, procedure.id] : current.filter(id => id !== procedure.id)))
+                      }
+                    />
+                  </TableCell>
                   <TableCell>
                     <div className='font-semibold'>{procedure.title}</div>
                     <div className='text-textSecondary text-xs'>{procedure.procedure_number}</div>
@@ -122,6 +159,7 @@ const LotoList = ({
                     >
                       {statusLabels[procedure.status] || procedure.status}
                     </Badge>
+                    {procedure.lockedOut ? <Badge size='sm' variant='destructive' className='ml-1'>Locked out</Badge> : null}
                   </TableCell>
                   <TableCell>Rev {procedure.revision_number}</TableCell>
                   <TableCell>
@@ -137,7 +175,7 @@ const LotoList = ({
                 </TableRow>
               )
             }) : (
-              <TableRow><TableCell colSpan={7} className='py-10 text-center'>No LOTO procedures match the current filters.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className='py-10 text-center'>No LOTO procedures match the current filters.</TableCell></TableRow>
             )}
           </TableBody>
         </Table>

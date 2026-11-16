@@ -204,8 +204,10 @@ const RESOURCE_DESCRIPTORS: Record<ForgeResourceType, ForgeResourceDescriptor> =
     defaultViewPermission: 'loto.view',
     defaultManagePermission: 'loto.execute',
     scopeMode: 'CUSTOM',
+    numberColumn: 'lockout_number',
+    titleColumn: 'work_description',
     statusColumn: 'status'
-    // no location_id / division_id / number — scope via linked asset
+    // no location_id / division_id — scope via linked asset
   },
   training_course: {
     resourceType: 'training_course',

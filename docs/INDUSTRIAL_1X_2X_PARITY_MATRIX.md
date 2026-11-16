@@ -72,7 +72,7 @@ A module must not skip directly from FUNCTIONAL to PRODUCTION READY.
 | Cranes & Rigging | Equipment & Operations | MISSING | Equipment/rigging inventory, inspections, qualifications, lift plans, approvals, defects and high-risk workflow links | P2 |
 | Machine Safety | Equipment & Operations | MISSING | Machine registry, guarding assessments, safeguards, inspections, defects, CAPA and LOTO linkage | P2 |
 | Electrical Safety | Equipment & Operations / High-Risk Work | MISSING | Electrical safety program, energized work controls, qualifications, PPE, boundaries, permit workflow and LOTO linkage | P2 |
-| Lockout / Tagout | High-Risk Work | FUNCTIONAL | Complete procedure/use/review parity; add worker qualification checks, permit links, QR launch, periodic review automation, change control and CAPA integration | P0 |
+| Lockout / Tagout | High-Risk Work | COMPLETE | Port slice 4 (docs/PORT_S4_LOTO.md): photos with arrows, 1.0 content, return for correction, group lockouts with verify/return-to-service, training-enforced lock holders, print sheet with QR, public QR view, CAPA link. Remaining: reports, AI lockout context, sanitation links, Brady labels, scheduled review reminders, permit links | P0 |
 | Confined Space | High-Risk Work | MISSING | Permit-required space registry, atmospheric testing, attendants/entrants, rescue plan, permit approval, suspension/closure and audit trail | P2 |
 | Hot Work | High-Risk Work | MISSING | Hot work permits, fire watch, combustibles controls, gas testing where required, approvals, expiration and post-work fire watch | P2 |
 | Working at Heights | High-Risk Work | MISSING | Fall protection permits/plans, equipment checks, rescue considerations, competent-person review and worker qualification checks | P2 |

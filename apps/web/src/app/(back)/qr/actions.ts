@@ -130,7 +130,7 @@ export const createManagedQrCode = async (values: QrFormValues) => {
   const expiresAt = cleanText(values.expires_at)
 
   if (!name || !assetId) return { error: 'QR Name and Linked Asset are required.' }
-  if (!['asset_record','maintenance','meter_reading'].includes(defaultAction)) {
+  if (!['asset_record','maintenance','meter_reading','loto_view'].includes(defaultAction)) {
     return { error: 'Invalid QR Default Action.' }
   }
   if (!['active','disabled'].includes(status)) {
@@ -234,7 +234,7 @@ export const updateManagedQrCode = async ({
   const expiresAt = cleanText(values.expires_at)
 
   if (!name || !assetId) return { error: 'QR Name and Linked Asset are required.' }
-  if (!['asset_record','maintenance','meter_reading'].includes(defaultAction)) {
+  if (!['asset_record','maintenance','meter_reading','loto_view'].includes(defaultAction)) {
     return { error: 'Invalid QR Default Action.' }
   }
   if (!['active','disabled'].includes(status)) {

@@ -6,9 +6,13 @@ import { optionalUserId } from '@/lib/platform/identity'
 
 export const dynamic = 'force-dynamic'
 
-const destinationFor = (targetId: string, action: string) => {
+const destinationFor = (token: string, targetId: string, action: string) => {
   if (action === 'maintenance') return '/assets/' + targetId + '/maintenance/create'
   if (action === 'meter_reading') return '/assets/' + targetId + '/meter-readings/create'
+
+  // Public, read-only LOTO view (as in 1.0). The page re-checks the token.
+  if (action === 'loto_view') return '/q/' + token + '/loto'
+
   return '/assets/' + targetId
 }
 
@@ -25,6 +29,7 @@ export async function GET(
   const authUserId = await optionalUserId()
 
   const supabase = createServiceRoleClient() as any
+
   const { data, error } = await supabase.rpc('resolve_and_record_forge_qr_scan', {
     p_token: token,
     p_auth_user_id: authUserId,
@@ -38,7 +43,7 @@ export async function GET(
     return NextResponse.redirect(new URL('/q/unavailable', request.url))
   }
 
-  const destinationPath = destinationFor(resolved.target_id, resolved.default_action)
+  const destinationPath = destinationFor(token, resolved.target_id, resolved.default_action)
   const appOrigin = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
 
   return NextResponse.redirect(new URL(destinationPath, appOrigin))
