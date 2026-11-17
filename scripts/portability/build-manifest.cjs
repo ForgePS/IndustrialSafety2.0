@@ -86,7 +86,8 @@ const manifest = {
   scheduledJobs: [
     { key: 'workers-comp', method: 'POST', path: '/api/workers-comp/cron', secret: 'FORGE_CRON_SECRET', schedule: 'rate(1 hour)' },
     { key: 'helpdesk', method: 'POST', path: '/api/helpdesk/cron', secret: 'HELPDESK_CRON_SECRET', schedule: 'rate(5 minutes)' },
-    { key: 'forge-ai-watch', method: 'POST', path: '/api/forge-ai/watch/cron', secret: 'FORGE_AI_CRON_SECRET', schedule: 'rate(1 day)' }
+    { key: 'forge-ai-watch', method: 'POST', path: '/api/forge-ai/watch/cron', secret: 'FORGE_AI_CRON_SECRET', schedule: 'rate(1 day)' },
+    { key: 'corrective-actions', method: 'POST', path: '/api/corrective-actions/cron', secret: 'FORGE_CRON_SECRET', schedule: 'rate(1 hour)' }
   ]
 }
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Badge } from '@repo/ui/components/ui/badge'
 import { Button } from '@repo/ui/components/ui/button'
@@ -9,7 +10,18 @@ import { Input } from '@repo/ui/components/ui/input'
 import { Label } from '@repo/ui/components/ui/label'
 import { Textarea } from '@repo/ui/components/ui/textarea'
 import { toast } from '@repo/ui/utils/toast'
-import { closeInspectionFinding, createRiskFromFinding, updateInspectionFinding } from './actions'
+import { closeInspectionFinding, createCapaFromFinding, createRiskFromFinding, updateInspectionFinding } from './actions'
+
+type FindingCapa = { id: string; action_number: string; status: string; due_at: string | null }
+
+const CAPA_STATUS_LABELS: Record<string, string> = {
+  open: 'Open',
+  in_progress: 'In Progress',
+  pending_verification: 'Pending Verification',
+  verified: 'Verified',
+  closed: 'Closed',
+  canceled: 'Canceled'
+}
 
 type Finding = {
   id: string
@@ -27,6 +39,9 @@ const InspectionFindings = ({
   editable,
   canClose,
   canCreateRisk,
+  canCreateCapa = false,
+  canViewCapas = true,
+  findingCapas = {},
   severityLabels,
   statusLabels
 }: {
@@ -34,6 +49,9 @@ const InspectionFindings = ({
   editable: boolean
   canClose: boolean
   canCreateRisk?: boolean
+  canCreateCapa?: boolean
+  canViewCapas?: boolean
+  findingCapas?: Record<string, FindingCapa>
   severityLabels: Record<string, string>
   statusLabels: Record<string, string>
 }) => {
@@ -107,6 +125,21 @@ const InspectionFindings = ({
     })
   }
 
+  const createCapa = (finding: Finding) => {
+    startTransition(async () => {
+      const result = await createCapaFromFinding(finding.id)
+
+      if (!result || 'error' in result) {
+        toast('error', (result && 'error' in result && result.error) || 'Unable to open Corrective Action.')
+
+        return
+      }
+
+      toast('success', result.message)
+      router.refresh()
+    })
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -117,6 +150,7 @@ const InspectionFindings = ({
         {findings.length ? findings.map(finding => {
           const draft = drafts[finding.id]
           const closed = finding.status === 'closed' || finding.status === 'canceled'
+          const capa = findingCapas[finding.id]
 
           return (
             <div key={finding.id} className='rounded-lg border p-4'>
@@ -141,11 +175,41 @@ const InspectionFindings = ({
                       Create Risk from Finding
                     </Button>
                   ) : null}
+                  {!capa && !closed && canCreateCapa ? (
+                    <Button type='button' variant='outline' size='sm' disabled={pending} onClick={() => createCapa(finding)}>
+                      Create CAPA
+                    </Button>
+                  ) : null}
                 </div>
               </div>
 
+              {capa ? (
+                <div className='bg-muted/40 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3' data-testid='finding-capa'>
+                  <div className='flex flex-wrap items-center gap-2 text-sm'>
+                    <span className='font-medium'>Corrective Action</span>
+                    <span className='font-mono'>{capa.action_number}</span>
+                    <Badge size='sm' variant={capa.status === 'closed' || capa.status === 'verified' ? 'tonalSuccess' : 'outline'}>
+                      {CAPA_STATUS_LABELS[capa.status] || capa.status}
+                    </Badge>
+                    {capa.due_at ? <span className='text-textSecondary'>Due {new Date(capa.due_at).toLocaleDateString()}</span> : null}
+                  </div>
+                  {canViewCapas ? (
+                    <Button asChild variant='outline' size='sm'>
+                      <Link href={'/corrective-actions/' + capa.id}>Open CAPA {capa.action_number}</Link>
+                    </Button>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {capa && finding.corrective_action ? (
+                <div className='text-textSecondary mt-3 text-sm'>
+                  <span className='font-medium'>Earlier corrective action note:</span> {finding.corrective_action}
+                </div>
+              ) : null}
+
               {!closed ? (
                 <div className='mt-4 grid gap-4 md:grid-cols-2'>
+                  {!capa ? (<>
                   <div className='md:col-span-2'>
                     <Label>Corrective Action</Label>
                     <Textarea
@@ -189,6 +253,7 @@ const InspectionFindings = ({
                     />
                   </div>
                   {editable ? <Button variant='outline' onClick={() => save(finding)} disabled={pending}>Save Corrective Action</Button> : null}
+                  </>) : null}
                   {canClose ? (
                     <div className='md:col-span-2 rounded-lg border p-3'>
                       <Label>Verification Notes</Label>

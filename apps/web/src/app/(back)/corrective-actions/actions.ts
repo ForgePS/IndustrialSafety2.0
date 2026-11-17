@@ -3,11 +3,12 @@
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@repo/supabase/server'
 import {
-  ensureCapaWorkflowInstance,
   performAtomicCapaLifecycleTransition,
   performTransactionalCapaUpdate
 } from '@/lib/forgeCapaWorkflowSync'
 import { correctiveActionWithinScope } from '@/lib/forgeCorrectiveActions'
+import { insertCorrectiveAction } from '@/lib/forgeCapaCreate'
+import { notifyCapaAssigned, notifyCapaNeedsVerification } from '@/lib/forgeCapaNotify'
 import { getEffectiveForm } from '@/lib/forgeForms'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 
@@ -45,13 +46,6 @@ const toIso = (value: unknown) => {
 
 const toBoolean = (value: unknown) =>
   value === true || value === 'true' || value === 'on' || value === '1'
-
-const priorityForSeverity = (severity: string | null) => {
-  if (severity === 'critical') return 'critical'
-  if (severity === 'high') return 'high'
-  if (severity === 'low') return 'low'
-  return 'normal'
-}
 
 const validateCorrectiveActionForm = async ({
   organizationId,
@@ -334,124 +328,21 @@ export const createCorrectiveAction = async (values: CorrectiveActionFormValues)
     return { error: 'The selected Corrective Action assignment is outside your permission scope.' }
   }
 
-  const { data: actionNumber, error: numberError } = await supabase.rpc(
-    'next_forge_corrective_action_number',
-    { p_organization_id: organizationId }
-  )
-
-  if (numberError || !actionNumber) {
-    return { error: numberError?.message || 'Unable to generate Corrective Action number.' }
-  }
-
-  const { data: correctiveAction, error } = await supabase
-    .from('forge_corrective_actions')
-    .insert({
-      organization_id: organizationId,
-      action_number: actionNumber,
-      ...payload,
-      assigned_personnel_id: assignee.personnelId,
-      assigned_user_id: assignee.userId,
-      status: payload.action_plan ? 'in_progress' : 'open',
-      created_by: context.user.id,
-      updated_by: context.user.id
-    })
-    .select('*')
-    .single()
-
-  if (error || !correctiveAction) {
-    return { error: error?.message || 'Unable to create Corrective Action.' }
-  }
-
-  const { data: taskNumber, error: taskNumberError } = await supabase.rpc(
-    'next_forge_task_number',
-    { p_organization_id: organizationId }
-  )
-
-  if (taskNumberError || !taskNumber) {
-    await supabase.from('forge_corrective_actions').delete().eq('id', correctiveAction.id)
-    return { error: taskNumberError?.message || 'Unable to create linked Task number.' }
-  }
-
-  const { data: task, error: taskError } = await supabase
-    .from('forge_tasks')
-    .insert({
-      organization_id: organizationId,
-      task_number: taskNumber,
-      title: correctiveAction.title,
-      description: correctiveAction.action_plan || correctiveAction.description,
-      status: correctiveAction.status === 'in_progress' ? 'in_progress' : 'open',
-      priority: priorityForSeverity(correctiveAction.severity),
-      assigned_personnel_id: correctiveAction.assigned_personnel_id,
-      assigned_user_id: correctiveAction.assigned_user_id,
-      location_id: correctiveAction.location_id,
-      division_id: correctiveAction.division_id,
-      due_at: correctiveAction.due_at,
-      source_type: 'corrective_action',
-      source_id: correctiveAction.id,
-      source_reference: correctiveAction.action_number,
-      corrective_action: true,
-      verification_required: true,
-      created_by: context.user.id,
-      updated_by: context.user.id
-    })
-    .select('*')
-    .single()
-
-  if (taskError || !task) {
-    await supabase.from('forge_corrective_actions').delete().eq('id', correctiveAction.id)
-    return { error: taskError?.message || 'Unable to create linked Corrective Action Task.' }
-  }
-
-  const { data: after } = await supabase
-    .from('forge_corrective_actions')
-    .update({
-      linked_task_id: task.id,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', correctiveAction.id)
-    .select('*')
-    .single()
-
-  await activity({
+  const created = await insertCorrectiveAction({
     supabase,
     organizationId,
-    correctiveActionId: correctiveAction.id,
-    userId: context.user.id,
-    type: 'created',
-    message: 'Corrective Action created with linked Task ' + task.task_number + '.',
-    metadata: { task_id: task.id, task_number: task.task_number }
-  })
-
-  await taskActivity({
-    supabase,
-    organizationId,
-    taskId: task.id,
-    userId: context.user.id,
-    type: 'created_from_corrective_action',
-    message: 'Task created from Corrective Action ' + correctiveAction.action_number + '.',
-    metadata: { corrective_action_id: correctiveAction.id }
-  })
-
-  await audit({
-    supabase,
     actorUserId: context.user.id,
-    organizationId,
-    action: 'corrective_action.created',
-    entityId: correctiveAction.id,
-    after: after || correctiveAction
+    payload: { ...payload, title: payload.title, description: payload.description },
+    assignee
   })
 
-  const created = after || correctiveAction
-  await ensureCapaWorkflowInstance({
-    organizationId,
-    capaId: created.id,
-    status: created.status,
-    actorUserId: context.user.id
-  })
+  if ('error' in created) return { error: created.error }
+
+  await notifyCapaAssigned({ organizationId, correctiveActionId: created.id, actorUserId: context.user.id })
 
   revalidatePath('/corrective-actions')
   revalidatePath('/tasks')
-  return { id: correctiveAction.id, message: 'Corrective Action created.' }
+  return { id: created.id, message: 'Corrective Action created.' }
 }
 
 export const updateCorrectiveAction = async ({
@@ -643,6 +534,10 @@ export const updateCorrectiveAction = async ({
     return { ok: false as const, error: 'Update succeeded but concurrency tokens were missing.' }
   }
 
+  if (assignee.userId && assignee.userId !== before.assigned_user_id && !updated.result.duplicate) {
+    await notifyCapaAssigned({ organizationId, correctiveActionId, actorUserId: context.user.id })
+  }
+
   revalidatePath('/corrective-actions')
   revalidatePath('/corrective-actions/' + correctiveActionId)
   revalidatePath('/tasks')
@@ -779,6 +674,8 @@ export const submitCorrectiveActionForVerification = async (correctiveActionId: 
       message: 'Corrective work submitted for CAPA verification.'
     })
   }
+
+  await notifyCapaNeedsVerification({ organizationId, correctiveActionId, actorUserId: context.user.id })
 
   revalidatePath('/corrective-actions')
   revalidatePath('/corrective-actions/' + correctiveActionId)

@@ -7,8 +7,11 @@ import { usePathname, useSearchParams } from 'next/navigation'
 /**
  * A thin bar across the top of the screen from the moment an in-app link is clicked until the new page
  * arrives. App Router keeps the old page on screen while the server renders the next one; on a slow page
- * that looks like a click that did nothing. `loading.tsx` only covers top-level module changes, so this
- * covers every link (list rows, cards, tabs).
+ * that looks like a click that did nothing. This covers every link (menu, list rows, cards, tabs).
+ *
+ * There is deliberately no `(back)/loading.tsx`: a loading boundary makes every page stream, the 200 status is
+ * sent before the page runs, and `notFound()` for a record outside the viewer's company or scope then answers
+ * 200 instead of 404.
  */
 const NavigationProgress = () => {
   const pathname = usePathname()

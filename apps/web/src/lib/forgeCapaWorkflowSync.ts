@@ -100,7 +100,9 @@ export const performAtomicCapaLifecycleTransition = async ({
   capaId: string
   fromStatus: string
   toStatus: string
-  actorUserId: string
+
+  /** null for system transitions (the public closeout link). */
+  actorUserId: string | null
   comment?: string | null
   capaPatch?: Record<string, unknown>
   metadata?: Record<string, unknown>

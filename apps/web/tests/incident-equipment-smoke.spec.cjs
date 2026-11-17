@@ -76,7 +76,8 @@ test('incident equipment link, asset history, and tenant isolation smoke test', 
     timeout: 20000
   })
   await expect(admin.getByText(summary)).toBeVisible()
-  await expect(admin.getByRole('link', { name: /INC-\d+|DEMO-INC-/i })).toBeVisible()
+  // The demo asset keeps the incidents linked by earlier runs; check this run's incident.
+  await expect(admin.locator(`a[href="/incidents/${incidentId}"]`)).toHaveText(/INC-\d+|DEMO-INC-/i)
 
   await admin.goto(incidentUrl)
   await expect(admin.getByRole('link', { name: /DEMO-AST-000001/ })).toBeVisible()

@@ -10,6 +10,7 @@ import InspectionWorkflowActions from '../InspectionWorkflowActions'
 import type { InspectionFormValues } from '../actions'
 import { getEffectiveForm } from '@/lib/forgeForms'
 import { getEffectiveLookup } from '@/lib/forgeLookups'
+import { getFindingCapas } from '@/lib/forgeInspectionCapa'
 import { getInspectionDetailData, inspectionWithinScope } from '@/lib/forgeInspections'
 import { getScopedPersonnel } from '@/lib/forgePersonnel'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
@@ -101,6 +102,9 @@ const InspectionDetailPage = async ({ params }: { params: Promise<{ id: string }
         })
       : Promise.resolve([])
   ])
+
+  const findingCapas = await getFindingCapas({ organizationId, findingIds: detail.findings.map((finding: any) => finding.id) })
+  const canViewCapas = Boolean(permissionByKey.get('corrective_actions.view'))
 
   const editable = Boolean(mayEditByScope) && ['draft','in_progress','returned'].includes(inspection.status)
 
@@ -200,6 +204,9 @@ const InspectionDetailPage = async ({ params }: { params: Promise<{ id: string }
         editable={Boolean(mayEditByScope)}
         canClose={Boolean(canCloseFindings)}
         canCreateRisk={canCreateRisk}
+        canCreateCapa
+        findingCapas={findingCapas}
+        canViewCapas={canViewCapas}
         severityLabels={severityLabels}
         statusLabels={findingStatusLabels}
       />

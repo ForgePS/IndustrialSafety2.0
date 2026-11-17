@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@repo/supabase/server'
 import { getEffectiveForm } from '@/lib/forgeForms'
 import { getEffectiveLookup } from '@/lib/forgeLookups'
+import { createCapaForFinding, createCapasForInspectionFindings } from '@/lib/forgeInspectionCapa'
+import { findingNeedsCapa } from '@/lib/forgeInspectionCapaRules'
 import { inspectionWithinScope } from '@/lib/forgeInspections'
 import { createRecordLink } from '@/lib/forgeRecordLinks'
 import { createRisk } from '@/lib/forgeRiskRegister'
@@ -964,9 +966,53 @@ export const submitInspection = async (inspectionId: string) => {
     after
   })
 
+  // 1.0 parity: completing an inspection opens a Corrective Action for each finding that still needs action.
+  const capas = await createCapasForInspectionFindings({ organizationId, actorUserId: context.user.id, inspection: after })
+
+  if (capas.errors.length) console.error('Inspection finding CAPA creation failed', inspectionId, capas.errors)
+
   revalidatePath('/inspections')
   revalidatePath('/inspections/' + inspectionId)
-  return { message: 'Inspection submitted for review.' }
+  revalidatePath('/corrective-actions')
+
+  const capaNote = capas.created ? ' ' + capas.created + ' Corrective Action' + (capas.created === 1 ? '' : 's') + ' opened.' : ''
+  const capaWarning = capas.errors.length ? ' ' + capas.errors.length + ' Corrective Action(s) could not be opened.' : ''
+
+  return { message: 'Inspection submitted for review.' + capaNote + capaWarning }
+}
+
+/** Opens (or returns the existing) Corrective Action for one finding. Needs only view access to the inspection. */
+export const createCapaFromFinding = async (findingId: string): Promise<CrossModuleActionResult & { actionNumber?: string }> => {
+  const context = await requireTenantPermission('inspections.view')
+  const organizationId = context.activeOrganization.id
+  const supabase = createServiceRoleClient() as any
+
+  const { data: finding } = await supabase
+    .from('forge_inspection_findings')
+    .select('*, forge_inspections(*)')
+    .eq('organization_id', organizationId)
+    .eq('id', findingId)
+    .maybeSingle()
+
+  if (!finding || !finding.forge_inspections) return { error: 'Finding not found.' }
+
+  const inspection = finding.forge_inspections
+  const mayView = await inspectionWithinScope({ organizationId, userId: context.user.id, scope: context.permission.scope, inspection })
+  if (!mayView) return { error: 'Finding not found.' }
+  if (!findingNeedsCapa(finding)) return { error: 'This finding is already closed.' }
+
+  const result = await createCapaForFinding({ organizationId, actorUserId: context.user.id, finding, inspection })
+  if ('error' in result) return { error: result.error }
+
+  revalidatePath('/inspections/' + inspection.id)
+  revalidatePath('/corrective-actions')
+
+  return {
+    ok: true,
+    id: result.id,
+    actionNumber: result.actionNumber,
+    message: result.existing ? 'Corrective Action ' + result.actionNumber + ' already exists.' : 'Corrective Action ' + result.actionNumber + ' opened.'
+  }
 }
 
 export const approveInspection = async (inspectionId: string) => {
