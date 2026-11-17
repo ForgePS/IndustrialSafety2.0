@@ -55,7 +55,12 @@ const PasswordSignInForm = () => {
     startTransition(async () => {
       try {
         setShowAlert(false)
-        await handleSignIn(formData)
+
+        // ?next=/path returns to a same-site page after sign-in (e.g. an EHS Director sign link, /sign/<token>).
+        const next = new URLSearchParams(window.location.search).get('next') || ''
+        const safeNext = /^\/(?![/\\])/.test(next) ? next : ''
+
+        await handleSignIn(formData, null, safeNext)
       } catch (error) {
         console.error(error)
         setShowAlert(true)
