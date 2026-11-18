@@ -2,7 +2,7 @@
   "product": "forge-industrial-safety-2.0",
   "version": "2.0.0",
   "basePath": "/v2",
-  "schemaVersion": "20261115120000",
+  "schemaVersion": "20261115160000",
   "database": {
     "schema": "forge2",
     "ledger": "forge2.schema_migrations"
@@ -3643,7 +3643,7 @@
       "label": "Assets & Equipment",
       "route": "/assets",
       "feature": "assets_equipment",
-      "category": "Navigation",
+      "category": "Equipment & Operations",
       "sortOrder": 170,
       "enabled": true,
       "routeLive": true
@@ -3654,7 +3654,7 @@
       "label": "Calendar",
       "route": "/calendar",
       "feature": "calendar",
-      "category": "Navigation",
+      "category": "System Tools",
       "sortOrder": 215,
       "enabled": true,
       "routeLive": false
@@ -3665,7 +3665,7 @@
       "label": "Form Designer",
       "route": "/company/settings/forms",
       "feature": null,
-      "category": "Administration",
+      "category": "System Tools",
       "sortOrder": 910,
       "enabled": true,
       "routeLive": true
@@ -3676,7 +3676,7 @@
       "label": "Dropdown Manager",
       "route": "/company/settings/lookups",
       "feature": null,
-      "category": "Administration",
+      "category": "System Tools",
       "sortOrder": 920,
       "enabled": true,
       "routeLive": true
@@ -3687,7 +3687,7 @@
       "label": "Company Settings",
       "route": "/company/settings",
       "feature": null,
-      "category": "Administration",
+      "category": "System Tools",
       "sortOrder": 900,
       "enabled": true,
       "routeLive": true
@@ -3698,7 +3698,7 @@
       "label": "Corrective Actions",
       "route": "/corrective-actions",
       "feature": "corrective_actions",
-      "category": "Navigation",
+      "category": "Risk & Prevention",
       "sortOrder": 135,
       "enabled": true,
       "routeLive": true
@@ -3709,7 +3709,7 @@
       "label": "Help Desk",
       "route": "/help-desk",
       "feature": null,
-      "category": "Administration",
+      "category": "System Tools",
       "sortOrder": 905,
       "enabled": true,
       "routeLive": true
@@ -3720,7 +3720,7 @@
       "label": "DOT",
       "route": "/dot",
       "feature": "dot",
-      "category": "Navigation",
+      "category": "Compliance Programs",
       "sortOrder": 160,
       "enabled": true,
       "routeLive": false
@@ -3731,7 +3731,7 @@
       "label": "Fleet",
       "route": "/fleet",
       "feature": "fleet",
-      "category": "Navigation",
+      "category": "Equipment & Operations",
       "sortOrder": 180,
       "enabled": true,
       "routeLive": false
@@ -3742,7 +3742,7 @@
       "label": "Forge AI",
       "route": "/ai",
       "feature": "forge_ai",
-      "category": "Navigation",
+      "category": "Forge AI",
       "sortOrder": 255,
       "enabled": true,
       "routeLive": true
@@ -3753,7 +3753,7 @@
       "label": "AI Analytics",
       "route": "/ai/analytics",
       "feature": "forge_ai",
-      "category": "Navigation",
+      "category": "Forge AI",
       "sortOrder": 257,
       "enabled": true,
       "routeLive": true
@@ -3764,7 +3764,7 @@
       "label": "AI Watch",
       "route": "/ai/watch",
       "feature": "forge_ai",
-      "category": "Navigation",
+      "category": "Forge AI",
       "sortOrder": 256,
       "enabled": true,
       "routeLive": true
@@ -3775,7 +3775,7 @@
       "label": "Incidents",
       "route": "/incidents",
       "feature": "incidents",
-      "category": "Navigation",
+      "category": "Incident & Claims",
       "sortOrder": 120,
       "enabled": true,
       "routeLive": true
@@ -3786,7 +3786,7 @@
       "label": "Inspections",
       "route": "/inspections",
       "feature": "inspections",
-      "category": "Navigation",
+      "category": "Risk & Prevention",
       "sortOrder": 130,
       "enabled": true,
       "routeLive": true
@@ -3797,7 +3797,7 @@
       "label": "JSA / JHA",
       "route": "/jsas",
       "feature": "jsa_jha",
-      "category": "Navigation",
+      "category": "People & Training",
       "sortOrder": 125,
       "enabled": true,
       "routeLive": true
@@ -3808,7 +3808,7 @@
       "label": "Lockout / Tagout",
       "route": "/loto",
       "feature": "loto",
-      "category": "Navigation",
+      "category": "High-Risk Work",
       "sortOrder": 190,
       "enabled": true,
       "routeLive": true
@@ -3819,7 +3819,7 @@
       "label": "Messaging",
       "route": "/messaging",
       "feature": "messaging",
-      "category": "Navigation",
+      "category": "System Tools",
       "sortOrder": 235,
       "enabled": true,
       "routeLive": false
@@ -3830,7 +3830,7 @@
       "label": "My Training",
       "route": "/my-training",
       "feature": "my_training",
-      "category": "Navigation",
+      "category": "People & Training",
       "sortOrder": 115,
       "enabled": true,
       "routeLive": true
@@ -3841,7 +3841,7 @@
       "label": "Observations",
       "route": "/observations",
       "feature": "observations",
-      "category": "Navigation",
+      "category": "Risk & Prevention",
       "sortOrder": 131,
       "enabled": true,
       "routeLive": true
@@ -3852,7 +3852,7 @@
       "label": "OSHA",
       "route": "/osha",
       "feature": "osha",
-      "category": "Navigation",
+      "category": "Incident & Claims",
       "sortOrder": 140,
       "enabled": true,
       "routeLive": true
@@ -3863,7 +3863,7 @@
       "label": "Personnel",
       "route": "/personnel",
       "feature": "personnel",
-      "category": "Navigation",
+      "category": "People & Training",
       "sortOrder": 100,
       "enabled": true,
       "routeLive": true
@@ -3874,7 +3874,7 @@
       "label": "QR Management",
       "route": "/qr",
       "feature": "qr_management",
-      "category": "Navigation",
+      "category": "System Tools",
       "sortOrder": 245,
       "enabled": true,
       "routeLive": true
@@ -3885,7 +3885,7 @@
       "label": "Reminders",
       "route": "/reminders",
       "feature": "reminders",
-      "category": "Navigation",
+      "category": "System Tools",
       "sortOrder": 225,
       "enabled": true,
       "routeLive": false
@@ -3896,7 +3896,7 @@
       "label": "Reporting",
       "route": "/reporting",
       "feature": "reporting",
-      "category": "Navigation",
+      "category": "System Tools",
       "sortOrder": 260,
       "enabled": true,
       "routeLive": false
@@ -3907,7 +3907,7 @@
       "label": "Risk Register",
       "route": "/risk-register",
       "feature": "risk_register",
-      "category": "Navigation",
+      "category": "Risk & Prevention",
       "sortOrder": 132,
       "enabled": true,
       "routeLive": true
@@ -3918,7 +3918,7 @@
       "label": "Tasks",
       "route": "/tasks",
       "feature": "tasks",
-      "category": "Navigation",
+      "category": "System Tools",
       "sortOrder": 205,
       "enabled": true,
       "routeLive": true
@@ -3929,7 +3929,7 @@
       "label": "Training",
       "route": "/training",
       "feature": "training",
-      "category": "Navigation",
+      "category": "People & Training",
       "sortOrder": 110,
       "enabled": true,
       "routeLive": true
@@ -3940,7 +3940,7 @@
       "label": "Workers Comp",
       "route": "/workers-comp",
       "feature": "workers_comp",
-      "category": "Navigation",
+      "category": "Incident & Claims",
       "sortOrder": 150,
       "enabled": true,
       "routeLive": true

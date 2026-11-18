@@ -45,7 +45,7 @@ jobs:
         run: node scripts/portability/check-portability.cjs
       - run: node scripts/portability/translate-migrations.cjs --check
       - run: node --test scripts/portability/sql.test.cjs
-      - run: node --experimental-strip-types --test apps/web/tests/forge-ai-foundation.test.cjs apps/web/tests/forge-ai-agents.test.cjs apps/web/tests/forge-ai-risk-monitoring.test.cjs apps/web/tests/forge-ai-recommendations.test.cjs apps/web/tests/forge-ai-command-center.test.cjs apps/web/tests/platform-cognito.test.cjs
+      - run: node --experimental-strip-types --test apps/web/tests/forge-ai-foundation.test.cjs apps/web/tests/forge-ai-agents.test.cjs apps/web/tests/forge-ai-risk-monitoring.test.cjs apps/web/tests/forge-ai-recommendations.test.cjs apps/web/tests/forge-ai-command-center.test.cjs apps/web/tests/platform-cognito.test.cjs apps/web/tests/navigation-groups.test.cjs
       - run: pnpm --filter forge-industrial-safety-2.0-web type-check
       - run: pnpm --filter forge-industrial-safety-2.0-web build
 
