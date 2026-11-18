@@ -68,7 +68,7 @@ export const createCapaForFinding = async ({
   inspection
 }: {
   organizationId: string
-  actorUserId: string
+  actorUserId: string | null
   finding: any
   inspection: any
 }) => {
@@ -118,7 +118,7 @@ export const createCapasForInspectionFindings = async ({
   inspection
 }: {
   organizationId: string
-  actorUserId: string
+  actorUserId: string | null
   inspection: any
 }) => {
   const supabase = createServiceRoleClient() as any

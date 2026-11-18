@@ -40,7 +40,7 @@ export const ensureCapaWorkflowInstance = async ({
   organizationId: string
   capaId: string
   status: string
-  actorUserId: string
+  actorUserId: string | null
 }) => {
   const workflowState = capaStatusToWorkflowState(status)
   if (!workflowState) throw new Error('Unsupported CAPA status for workflow: ' + status)

@@ -1,13 +1,17 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+
 import Link from 'next/link'
-import { TbPlus, TbQrcode, TbSearch } from 'react-icons/tb'
+import { TbPlus, TbQrcode, TbSearch, TbAlertTriangle, TbScan } from 'react-icons/tb'
 import { Badge } from '@repo/ui/components/ui/badge'
 import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
 import { Input } from '@repo/ui/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@repo/ui/components/ui/table'
+
+import { QR_TARGET_TYPE_LABELS } from '@/lib/forgeQrDestination'
+import type { ScanTargetType } from '@/lib/forgeScanRules'
 
 export type QrListItem = {
   id: string
@@ -18,18 +22,21 @@ export type QrListItem = {
   default_action: string
   scan_count: number
   last_scanned_at: string | null
-  targetAssetName: string | null
-  targetAssetNumber: string | null
+  target_type: string
+  targetName: string | null
+  targetDetail: string | null
 }
 
 const QrList = ({
   codes,
   canCreate,
+  canViewIssues = false,
   statusLabels,
   actionLabels
 }: {
   codes: QrListItem[]
   canCreate: boolean
+  canViewIssues?: boolean
   statusLabels: Record<string, string>
   actionLabels: Record<string, string>
 }) => {
@@ -45,8 +52,8 @@ const QrList = ({
         code.qr_number.toLowerCase().includes(q) ||
         code.name.toLowerCase().includes(q) ||
         code.description?.toLowerCase().includes(q) ||
-        code.targetAssetName?.toLowerCase().includes(q) ||
-        code.targetAssetNumber?.toLowerCase().includes(q)
+        code.targetName?.toLowerCase().includes(q) ||
+        code.targetDetail?.toLowerCase().includes(q)
 
       return matches && (status === 'all' || code.status === status)
     })
@@ -59,9 +66,13 @@ const QrList = ({
       <div className='flex flex-wrap items-end justify-between gap-4'>
         <div>
           <h1 className='text-textPrimary flex items-center gap-3 text-3xl font-bold'><TbQrcode />QR Management</h1>
-          <p className='text-textSecondary mt-2'>Managed QR codes connected to Forge assets, workflows, and scan history.</p>
+          <p className='text-textSecondary mt-2'>Managed QR codes for equipment, fleet vehicles, locations and forms, with scan history.</p>
         </div>
-        {canCreate ? <Button asChild><Link href='/qr/create'><TbPlus />Create QR Code</Link></Button> : null}
+        <div className='flex flex-wrap gap-2'>
+          <Button asChild variant='outline'><Link href='/scan'><TbScan />Scan a QR</Link></Button>
+          {canViewIssues ? <Button asChild variant='outline'><Link href='/qr/issues'><TbAlertTriangle />Scan issues</Link></Button> : null}
+          {canCreate ? <Button asChild><Link href='/qr/create'><TbPlus />Create QR Code</Link></Button> : null}
+        </div>
       </div>
 
       <Card>
@@ -82,7 +93,7 @@ const QrList = ({
           <TableHeader>
             <TableRow>
               <TableHead>QR Code</TableHead>
-              <TableHead>Linked Asset</TableHead>
+              <TableHead>Points To</TableHead>
               <TableHead>Default Action</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Scans</TableHead>
@@ -98,8 +109,11 @@ const QrList = ({
                   <div className='text-textSecondary text-xs'>{code.qr_number}</div>
                 </TableCell>
                 <TableCell>
-                  <div>{code.targetAssetName || 'Missing target'}</div>
-                  <div className='text-textSecondary text-xs'>{code.targetAssetNumber || '—'}</div>
+                  <div>{code.targetName || 'Missing target'}</div>
+                  <div className='text-textSecondary text-xs'>
+                    {QR_TARGET_TYPE_LABELS[code.target_type as ScanTargetType] || code.target_type}
+                    {code.targetDetail ? ' · ' + code.targetDetail : ''}
+                  </div>
                 </TableCell>
                 <TableCell>{actionLabels[code.default_action] || code.default_action}</TableCell>
                 <TableCell>

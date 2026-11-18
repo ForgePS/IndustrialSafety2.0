@@ -7,6 +7,7 @@ import LotoAnnotatedImage from '@/components/loto/LotoAnnotatedImage'
 import LotoEnergyBadge from '@/components/loto/LotoEnergyBadge'
 import { getPublicLotoForAsset, type LotoPhoto } from '@/lib/forgeLoto'
 import { effectiveLotoContent, normalizePrecautions } from '@/lib/forgeLotoRules'
+import { loadScanQr, recordScanEvent, resolveScanViewer } from '@/lib/forgeScanContext'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'LOTO Procedures', robots: { index: false, follow: false } }
@@ -38,13 +39,20 @@ const PublicLotoPage = async ({ params }: { params: Promise<{ token: string }> }
   const { data } = await supabase.rpc('forge_resolve_qr_token', { p_token: token })
   const resolved = Array.isArray(data) ? data[0] : null
 
-  if (!resolved || resolved.default_action !== 'loto_view' || resolved.target_type !== 'asset') redirect('/q/unavailable')
+  if (!resolved || resolved.target_type !== 'asset') redirect('/q/unavailable')
+
+  // Port slice 10: a scan-menu QR with "View LOTO" turned on also opens this page from its menu.
+  const scanQr = resolved.default_action === 'scan_menu' ? await loadScanQr(token) : null
+
+  if (resolved.default_action !== 'loto_view' && !(scanQr && scanQr.targetType === 'asset' && scanQr.config.lotoView)) redirect('/q/unavailable')
 
   const view = await getPublicLotoForAsset({ organizationId: resolved.organization_id, assetId: resolved.target_id })
 
   if (!view) redirect('/q/unavailable')
 
   const { asset, organizationName, procedures, photos } = view as any
+
+  if (scanQr) await recordScanEvent({ qr: scanQr, action: 'view_loto', viewer: await resolveScanViewer(scanQr), recordType: 'asset', recordId: scanQr.targetId })
 
   return (
     <main className='min-h-screen bg-slate-100 px-4 py-6 text-slate-900'>

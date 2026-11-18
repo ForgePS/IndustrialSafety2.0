@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+
 import QrList from './QrList'
 import type { QrListItem } from './QrList'
 import { getEffectiveLookup } from '@/lib/forgeLookups'
@@ -25,6 +26,10 @@ const QrManagementPage = async () => {
     item => item.permissionKey === 'qr_management.create' && item.allowed
   )
 
+  const canViewIssues = context.access.effective.some(
+    item => item.permissionKey === 'qr_management.view_issues' && item.allowed
+  )
+
   const codes: QrListItem[] = records.map((record: any) => ({
     id: record.id,
     qr_number: record.qr_number,
@@ -34,14 +39,16 @@ const QrManagementPage = async () => {
     default_action: record.default_action,
     scan_count: Number(record.scan_count || 0),
     last_scanned_at: record.last_scanned_at,
-    targetAssetName: record.targetAsset?.name || null,
-    targetAssetNumber: record.targetAsset?.asset_number || null
+    target_type: record.target_type,
+    targetName: record.targetName || null,
+    targetDetail: record.targetDetail || null
   }))
 
   return (
     <QrList
       codes={codes}
       canCreate={canCreate}
+      canViewIssues={canViewIssues}
       statusLabels={Object.fromEntries(statusLookup.options.map(option => [option.key, option.label]))}
       actionLabels={Object.fromEntries(actionLookup.options.map(option => [option.key, option.label]))}
     />

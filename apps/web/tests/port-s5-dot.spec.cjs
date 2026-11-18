@@ -178,7 +178,7 @@ test('a company driver with an MVR upload, and a DOT record opened and closed', 
   await login(page, 'admin@forge2.local')
 
   await open(page, '/dot/company-drivers')
-  await page.getByLabel('Company driver').selectOption(seeded.company.id)
+  await page.getByLabel('Company driver', { exact: true }).selectOption(seeded.company.id)
   await page.getByRole('button', { name: 'Add Driver' }).click()
   await page.waitForURL(/\/dot\/company-drivers\/[0-9a-f-]{36}$/, { timeout: 30000 })
   seeded.rosterId = page.url().split('/').pop()

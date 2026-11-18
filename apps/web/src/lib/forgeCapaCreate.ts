@@ -148,7 +148,7 @@ export const insertCorrectiveAction = async ({
 }: {
   supabase: Supabase
   organizationId: string
-  actorUserId: string
+  actorUserId: string | null
   payload: CapaInsertPayload
   assignee: { personnelId: string | null; userId: string | null }
   createdMessage?: string
@@ -273,7 +273,7 @@ export const createCapaForSource = async ({
   createdMessage
 }: {
   organizationId: string
-  actorUserId: string
+  actorUserId: string | null
   source: CapaSource
   values: CapaInsertPayload & { assigned_personnel_id?: string | null }
   createdMessage?: string

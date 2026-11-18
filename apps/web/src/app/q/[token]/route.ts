@@ -6,7 +6,9 @@ import { optionalUserId } from '@/lib/platform/identity'
 
 export const dynamic = 'force-dynamic'
 
-const destinationFor = (token: string, targetId: string, action: string) => {
+const destinationFor = (token: string, targetType: string, targetId: string, action: string) => {
+  // Port slice 10: the scan action menu (also every location and form QR). The scan page logs the open.
+  if (action === 'scan_menu' || targetType !== 'asset') return '/scan/' + token.toLowerCase()
   if (action === 'maintenance') return '/assets/' + targetId + '/maintenance/create'
   if (action === 'meter_reading') return '/assets/' + targetId + '/meter-readings/create'
 
@@ -43,7 +45,7 @@ export async function GET(
     return NextResponse.redirect(new URL('/q/unavailable', request.url))
   }
 
-  const destinationPath = destinationFor(token, resolved.target_id, resolved.default_action)
+  const destinationPath = destinationFor(token, resolved.target_type, resolved.target_id, resolved.default_action)
   const appOrigin = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
 
   return NextResponse.redirect(new URL(destinationPath, appOrigin))

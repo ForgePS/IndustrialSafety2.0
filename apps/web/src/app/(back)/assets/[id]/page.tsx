@@ -18,6 +18,7 @@ import { isOpenLockout } from '@/lib/forgeLotoRules'
 import { getScopedPersonnel } from '@/lib/forgePersonnel'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import ForgeAiContextButton from '@/components/forge-ai/ForgeAiContextButton'
+import AssetScanPanels from '@/components/qr/AssetScanPanels'
 
 export const metadata: Metadata = { title: 'Asset & Equipment' }
 
@@ -86,6 +87,7 @@ const AssetDetailPage = async ({ params }: { params: Promise<{ id: string }> }) 
   const canUseAi = Boolean(permissions.get('forge_ai.use'))
   const incidentViewPermission = permissions.get('incidents.view')
   const lotoViewPermission = permissions.get('loto.view')
+  const qrViewPermission = permissions.get('qr_management.view')
 
   const within = async (permission: any) =>
     permission
@@ -97,7 +99,7 @@ const AssetDetailPage = async ({ params }: { params: Promise<{ id: string }> }) 
         })
       : false
 
-  const [canEdit, canAssign, canMaintain, canMeter, canRetire, canCreateQr, canCreateLoto, personnel] = await Promise.all([
+  const [canEdit, canAssign, canMaintain, canMeter, canRetire, canCreateQr, canCreateLoto, personnel, canViewQr] = await Promise.all([
     within(editPermission),
     within(assignPermission),
     within(maintenancePermission),
@@ -111,7 +113,8 @@ const AssetDetailPage = async ({ params }: { params: Promise<{ id: string }> }) 
           userId: context.user.id,
           permission: (assignPermission || editPermission) as any
         })
-      : Promise.resolve([])
+      : Promise.resolve([]),
+    within(qrViewPermission)
   ])
 
   const lotoProcedures: any[] = (await within(lotoViewPermission))
@@ -238,6 +241,14 @@ const AssetDetailPage = async ({ params }: { params: Promise<{ id: string }> }) 
             ? person.first_name + ' ' + person.last_name + ' (' + person.employee_number + ')'
             : person.first_name + ' ' + person.last_name
         }))}
+      />
+
+      <AssetScanPanels
+        organizationId={organizationId}
+        assetId={asset.id}
+        statusLabels={statusLabels}
+        showQrCodes={Boolean(canViewQr)}
+        canCreateQr={Boolean(canCreateQr) && !asset.retired_at}
       />
 
       {lotoViewPermission ? (

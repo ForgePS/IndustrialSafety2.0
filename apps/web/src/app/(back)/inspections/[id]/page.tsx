@@ -14,6 +14,8 @@ import { getFindingCapas } from '@/lib/forgeInspectionCapa'
 import { getInspectionDetailData, inspectionWithinScope } from '@/lib/forgeInspections'
 import { getScopedPersonnel } from '@/lib/forgePersonnel'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
+import { loadScanInspectionOrigin } from '@/lib/forgeScanInspections'
+import { scanInspectionOriginLabel } from '@/lib/forgeScanInspectionRules'
 import ForgeAiContextButton from '@/components/forge-ai/ForgeAiContextButton'
 
 export const metadata: Metadata = { title: 'Inspection' }
@@ -103,6 +105,9 @@ const InspectionDetailPage = async ({ params }: { params: Promise<{ id: string }
       : Promise.resolve([])
   ])
 
+  // Port slice 10: inspections started from a QR scan say so.
+  const scanOrigin = await loadScanInspectionOrigin({ organizationId, inspection })
+
   const findingCapas = await getFindingCapas({ organizationId, findingIds: detail.findings.map((finding: any) => finding.id) })
   const canViewCapas = Boolean(permissionByKey.get('corrective_actions.view'))
 
@@ -140,6 +145,11 @@ const InspectionDetailPage = async ({ params }: { params: Promise<{ id: string }
             ) : null}
           </div>
           <p className='text-textSecondary mt-2'>{inspection.template_name_snapshot || inspection.forge_inspection_templates?.name || 'Inspection'}</p>
+          {scanOrigin ? (
+            <p className='text-textSecondary mt-1 text-sm' data-testid='inspection-scan-origin'>
+              {scanInspectionOriginLabel({ qrNumber: scanOrigin.qrNumber, frequency: scanOrigin.frequency, assetName: scanOrigin.asset?.name })}
+            </p>
+          ) : null}
         </div>
         {canUseAi ? (
           <ForgeAiContextButton

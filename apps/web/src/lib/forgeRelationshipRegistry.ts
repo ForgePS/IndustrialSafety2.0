@@ -80,7 +80,7 @@ const RELATIONSHIP_DEFINITIONS: ForgeRelationshipDefinition[] = [
   {
     relationshipType: 'equipment',
     sourceTypes: ['incident', 'inspection', 'inspection_finding', 'corrective_action', 'task', 'loto_procedure', 'loto_application'],
-    targetTypes: ['asset'],
+    targetTypes: ['asset', 'fleet_vehicle'],
     reciprocalDisplay: true,
     allowDuplicate: false,
     archivable: true

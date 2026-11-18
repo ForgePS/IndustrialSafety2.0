@@ -1,5 +1,6 @@
 import { createServiceRoleClient } from '@repo/supabase/server'
 import { getEffectiveTenantAccess, type EffectivePermission } from './forgeEffectiveAccess'
+import { vehicleWithinScope } from './forgeFleetAccess'
 import { getTenantScopeAssignments } from './forgeScope'
 import { getTenantContext, type TenantContextOrganization } from './forgeTenantContext'
 
@@ -22,6 +23,7 @@ export type ForgeResourceType =
   | 'personnel'
   | 'support_ticket'
   | 'workers_comp_case'
+  | 'fleet_vehicle'
 
 export type ForgeResourceScopeMode =
   | 'ORGANIZATION'
@@ -73,7 +75,8 @@ export const FORGE_RESOURCE_TYPES: ForgeResourceType[] = [
   'training_assignment',
   'personnel',
   'support_ticket',
-  'workers_comp_case'
+  'workers_comp_case',
+  'fleet_vehicle'
 ]
 
 const RESOURCE_DESCRIPTORS: Record<ForgeResourceType, ForgeResourceDescriptor> = {
@@ -266,6 +269,20 @@ const RESOURCE_DESCRIPTORS: Record<ForgeResourceType, ForgeResourceDescriptor> =
     numberColumn: 'case_number',
     titleColumn: 'employee_name',
     statusColumn: 'status'
+  },
+
+  // Port slice 11: fleet vehicles (scan issue CAPAs link to the vehicle). Scope follows forgeFleetAccess.vehicleWithinScope.
+  fleet_vehicle: {
+    resourceType: 'fleet_vehicle',
+    table: 'forge_fleet_vehicles',
+    featureKey: 'fleet',
+    defaultViewPermission: 'fleet.view',
+    defaultManagePermission: 'fleet.edit',
+    scopeMode: 'CUSTOM',
+    numberColumn: 'vehicle_number',
+    titleColumn: 'unit_number',
+    statusColumn: 'status',
+    archivedColumn: 'archived_at'
   }
 }
 
@@ -530,6 +547,20 @@ const customResourceWithinScope = async ({
       return matchesDivisionScope(resource.divisionId, divisionIds) || personnelAuth === userId
     }
     return false
+  }
+
+  if (resource.resourceType === 'fleet_vehicle') {
+    return vehicleWithinScope({
+      organizationId,
+      userId,
+      scope,
+      vehicle: {
+        organization_id: resource.organizationId,
+        location_id: resource.locationId,
+        division_id: resource.divisionId,
+        assigned_driver_personnel_id: asNullableString(source.assigned_driver_personnel_id)
+      }
+    })
   }
 
   if (
