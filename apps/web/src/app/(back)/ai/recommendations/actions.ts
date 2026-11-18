@@ -35,6 +35,7 @@ const run = async (task: () => Promise<Result>): Promise<Result> => {
     const result = await task()
 
     revalidatePath('/ai/recommendations')
+    revalidatePath('/ai/command-center')
 
     return result.error ? { error: result.error } : { message: result.message }
   } catch (error) {

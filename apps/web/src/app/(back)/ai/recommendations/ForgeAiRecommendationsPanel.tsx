@@ -104,12 +104,16 @@ const ForgeAiRecommendationsPanel = ({
   recommendations,
   canReview,
   canSubmit,
-  canApprove
+  canApprove,
+  compact = false
 }: {
   recommendations: Recommendation[]
   canReview: boolean
   canSubmit: boolean
   canApprove: boolean
+
+  // On the Command Center: open recommendations only, without the tabs and refresh.
+  compact?: boolean
 }) => {
   const [pending, startTransition] = useTransition()
   const [view, setView] = useState<'open' | 'closed'>('open')
@@ -165,7 +169,7 @@ const ForgeAiRecommendationsPanel = ({
 
   return (
     <div className='flex flex-col gap-4'>
-      <div className='flex flex-wrap items-center justify-between gap-2'>
+      <div className={compact ? 'hidden' : 'flex flex-wrap items-center justify-between gap-2'}>
         <div className='flex gap-2'>
           {(['open', 'closed'] as const).map(key => (
             <Button key={key} size='sm' variant={view === key ? 'default' : 'outline'} onClick={() => setView(key)}>
@@ -181,7 +185,9 @@ const ForgeAiRecommendationsPanel = ({
         ) : null}
       </div>
 
-      {!shown.length ? (
+      {!shown.length && compact ? (
+        <p className='text-textSecondary text-sm'>Nothing waiting for review in your locations.</p>
+      ) : !shown.length ? (
         <Card>
           <CardContent className='text-textSecondary p-6 text-sm'>
             {view === 'open'

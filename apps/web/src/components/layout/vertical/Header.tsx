@@ -19,6 +19,7 @@ import type { SearchDataItem } from '@/assets/data/searchData'
 import LanguageDropdown from '@components/LanguageDropdown'
 import UserDropdown from './UserDropdown'
 import TenantSwitcher from './TenantSwitcher'
+import ForgeAiGlobalAssistant from '@/components/forge-ai/ForgeAiGlobalAssistant'
 import { unreadCount } from '@/lib/forgeNotifications'
 
 // Data
@@ -42,10 +43,12 @@ const transformSearchData = (data: SearchDataItem[]): SearchDataProps[] => {
 
 const Header = async ({
   organizations = [],
-  activeOrganizationId
+  activeOrganizationId,
+  forgeAi = null
 }: {
   organizations?: Array<{ id: string; name: string; slug: string; membershipRole: string }>
   activeOrganizationId?: string | null
+  forgeAi?: { assistantName: string; commandCenter: boolean } | null
 }) => {
   const {
     data: { user }
@@ -72,6 +75,7 @@ const Header = async ({
           <Search data={transformSearchData(permissionFilteredData)} roles={roles} />
         </div>
         <div className='flex items-center gap-3 sm:gap-5'>
+          {forgeAi ? <ForgeAiGlobalAssistant assistantName={forgeAi.assistantName} commandCenter={forgeAi.commandCenter} /> : null}
           <Button variant='ghost' size='sm' asChild className='hidden sm:inline-flex'>
             <Link href='/help-desk'>
               <TbLifebuoy />

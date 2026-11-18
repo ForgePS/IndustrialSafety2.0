@@ -13,6 +13,7 @@ import {
   TbPinned,
   TbGauge,
   TbBulb,
+  TbLayoutDashboard,
   TbRadar,
   TbReportAnalytics,
   TbShieldCheck,
@@ -100,6 +101,7 @@ const ForgeAiWorkspace = ({
   canViewUsage,
   canUseActions,
   canViewWatch,
+  canViewCommandCenter = false,
   canViewRisk = false,
   canViewRecommendations = false,
   canViewAnalytics
@@ -116,6 +118,7 @@ const ForgeAiWorkspace = ({
   canViewUsage: boolean
   canUseActions: boolean
   canViewWatch: boolean
+  canViewCommandCenter?: boolean
   canViewRisk?: boolean
   canViewRecommendations?: boolean
   canViewAnalytics: boolean
@@ -331,6 +334,15 @@ const ForgeAiWorkspace = ({
             {canUseActions ? (
               <Button className='mt-2 w-full' variant='outline' asChild>
                 <Link href='/ai/actions'>AI Actions</Link>
+              </Button>
+            ) : null}
+
+            {canViewCommandCenter ? (
+              <Button className='mt-2 w-full' variant='outline' asChild>
+                <Link href='/ai/command-center'>
+                  <TbLayoutDashboard />
+                  Command Center
+                </Link>
               </Button>
             ) : null}
 

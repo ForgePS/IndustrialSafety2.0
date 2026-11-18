@@ -1,16 +1,21 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { TbBulb } from 'react-icons/tb'
 import { Button } from '@repo/ui/components/ui/button'
 
 import ForgeAiRecommendationsPanel from './ForgeAiRecommendationsPanel'
 import { getScopedForgeAiRecommendations } from '@/lib/forgeAiRecommendations'
+import { commandCenterAvailable } from '@/lib/forgeFeatureAvailability'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 
 export const metadata: Metadata = { title: 'Forge AI Recommendations' }
 
 const ForgeAiRecommendationsPage = async () => {
   const context = await requireTenantPermission('forge_ai.view_recommendations')
+
+  if (!commandCenterAvailable(context.access.effective)) redirect('/ai')
+
   const organizationId = context.activeOrganization.id
   const permissionByKey = new Map(context.access.effective.map(item => [item.permissionKey, item]))
   const allowed = (key: string) => Boolean(permissionByKey.get(key)?.allowed)
