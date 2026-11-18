@@ -340,13 +340,43 @@ export const runForgeAiRiskAssessments = async ({
 }
 
 // Module permission each evidence type needs before a viewer may see its reference.
-const EVIDENCE_PERMISSIONS: Record<string, string> = {
+export const EVIDENCE_PERMISSIONS: Record<string, string> = {
   incident: 'incidents.view',
   inspection: 'inspections.view',
   task: 'tasks.view',
   training_assignment: 'training.view',
   risk: 'risk_register.view',
   observation: 'observations.view'
+}
+
+// Which facility and division scopes a viewer may see under a risk-style permission. A
+// location-scoped viewer sees only their locations; a division-scoped viewer sees their
+// divisions and the locations in them.
+export const riskScopeVisibility = async ({
+  organizationId,
+  userId,
+  permission
+}: {
+  organizationId: string
+  userId: string
+  permission: EffectivePermission
+}): Promise<(scopeType: string, scopeId: string) => boolean> => {
+  if (!permission.allowed) return () => false
+  if (permission.scope === 'organization') return () => true
+  if (permission.scope !== 'location' && permission.scope !== 'division') return () => false
+
+  const supabase = createServiceRoleClient() as any
+  const assignments = await getTenantScopeAssignments({ organizationId, userId })
+  const { data: locations } = await supabase.from('locations').select('id, division_id').eq('organization_id', organizationId)
+  const divisionOf = new Map<string, string | null>((locations || []).map((row: any) => [row.id, row.division_id]))
+
+  return (scopeType, scopeId) => {
+    if (permission.scope === 'location') return scopeType === 'location' && assignments.locationIds.includes(scopeId)
+
+    return scopeType === 'division'
+      ? assignments.divisionIds.includes(scopeId)
+      : assignments.divisionIds.includes(divisionOf.get(scopeId) || '')
+  }
 }
 
 // Which evidence records a viewer may see. A module permission alone is not enough: the record
@@ -430,23 +460,8 @@ export const getScopedForgeAiRiskAssessments = async ({
     if (!latest.has(key)) latest.set(key, row)
   }
 
-  let visible = [...latest.values()]
-
-  if (permission.scope !== 'organization') {
-    if (permission.scope !== 'location' && permission.scope !== 'division') return []
-
-    const assignments = await getTenantScopeAssignments({ organizationId, userId })
-    const { data: locations } = await supabase.from('locations').select('id, division_id').eq('organization_id', organizationId)
-    const divisionOf = new Map<string, string | null>((locations || []).map((row: any) => [row.id, row.division_id]))
-
-    visible = visible.filter(row => {
-      if (permission.scope === 'location') return row.scope_type === 'location' && assignments.locationIds.includes(row.scope_id)
-
-      return row.scope_type === 'division'
-        ? assignments.divisionIds.includes(row.scope_id)
-        : assignments.divisionIds.includes(divisionOf.get(row.scope_id) || '')
-    })
-  }
+  const canSeeScope = await riskScopeVisibility({ organizationId, userId, permission })
+  const visible = [...latest.values()].filter(row => canSeeScope(row.scope_type, row.scope_id))
 
   visible.sort((a, b) => (b.score ?? -1) - (a.score ?? -1) || String(a.scope_name).localeCompare(String(b.scope_name)))
 

@@ -110,6 +110,8 @@ const runScheduledWatch = async (request: Request) => {
         success: true,
         ...cycle.watch,
         riskScopes: cycle.risk.scopes.length,
+        recommendations: cycle.recommendations.created,
+        verified: cycle.verification.verified,
         deliveries: cycle.notified.deliveries
       })
     } catch (error) {
