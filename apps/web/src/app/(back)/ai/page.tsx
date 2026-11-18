@@ -70,6 +70,8 @@ const ForgeAiPage = async ({
       initialMessages = messages.map((message: any) => ({
         ...message,
         prepared_actions: message.metadata?.prepared_actions || [],
+        agent: message.metadata?.agent || null,
+        sources: message.metadata?.sources || [],
         rating: feedbackByMessage.get(Number(message.id)) || 0
       }))
     }

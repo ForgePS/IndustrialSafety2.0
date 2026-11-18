@@ -37,7 +37,7 @@ jobs:
           version: 9.13.2
       - run: pnpm install --frozen-lockfile
       - run: node scripts/check-forge-ai-schemas.cjs
-      - run: node --experimental-strip-types --test apps/web/tests/forge-ai-foundation.test.cjs
+      - run: node --experimental-strip-types --test apps/web/tests/forge-ai-foundation.test.cjs apps/web/tests/forge-ai-agents.test.cjs
       - run: pnpm --filter forge-industrial-safety-2.0-web type-check
       - run: pnpm --filter forge-industrial-safety-2.0-web build
 
@@ -100,6 +100,9 @@ jobs:
 
       - name: Run Forge AI foundation database regression
         run: node apps/web/tests/forge-ai-foundation-db.cjs
+
+      - name: Run Forge AI agents and knowledge database regression
+        run: node apps/web/tests/forge-ai-agents-knowledge-db.cjs
 
       - name: Install Playwright Chromium
         run: |
@@ -174,6 +177,11 @@ jobs:
         env:
           SMOKE_BASE_URL: http://127.0.0.1:3000
         run: pnpm exec playwright test apps/web/tests/forge-ai-pipeline.spec.cjs --reporter=line --workers=1
+
+      - name: Run Forge AI agents and knowledge end-to-end
+        env:
+          SMOKE_BASE_URL: http://127.0.0.1:3000
+        run: pnpm exec playwright test apps/web/tests/forge-ai-agents.spec.cjs --reporter=line --workers=1
 
       - name: Print web log on failure
         if: failure()

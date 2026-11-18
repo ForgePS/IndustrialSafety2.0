@@ -253,7 +253,15 @@ test('prompt versions are pinned: editing text without a version bump fails here
   assert.deepEqual(
     Object.fromEntries(prompts.listForgeAiPromptTemplates().map(t => [t.key + '@' + t.version, t.hash])),
     {
-      'assistant.general@1': '5f1812c1e60dc745'
+      'assistant.general@1': '5f1812c1e60dc745',
+      'agent.knowledge@1': '96b9af793bb854dd',
+      'agent.incident@1': '7c62583895f44326',
+      'agent.inspection@1': '0cb8e7a6e842f63f',
+      'agent.compliance@1': '4ec9497263ce9d2e',
+      'agent.risk@1': 'ae18912a555edd3e',
+      'agent.reporting@1': 'c1010f3d656faef5',
+      'agent.monitoring@1': 'd8306e934b1d769a',
+      'agent.workflow@1': '87f3ef980123dd6f'
     }
   )
 })
