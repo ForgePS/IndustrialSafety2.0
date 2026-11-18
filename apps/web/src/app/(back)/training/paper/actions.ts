@@ -20,7 +20,7 @@ export const recordPaperResults = async ({ courseId, raw, defaultDate }: { cours
   const organizationId = context.activeOrganization.id
   const supabase = createServiceRoleClient() as any
 
-  const { data: course } = await supabase.from('forge_training_courses').select('id, title').eq('organization_id', organizationId).eq('id', courseId).maybeSingle()
+  const { data: course } = await supabase.from('forge_training_courses').select('id, title').eq('organization_id', organizationId).eq('id', courseId).eq('is_active', true).maybeSingle()
 
   if (!course) return { error: 'Course not found.', outcomes: [] as PaperResultOutcome[] }
 

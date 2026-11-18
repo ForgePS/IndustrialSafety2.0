@@ -1524,6 +1524,7 @@ export const getJsaTrainingWarnings = async ({
         .eq('organization_id', organizationId)
         .eq('personnel_id', personnelId)
         .eq('course_id', courseId)
+        .is('archived_at', null)
         .limit(1)
 
       const { data: assignments } = await supabase
@@ -1532,6 +1533,7 @@ export const getJsaTrainingWarnings = async ({
         .eq('organization_id', organizationId)
         .eq('personnel_id', personnelId)
         .eq('course_id', courseId)
+        .neq('status', 'canceled')
         .limit(1)
 
       const hasCompletion = Boolean(completions?.length)

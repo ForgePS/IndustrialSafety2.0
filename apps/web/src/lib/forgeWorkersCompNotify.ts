@@ -4,7 +4,7 @@ import { getEffectiveTenantAccess } from '@/lib/forgeEffectiveAccess'
 import type { EffectivePermission } from '@/lib/forgeEffectiveAccess'
 import { zonedDateTimeParts } from '@/lib/forgeOshaRules'
 import { getWeeklyStatusReport } from '@/lib/forgeWorkersComp'
-import { buildWeeklyStatusNotice, weekdayOf, weeklyEmailDue } from '@/lib/forgeWorkersCompEmail'
+import { buildWeeklyStatusNotice, reportWeekOf, weekdayOf, weeklyEmailDue } from '@/lib/forgeWorkersCompEmail'
 import type { WcWeeklyNoticeRow } from '@/lib/forgeWorkersCompEmail'
 import { WC_STAGE_LABELS, WC_WORK_STATUS_LABELS } from '@/lib/forgeWorkersCompRules'
 import type { WcStage, WcWorkStatus } from '@/lib/forgeWorkersCompRules'
@@ -99,6 +99,83 @@ export const buildWcWeeklyNoticeFor = async ({
 type SweepResult = { organizationId: string; reason: string; queued: number; skippedRecipients: number }
 
 /**
+ * Builds one notice per eligible recipient and queues the week through forge_wc_queue_weekly_status, which
+ * also marks the week sent under a row lock, so the hourly sweep and a manual send can never send a week twice.
+ * Access is checked again here: people who lost workers' comp access since the save are skipped.
+ */
+export const queueWcWeeklyNoticeForOrganization = async ({
+  organizationId,
+  organizationName,
+  recipientIds,
+  weekOf
+}: {
+  organizationId: string
+  organizationName: string
+  recipientIds: string[]
+  weekOf: string
+}): Promise<{ reason: string; queued: number; skippedRecipients: number; error?: string }> => {
+  const supabase = createServiceRoleClient() as any
+  const deliveries: Array<{ user_id: string; title: string; body: string }> = []
+  let skippedRecipients = 0
+
+  for (const userId of recipientIds) {
+    const permission = await wcViewPermissionFor(organizationId, userId)
+
+    if (!permission) {
+      skippedRecipients += 1
+      continue
+    }
+
+    const notice = await buildWcWeeklyNoticeFor({ organizationId, organizationName, userId, permission, weekOf })
+
+    deliveries.push({ user_id: userId, title: notice.title, body: notice.body })
+  }
+
+  if (!deliveries.length) return { reason: 'no_eligible_recipients', queued: 0, skippedRecipients }
+
+  const { data, error } = await supabase.rpc('forge_wc_queue_weekly_status', {
+    p_organization_id: organizationId,
+    p_week_of: weekOf,
+    p_title: `Workers' comp weekly status (week of ${weekOf})`,
+    p_body: `${organizationName}: workers' comp weekly status notice.`,
+    p_deliveries: deliveries
+  })
+
+  if (error) return { reason: 'error', queued: 0, skippedRecipients, error: error.message }
+
+  return { reason: data?.reason || 'queued', queued: data?.queued || 0, skippedRecipients }
+}
+
+/** How many people already have this week's notice (one in-app delivery per recipient per week). */
+export const countWcWeeklyNoticeRecipients = async (organizationId: string, weekOf: string) => {
+  const supabase = createServiceRoleClient() as any
+
+  const { data: events } = await supabase
+    .from('forge_notification_events')
+    .select('id')
+    .eq('organization_id', organizationId)
+    .eq('source_module', 'workers_comp')
+    .eq('event_type', 'weekly_status')
+    .eq('payload->>week_of', weekOf)
+
+  const eventIds = (events || []).map((row: any) => row.id)
+
+  if (!eventIds.length) return 0
+
+  const { data: deliveries } = await supabase
+    .from('forge_notification_deliveries')
+    .select('recipient_user_id')
+    .in('event_id', eventIds)
+    .eq('channel', 'in_app')
+
+  return new Set((deliveries || []).map((row: any) => row.recipient_user_id)).size
+}
+
+/** The report week for "now" in the tenant's time zone (the most recent Thursday). */
+export const wcWeekOfNow = (timeZone: string | null | undefined, now = new Date()) =>
+  reportWeekOf(zonedDateTimeParts(now.toISOString(), timeZone || 'America/Chicago').date)
+
+/**
  * Hourly sweep: for each tenant whose weekly notice is due in its own time zone, builds one notice per
  * eligible recipient and queues them in a single database call that also marks the week sent.
  */
@@ -125,44 +202,16 @@ export const queueDueWcWeeklyNotices = async (now = new Date()) => {
 
     if (!due) continue
 
-    const organizationName = settings.organizations?.name || 'Your organization'
-    const deliveries: Array<{ user_id: string; title: string; body: string }> = []
-    let skippedRecipients = 0
-
-    // Access is checked again at send time: people who lost workers' comp access since the save are skipped.
-    for (const userId of settings.weekly_email_recipient_ids || []) {
-      const permission = await wcViewPermissionFor(organizationId, userId)
-
-      if (!permission) {
-        skippedRecipients += 1
-        continue
-      }
-
-      const notice = await buildWcWeeklyNoticeFor({ organizationId, organizationName, userId, permission, weekOf })
-
-      deliveries.push({ user_id: userId, title: notice.title, body: notice.body })
-    }
-
-    if (!deliveries.length) {
-      results.push({ organizationId, reason: 'no_eligible_recipients', queued: 0, skippedRecipients })
-      continue
-    }
-
-    const { data, error: queueError } = await supabase.rpc('forge_wc_queue_weekly_status', {
-      p_organization_id: organizationId,
-      p_week_of: weekOf,
-      p_title: `Workers' comp weekly status (week of ${weekOf})`,
-      p_body: `${organizationName}: workers' comp weekly status notice.`,
-      p_deliveries: deliveries
+    const result = await queueWcWeeklyNoticeForOrganization({
+      organizationId,
+      organizationName: settings.organizations?.name || 'Your organization',
+      recipientIds: settings.weekly_email_recipient_ids || [],
+      weekOf
     })
 
-    if (queueError) {
-      results.push({ organizationId, reason: 'error', queued: 0, skippedRecipients })
-      console.error('[workers-comp] weekly notice', organizationId, queueError.message)
-      continue
-    }
+    if (result.error) console.error('[workers-comp] weekly notice', organizationId, result.error)
 
-    results.push({ organizationId, reason: data?.reason || 'queued', queued: data?.queued || 0, skippedRecipients })
+    results.push({ organizationId, reason: result.reason, queued: result.queued, skippedRecipients: result.skippedRecipients })
   }
 
   return { checked: (settingsRows || []).length, results }

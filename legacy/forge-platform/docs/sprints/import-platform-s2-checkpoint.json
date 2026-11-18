@@ -1,0 +1,68 @@
+{
+  "sprint": "IMPORT-PLATFORM-S2",
+  "at": "2026-07-29T12:45:00.000Z",
+  "status": "ACCEPTED",
+  "verdict": "ACCEPTED",
+  "s1Preconditions": {
+    "verdict": "ACCEPTED",
+    "migration0022Applied": true,
+    "forceRlsNineTables": true,
+    "importPermissions": 12,
+    "rlsOk": true,
+    "appRoleNoBypass": true,
+    "secretUnchanged": true
+  },
+  "apiRoutesBase": "/api/v1/imports",
+  "awsIdentity": {
+    "accountId": "511343547817",
+    "assumedRoleArn": "arn:aws:sts::511343547817:assumed-role/AWSReservedSSO_ForgeDeployAdmin_4e3cbf93096d93f3/forge-admin",
+    "profile": "forge-dev",
+    "region": "us-east-1"
+  },
+  "migration": {
+    "id": "0023_import_platform_s2_control_plane",
+    "appliedLocal": true,
+    "appliedAurora": true,
+    "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/8aed438a360a481aba57097a3a451c1c",
+    "exitCode": 0,
+    "taskDefinition": "forge-development-ecs-platform-api:33"
+  },
+  "localTests": {
+    "importsUnit": { "passed": 14, "failed": 0 },
+    "errorsEventsUnit": { "passed": 4, "failed": 0 },
+    "importsE2e": { "passed": 1, "failed": 0, "skipped": 0 },
+    "typecheck": "PASS"
+  },
+  "deployment": {
+    "imageTag": "import-s2-20260729072334",
+    "imageDigest": "sha256:017657bc49ea9cf8b9eb5613a8d7439bfb69e86d97dd97386bea44183e71d208",
+    "taskDefinition": "forge-development-ecs-platform-api:33",
+    "priorTaskDefinition": "forge-development-ecs-platform-api:32",
+    "workerTaskDefinition": "forge-development-ecs-worker-service:19",
+    "health": "200 healthy",
+    "importsTemplatesUnauth": "401"
+  },
+  "applicationSecret": {
+    "name": "forge-development-secrets-database-app",
+    "arn": "arn:aws:secretsmanager:us-east-1:511343547817:secret:forge-development-secrets-database-app-SknUu5",
+    "rotated": false,
+    "lastChangedDate": "2026-07-26T15:30:16.387000-05:00",
+    "unchangedThroughDeploy": true
+  },
+  "rollbackReferences": {
+    "apiPrior": "forge-development-ecs-platform-api:32",
+    "worker": "unchanged :19",
+    "schema": "0023 additive control-plane columns"
+  },
+  "knownLimitations": [
+    "Validation/preview return NOT_AVAILABLE_UNTIL_S3",
+    "No presigned upload, parsing, workers, execution, rollback, or product adapters"
+  ],
+  "evidence": [
+    "docs/testing/evidence/import-platform/s2-image.json",
+    "docs/testing/evidence/import-platform/s2-deploy.json",
+    "docs/testing/evidence/import-platform/s2-migrate.json",
+    "docs/testing/evidence/import-platform/s2-smoke.json"
+  ],
+  "s3Authorization": "NOT_STARTED — require explicit S3 kickoff"
+}

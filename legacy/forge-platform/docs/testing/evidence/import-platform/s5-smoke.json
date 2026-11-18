@@ -1,0 +1,15 @@
+{
+  "edge": "https://d108fstxdv69bo.cloudfront.net",
+  "health": { "path": "/health", "status": 200 },
+  "executeUnauth": {
+    "path": "POST /api/v1/imports/jobs/{id}/execute",
+    "status": 401
+  },
+  "statusUnauth": {
+    "path": "GET /api/v1/imports/jobs/{id}/status",
+    "status": 401
+  },
+  "appSecretLastChangedDate": "2026-07-26T15:30:16.387000-05:00",
+  "unitTests": { "package": "@forge/imports", "passed": 38 },
+  "checkedAt": "2026-07-29T19:15:00Z"
+}

@@ -1,0 +1,3 @@
+# Local / sensitive access-review working files (never commit)
+_raw-*
+*.local.json

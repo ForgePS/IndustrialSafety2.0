@@ -4,6 +4,7 @@ import { createServiceRoleClient } from '@repo/supabase/server'
 import { getHelpdeskCustomerAccess, getHelpdeskStaffAccess, isUuid } from '@/lib/forgeHelpdeskAccess'
 import { HELPDESK_BUCKET } from '@/lib/forgeHelpdeskAttachments'
 import { jsonError } from '@/lib/forgeHelpdeskHttp'
+import { storage } from '@/lib/platform/storage'
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -35,9 +36,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     if (!visible) return jsonError('File not found.', 404)
   }
 
-  const { data, error } = await db.storage.from(HELPDESK_BUCKET).createSignedUrl(media.storage_path, 300)
+  const { url, error } = await storage().createSignedUrl(HELPDESK_BUCKET, media.storage_path, 300)
 
-  if (error || !data?.signedUrl) return jsonError('Unable to open the file.', 500)
+  if (error || !url) return jsonError('Unable to open the file.', 500)
 
-  return NextResponse.redirect(data.signedUrl, { headers: { 'Cache-Control': 'private, no-store' } })
+  return NextResponse.redirect(url, { headers: { 'Cache-Control': 'private, no-store' } })
 }

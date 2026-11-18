@@ -2,7 +2,8 @@
 
 import { useTransition } from 'react'
 
-import { TbCopy, TbDownload, TbRefresh } from 'react-icons/tb'
+import Link from 'next/link'
+import { TbCopy, TbDownload, TbExternalLink, TbRefresh } from 'react-icons/tb'
 import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
 import { toast } from '@repo/ui/utils/toast'
@@ -15,7 +16,8 @@ const QrVisualCard = ({
   name,
   scanUrl,
   svg,
-  canRotate
+  canRotate,
+  previewHref
 }: {
   qrCodeId: string
   qrNumber: string
@@ -23,6 +25,9 @@ const QrVisualCard = ({
   scanUrl: string
   svg: string
   canRotate: boolean
+
+  /** /scan/<token> for QR codes that open the scan menu. */
+  previewHref?: string | null
 }) => {
   const [pending, startTransition] = useTransition()
 
@@ -52,8 +57,8 @@ const QrVisualCard = ({
 
       if ('error' in result) {
         toast('error', result.error || 'Unable to rotate QR token.')
-        
-return
+
+        return
       }
 
       toast('success', result.message)
@@ -79,6 +84,9 @@ return
             <div className='mt-4 flex flex-wrap gap-2'>
               <Button variant='outline' onClick={copy}><TbCopy />Copy URL</Button>
               <Button variant='outline' onClick={download}><TbDownload />Download SVG</Button>
+              {previewHref ? (
+                <Button variant='outline' asChild><Link href={previewHref} target='_blank' rel='noopener'><TbExternalLink />Preview scan menu</Link></Button>
+              ) : null}
               {canRotate ? (
                 <Button variant='destructive' onClick={rotate} disabled={pending}><TbRefresh />Rotate Token</Button>
               ) : null}

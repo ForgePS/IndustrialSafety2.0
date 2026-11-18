@@ -1,0 +1,187 @@
+{
+  "meta": {
+    "generated_at": "2026-07-26T21:43:29.670Z",
+    "environment": "development",
+    "aws_account": "511343547817",
+    "aws_region": "us-east-1",
+    "tool_versions": {
+      "awsCli": "aws-cli/2.36.8 Python/3.14.6 Windows/11 exe/AMD64",
+      "node": "v20.20.2"
+    },
+    "control_id": "CC-LOG-01",
+    "risk_id": "R-002",
+    "title": "CloudTrail S3 bucket security settings",
+    "classification": "Confidential",
+    "source": "aws s3api get-bucket-*",
+    "review_status": "ACCEPTED",
+    "reviewed_by": "Jeremy Powell",
+    "reviewed_at": "2026-07-26"
+  },
+  "data": {
+    "bucketName": "forge-development-cloudtrail-511343547817-us-east-1",
+    "encryption": {
+      "ServerSideEncryptionConfiguration": {
+        "Rules": [
+          {
+            "ApplyServerSideEncryptionByDefault": {
+              "SSEAlgorithm": "aws:kms",
+              "KMSMasterKeyID": "arn:aws:kms:us-east-1:511343547817:key/5efbe077-1ef5-4e55-aaba-7e6614f35c87"
+            },
+            "BucketKeyEnabled": false,
+            "BlockedEncryptionTypes": {
+              "EncryptionType": ["SSE-C"]
+            }
+          }
+        ]
+      }
+    },
+    "publicAccessBlock": {
+      "PublicAccessBlockConfiguration": {
+        "BlockPublicAcls": true,
+        "IgnorePublicAcls": true,
+        "BlockPublicPolicy": true,
+        "RestrictPublicBuckets": true
+      }
+    },
+    "versioning": {
+      "Status": "Enabled"
+    },
+    "lifecycle": {
+      "TransitionDefaultMinimumObjectSize": "all_storage_classes_128K",
+      "Rules": [
+        {
+          "Expiration": {
+            "Days": 90
+          },
+          "ID": "cloudtrail-retention",
+          "Filter": {
+            "Prefix": ""
+          },
+          "Status": "Enabled",
+          "Transitions": [
+            {
+              "Days": 30,
+              "StorageClass": "STANDARD_IA"
+            }
+          ],
+          "NoncurrentVersionExpiration": {
+            "NoncurrentDays": 90
+          },
+          "AbortIncompleteMultipartUpload": {
+            "DaysAfterInitiation": 7
+          }
+        }
+      ]
+    },
+    "policy": {
+      "Policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Deny",
+            "Principal": {
+              "AWS": "*"
+            },
+            "Action": "s3:*",
+            "Resource": [
+              "arn:aws:s3:::forge-development-cloudtrail-511343547817-us-east-1",
+              "arn:aws:s3:::forge-development-cloudtrail-511343547817-us-east-1/*"
+            ],
+            "Condition": {
+              "Bool": {
+                "aws:SecureTransport": "false"
+              }
+            }
+          },
+          {
+            "Sid": "AWSCloudTrailAclCheck",
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "cloudtrail.amazonaws.com"
+            },
+            "Action": "s3:GetBucketAcl",
+            "Resource": "arn:aws:s3:::forge-development-cloudtrail-511343547817-us-east-1",
+            "Condition": {
+              "StringEquals": {
+                "aws:SourceAccount": "511343547817"
+              },
+              "ArnLike": {
+                "aws:SourceArn": "arn:aws:cloudtrail:us-east-1:511343547817:trail/*"
+              }
+            }
+          },
+          {
+            "Sid": "AWSCloudTrailWrite",
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "cloudtrail.amazonaws.com"
+            },
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws:s3:::forge-development-cloudtrail-511343547817-us-east-1/AWSLogs/511343547817/*",
+            "Condition": {
+              "StringEquals": {
+                "aws:SourceAccount": "511343547817",
+                "s3:x-amz-acl": "bucket-owner-full-control"
+              },
+              "ArnLike": {
+                "aws:SourceArn": "arn:aws:cloudtrail:us-east-1:511343547817:trail/*"
+              }
+            }
+          },
+          {
+            "Sid": "DenyUnencryptedObjectUploads",
+            "Effect": "Deny",
+            "Principal": {
+              "AWS": "*"
+            },
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws:s3:::forge-development-cloudtrail-511343547817-us-east-1/*",
+            "Condition": {
+              "StringNotEquals": {
+                "s3:x-amz-server-side-encryption": "aws:kms"
+              }
+            }
+          },
+          {
+            "Sid": "DenyInsecureTransport",
+            "Effect": "Deny",
+            "Principal": {
+              "AWS": "*"
+            },
+            "Action": "s3:*",
+            "Resource": [
+              "arn:aws:s3:::forge-development-cloudtrail-511343547817-us-east-1",
+              "arn:aws:s3:::forge-development-cloudtrail-511343547817-us-east-1/*"
+            ],
+            "Condition": {
+              "Bool": {
+                "aws:SecureTransport": "false"
+              }
+            }
+          },
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "cloudtrail.amazonaws.com"
+            },
+            "Action": "s3:GetBucketAcl",
+            "Resource": "arn:aws:s3:::forge-development-cloudtrail-511343547817-us-east-1"
+          },
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "cloudtrail.amazonaws.com"
+            },
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws:s3:::forge-development-cloudtrail-511343547817-us-east-1/AWSLogs/511343547817/*",
+            "Condition": {
+              "StringEquals": {
+                "s3:x-amz-acl": "bucket-owner-full-control"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

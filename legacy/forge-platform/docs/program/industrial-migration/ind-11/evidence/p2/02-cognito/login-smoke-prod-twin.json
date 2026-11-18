@@ -1,0 +1,65 @@
+{
+  "ok": true,
+  "at": "2026-08-05T21:01:14.036Z",
+  "phase": "PRODUCERS-P2-prod-twin-api-smoke",
+  "apiBase": "https://api-dev.forgepublicsafety.com",
+  "tenantId": "5da680d3-50f5-46ac-8b85-6cf454b6a0da",
+  "results": [
+    {
+      "email": "safetyadmin@producersrice.com",
+      "ok": true,
+      "me": {
+        "label": "auth_me",
+        "path": "/api/v1/auth/me",
+        "status": 200,
+        "pass": true,
+        "tenantIdFromBody": "5da680d3-50f5-46ac-8b85-6cf454b6a0da",
+        "emailHint": "afa0cbb1",
+        "entitled": [
+          "FORGE_INDUSTRIAL"
+        ],
+        "product": null,
+        "industrialEnabled": null
+      },
+      "bootstrap": {
+        "label": "bootstrap",
+        "path": "/api/v1/industrial/bootstrap",
+        "status": 200,
+        "pass": true,
+        "tenantIdFromBody": "5da680d3-50f5-46ac-8b85-6cf454b6a0da",
+        "emailHint": null,
+        "entitled": true,
+        "product": "FORGE_INDUSTRIAL",
+        "industrialEnabled": true
+      }
+    },
+    {
+      "email": "jlackie@producersrice.com",
+      "ok": true,
+      "me": {
+        "label": "auth_me",
+        "path": "/api/v1/auth/me",
+        "status": 200,
+        "pass": true,
+        "tenantIdFromBody": "5da680d3-50f5-46ac-8b85-6cf454b6a0da",
+        "emailHint": "d3251e02",
+        "entitled": [
+          "FORGE_INDUSTRIAL"
+        ],
+        "product": null,
+        "industrialEnabled": null
+      },
+      "bootstrap": {
+        "label": "bootstrap",
+        "path": "/api/v1/industrial/bootstrap",
+        "status": 200,
+        "pass": true,
+        "tenantIdFromBody": "5da680d3-50f5-46ac-8b85-6cf454b6a0da",
+        "emailHint": null,
+        "entitled": true,
+        "product": "FORGE_INDUSTRIAL",
+        "industrialEnabled": true
+      }
+    }
+  ]
+}

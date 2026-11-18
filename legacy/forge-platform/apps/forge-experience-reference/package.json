@@ -1,0 +1,32 @@
+{
+  "name": "@forge/forge-experience-reference",
+  "version": "1.0.0-rc.1",
+  "private": true,
+  "description": "FX-S1.5 living reference application — Forge Experience Design System RC1",
+  "scripts": {
+    "dev": "next dev --port 3010",
+    "build": "next build",
+    "start": "next start --port 3010",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src --max-warnings=0",
+    "clean": "rimraf .next"
+  },
+  "dependencies": {
+    "@forge/fx-design-tokens": "workspace:*",
+    "@forge/fx-hooks": "workspace:*",
+    "@forge/fx-icons": "workspace:*",
+    "@forge/fx-layouts": "workspace:*",
+    "@forge/fx-patterns": "workspace:*",
+    "@forge/fx-ui": "workspace:*",
+    "@forge/fx-utils": "workspace:*",
+    "next": "^15.5.28",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "rimraf": "^6.1.4",
+    "typescript": "^5.8.3"
+  }
+}

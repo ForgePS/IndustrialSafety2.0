@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "at": "2026-08-06T15:24:27.263Z",
+  "wave": "wave3-workbooks",
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/7ed9551e73e04abd9c50d7ba6565ce0c",
+  "exitCode": 0,
+  "payloadUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave3-workbooks/payload.json",
+  "loaderUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave3-workbooks/ecs-loader.mjs",
+  "remappedSha256": "d9e2e4c3690288140c04cb2a51060d0167c672e6c416c8ce700b5efd77bbe7d0",
+  "logExcerpt": "{\"dbUser\":\"forge_admin\",\"batchId\":\"0d950bc7-7b07-5a47-a27a-bc12de35f8aa\"}\t{\t  \"ok\": true,\t  \"phase\": \"IND-11B-wave3-workbooks\",\t  \"mode\": \"NONPRODUCTION_LOAD\",\t  \"environment\": \"development\",\t  \"migrationBatchId\": \"p4-staging-wave3-workbooks-2026-08-06T15-15-28-618Z\",\t  \"dbBatchId\": \"0d950bc7-7b07-5a47-a27a-bc12de35f8aa\",\t  \"counts\": {\t    \"confinedSpaceRecords\": 26,\t    \"hotWorkRecords\": 25,\t    \"workingAtHeightsRecords\": 25,\t    \"electricalSafetyRecords\": 25,\t    \"cranesRiggingRecords\": 30,\t    \"machineSafetyRecords\": 35,\t    \"dotComplianceRecords\": 47,\t    \"forkliftRecords\": 40,\t    \"chemicalSafetyRecords\": 52,\t    \"warehouseSafetyRecords\": 51,\t    \"manufacturingSafetyRecords\": 41,\t    \"contractorSafetyRecords\": 30,\t    \"processSafetyRecords\": 35,\t    \"environmentalSafetyRecords\": 30,\t    \"workersCompCases\": 27,\t    \"oshaCases\": 1\t  },\t  \"errorCount\": 0,\t  \"errors\": []\t}"
+}

@@ -10,7 +10,7 @@ import { OSHA_TIME_ZONE, oshaRecordWithinScope } from '@/lib/forgeOsha'
 import { zonedDateTimeParts } from '@/lib/forgeOshaRules'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import { syncWcCaseToOsha, wcRecordWithinScope, wcTodayIso, wcWriteErrorMessage, writeWcActivity } from '@/lib/forgeWorkersComp'
-import { wcViewPermissionFor } from '@/lib/forgeWorkersCompNotify'
+import { countWcWeeklyNoticeRecipients, queueWcWeeklyNoticeForOrganization, wcViewPermissionFor, wcWeekOfNow } from '@/lib/forgeWorkersCompNotify'
 import {
   WC_LIFTING_OPTIONS,
   WC_LOWER_EXTREMITY_LABELS,
@@ -120,6 +120,146 @@ const syncAfterChange = async (target: { context: any; organizationId: string; r
 // Cases
 // ---------------------------------------------------------------------------
 
+type CaseTarget = { context: Awaited<ReturnType<typeof requireTenantPermission>>; organizationId: string; supabase: any }
+
+/** Flags an incident for workers' comp review and notes the linked case on its history. */
+const flagIncidentForWc = async (target: CaseTarget, incident: { id: string }, caseNumber: string, verb: 'opened from' | 'linked to') => {
+  await target.supabase
+    .from('forge_incidents')
+    .update({ workers_comp_review_flag: true, updated_at: new Date().toISOString(), updated_by: target.context.user.id })
+    .eq('id', incident.id)
+    .eq('organization_id', target.organizationId)
+
+  await target.supabase.from('forge_incident_activity').insert({
+    organization_id: target.organizationId,
+    incident_id: incident.id,
+    activity_type: verb === 'opened from' ? 'workers_comp_case_opened' : 'workers_comp_case_linked',
+    message: verb === 'opened from' ? `Workers' comp case ${caseNumber} opened.` : `Workers' comp case ${caseNumber} linked to this incident.`,
+    actor_user_id: target.context.user.id
+  })
+}
+
+const personName = (person: any) => [person.first_name, person.middle_name, person.last_name, person.suffix].filter(Boolean).join(' ')
+
+/**
+ * Validates a change of employee, incident or Location on an existing case (1.0 PATCH):
+ * - each must belong to this company, and a new incident must be inside the editor's incident scope;
+ * - the case must stay inside the editor's workers' comp edit scope after the change;
+ * - a case marked OSHA recordable keeps its incident and employee, because its OSHA case was opened for them.
+ *   A non-recordable case that still points at an OSHA case is detached from it, so the next recordable sync
+ *   opens an OSHA case for the new incident and employee. The database refuses the change on a live link.
+ */
+const resolveWcLinks = async (
+  target: CaseTarget & { record: any },
+  wanted: { personnelId: string | null; incidentId: string | null; locationId: string | null }
+) => {
+  const { context, organizationId, supabase, record: before } = target
+  const changed: string[] = []
+  const notes: string[] = []
+
+  const update: Record<string, any> = {
+    personnel_id: before.personnel_id,
+    incident_id: before.incident_id,
+    location_id: before.location_id,
+    division_id: before.division_id,
+    employee_name: before.employee_name,
+    osha_case_id: before.osha_case_id
+  }
+
+  let newIncident: any = null
+  let person: any = null
+
+  if (wanted.incidentId !== before.incident_id) {
+    if (wanted.incidentId) {
+      const { data } = await supabase.from('forge_incidents').select('*').eq('organization_id', organizationId).eq('id', wanted.incidentId).maybeSingle()
+
+      if (!data) return { error: 'Choose an incident from this company.' }
+
+      const incidentView = hasPermission(context, 'incidents.view')
+      const visible = incidentView ? await incidentWithinScope({ organizationId, userId: context.user.id, scope: incidentView.scope, incident: data }) : false
+
+      if (!visible) return { error: 'That incident is outside your incident access scope.' }
+      newIncident = data
+      notes.push(`Linked to incident ${data.incident_number}`)
+    } else {
+      notes.push('Incident unlinked')
+    }
+
+    update.incident_id = wanted.incidentId
+    changed.push('incident_id')
+  }
+
+  if (wanted.personnelId !== before.personnel_id) {
+    if (wanted.personnelId) {
+      const { data } = await supabase
+        .from('forge_personnel')
+        .select('id, first_name, middle_name, last_name, suffix, location_id, division_id, archived_at')
+        .eq('organization_id', organizationId)
+        .eq('id', wanted.personnelId)
+        .maybeSingle()
+
+      if (!data) return { error: 'Choose the employee from this company\'s personnel.' }
+      if (data.archived_at) return { error: 'That employee\'s personnel record is archived.' }
+      person = data
+      update.employee_name = personName(data)
+      notes.push(`Employee: ${update.employee_name}`)
+    } else {
+      notes.push('Personnel record unlinked')
+    }
+
+    update.personnel_id = wanted.personnelId
+    changed.push('personnel_id')
+  }
+
+  if (wanted.locationId !== before.location_id) {
+    let location: any = null
+
+    if (wanted.locationId) {
+      const { data } = await supabase.from('locations').select('id, name, division_id').eq('organization_id', organizationId).eq('id', wanted.locationId).maybeSingle()
+
+      if (!data) return { error: 'Choose a Location from this company.' }
+      location = data
+      notes.push(`Location: ${data.name}`)
+    } else {
+      notes.push('Location cleared')
+    }
+
+    update.location_id = wanted.locationId
+    update.division_id = location ? location.division_id || newIncident?.division_id || person?.division_id || null : before.division_id
+    changed.push('location_id')
+  }
+
+  if (!changed.length) return { update, changed, notes, newIncident: null, previousIncidentId: null }
+
+  if ((changed.includes('incident_id') || changed.includes('personnel_id')) && before.osha_case_id) {
+    const { data: linked } = await supabase.from('forge_osha_cases').select('status').eq('id', before.osha_case_id).maybeSingle()
+
+    if (before.osha_recordable && linked && linked.status !== 'voided') {
+      return { error: 'This case is on the OSHA log for its current incident and employee. Clear the OSHA recordable flag and save first, then change them.' }
+    }
+
+    update.osha_case_id = null
+    notes.push('Detached from its non-recordable OSHA case')
+  }
+
+  const inScope = await wcRecordWithinScope({
+    organizationId,
+    userId: context.user.id,
+    scope: context.permission.scope,
+    record: { ...before, location_id: update.location_id, division_id: update.division_id }
+  })
+
+  if (!inScope) return { error: 'That change would move the case outside your workers\' comp access scope.' }
+
+  return {
+    update,
+    changed,
+    notes,
+    newIncident,
+    previousIncidentId: changed.includes('incident_id') ? (before.incident_id as string | null) : null
+  }
+}
+
 const createSchema = z.object({
   incident_id: optionalUuid,
   personnel_id: optionalUuid,
@@ -217,21 +357,7 @@ export const createWcCase = async (values: WcCreateValues): Promise<ActionResult
 
   if (error || !created) return { error: wcWriteErrorMessage(error) }
 
-  if (incident) {
-    await supabase
-      .from('forge_incidents')
-      .update({ workers_comp_review_flag: true, updated_at: new Date().toISOString(), updated_by: context.user.id })
-      .eq('id', incident.id)
-      .eq('organization_id', organizationId)
-
-    await supabase.from('forge_incident_activity').insert({
-      organization_id: organizationId,
-      incident_id: incident.id,
-      activity_type: 'workers_comp_case_opened',
-      message: `Workers' comp case ${created.case_number} opened.`,
-      actor_user_id: context.user.id
-    })
-  }
+  if (incident) await flagIncidentForWc({ context, organizationId, supabase }, incident, created.case_number, 'opened from')
 
   await writeWcActivity({
     organizationId,
@@ -274,7 +400,12 @@ const caseSchema = z.object({
   osha_recordable: z.boolean(),
   osha_privacy_case: z.boolean(),
   osha_case_type: emptyToNull(['injury', 'skin_disorder', 'respiratory_condition', 'poisoning', 'hearing_loss', 'other_illness'] as const),
-  osha_case_outcome_override: emptyToNull(['death', 'days_away', 'job_transfer_restriction', 'other_recordable'] as const)
+  osha_case_outcome_override: emptyToNull(['death', 'days_away', 'job_transfer_restriction', 'other_recordable'] as const),
+
+  // Links (1.0 PATCH): optional so callers that omit them leave the links unchanged.
+  personnel_id: optionalUuid.optional(),
+  incident_id: optionalUuid.optional(),
+  location_id: optionalUuid.optional()
 })
 
 export type WcCaseValues = z.input<typeof caseSchema>
@@ -288,8 +419,16 @@ export const saveWcCase = async ({ caseId, rowVersion, values }: { caseId: strin
 
   if (!parsed.success) return { error: parsed.error.issues[0]?.message || 'Check the case fields.' }
 
-  const payload = parsed.data
+  const { personnel_id: personnelInput, incident_id: incidentInput, location_id: locationInput, ...payload } = parsed.data
   const before = target.record
+
+  const links = await resolveWcLinks(target, {
+    personnelId: personnelInput === undefined ? before.personnel_id : personnelInput,
+    incidentId: incidentInput === undefined ? before.incident_id : incidentInput,
+    locationId: locationInput === undefined ? before.location_id : locationInput
+  })
+
+  if ('error' in links) return { error: links.error }
 
   if (payload.is_self_pay) payload.carrier_id = null
   if (!payload.osha_recordable) payload.osha_privacy_case = false
@@ -311,17 +450,20 @@ export const saveWcCase = async ({ caseId, rowVersion, values }: { caseId: strin
     payload.osha_case_type !== before.osha_case_type ||
     payload.osha_case_outcome_override !== before.osha_case_outcome_override ||
     payload.severity !== before.severity ||
-    payload.injury_date !== before.injury_date
+    payload.injury_date !== before.injury_date ||
+    links.changed.some(key => key !== 'location_id')
 
-  if (oshaChanged && (payload.osha_recordable || before.osha_case_id) && !(await canWriteOsha(target.context, before))) {
+  const afterLinks = { ...before, location_id: links.update.location_id, division_id: links.update.division_id }
+
+  if (oshaChanged && (payload.osha_recordable || links.update.osha_case_id) && !(await canWriteOsha(target.context, afterLinks))) {
     return { error: 'Changing the OSHA classification updates the OSHA log, which needs OSHA edit access for this Location.' }
   }
 
-  if (payload.osha_recordable && !before.incident_id) return { error: 'Link an injury incident before marking this case OSHA recordable.' }
+  if (payload.osha_recordable && !links.update.incident_id) return { error: 'Link an injury incident before marking this case OSHA recordable.' }
 
   const { data: updated, error } = await target.supabase
     .from('forge_wc_cases')
-    .update({ ...payload, updated_by: target.context.user.id })
+    .update({ ...payload, ...links.update, updated_by: target.context.user.id })
     .eq('id', caseId)
     .eq('organization_id', target.organizationId)
     .eq('row_version', rowVersion)
@@ -331,11 +473,12 @@ export const saveWcCase = async ({ caseId, rowVersion, values }: { caseId: strin
   if (error) return { error: wcWriteErrorMessage(error) }
   if (!updated) return { error: 'This case changed since you opened it. Reload to see the latest version, then reapply your changes.' }
 
-  const changedFields = Object.keys(payload).filter(key => (before as any)[key] !== (updated as any)[key])
+  const changedFields = [...Object.keys(payload), ...Object.keys(links.update)].filter(key => (before as any)[key] !== (updated as any)[key])
   const notes: string[] = []
 
   if (before.stage !== updated.stage) notes.push(`Stage: ${WC_STAGE_LABELS[updated.stage as WcStage]}`)
   if (before.osha_recordable !== updated.osha_recordable) notes.push(updated.osha_recordable ? 'Marked OSHA recordable' : 'OSHA recordable flag cleared')
+  notes.push(...links.notes)
 
   if (changedFields.length) {
     await writeWcActivity({
@@ -353,9 +496,13 @@ export const saveWcCase = async ({ caseId, rowVersion, values }: { caseId: strin
       action: 'workers_comp.case_updated',
       entityType: 'workers_comp_case',
       entityId: caseId,
-      afterValue: { changed_fields: changedFields }
+      beforeValue: Object.fromEntries(changedFields.map(key => [key, (before as any)[key] ?? null])),
+      afterValue: { changed_fields: changedFields, ...Object.fromEntries(changedFields.map(key => [key, (updated as any)[key] ?? null])) }
     })
   }
+
+  if (links.newIncident) await flagIncidentForWc(target, links.newIncident, updated.case_number, 'linked to')
+  if (links.previousIncidentId) revalidatePath(`/incidents/${links.previousIncidentId}`)
 
   const syncNote = oshaChanged ? await syncAfterChange(target, caseId) : ''
 
@@ -1116,4 +1263,54 @@ export const saveWcSettings = async ({
   revalidatePath('/workers-comp/settings')
 
   return { message: 'Weekly notice settings saved.' }
+}
+
+/**
+ * "Send weekly status now" (1.0 POST /workers-comp/weekly-status/send). Uses the same queue path as the
+ * hourly sweep: the database marks the week sent under a lock, so a second click (or the scheduled run
+ * later that week) never sends the same week twice. Email goes out when /api/helpdesk/cron drains the outbox.
+ */
+export const sendWcWeeklyStatusNow = async (): Promise<ActionResult> => {
+  const context = await requireTenantPermission('workers_comp.configure')
+  const organizationId = context.activeOrganization.id
+  const supabase = createServiceRoleClient() as any
+
+  const { data: settings } = await supabase.from('forge_wc_settings').select('*').eq('organization_id', organizationId).maybeSingle()
+
+  if (!settings?.weekly_email_enabled) return { error: 'Turn on the weekly status notice and save the settings before sending it.' }
+
+  const recipientIds: string[] = settings.weekly_email_recipient_ids || []
+
+  if (!recipientIds.length) return { error: 'Choose at least one recipient and save the settings before sending.' }
+
+  const weekOf = wcWeekOfNow(settings.time_zone)
+
+  const result = await queueWcWeeklyNoticeForOrganization({
+    organizationId,
+    organizationName: context.activeOrganization.name,
+    recipientIds,
+    weekOf
+  })
+
+  if (result.error) return { error: `Unable to queue the weekly notice: ${result.error}` }
+
+  const alreadySent = result.reason === 'already_sent' ? await countWcWeeklyNoticeRecipients(organizationId, weekOf) : 0
+
+  await writeForgeAudit({
+    actorUserId: context.user.id,
+    organizationId,
+    action: 'workers_comp.weekly_notice_sent_now',
+    entityType: 'workers_comp_settings',
+    entityId: organizationId,
+    afterValue: { week_of: weekOf, reason: result.reason, queued: result.queued, already_sent: alreadySent, skipped_recipients: result.skippedRecipients }
+  })
+
+  revalidatePath('/workers-comp/settings')
+
+  const skipped = result.skippedRecipients ? ` Skipped ${result.skippedRecipients} without workers' comp access.` : ''
+
+  if (result.reason === 'disabled') return { error: 'The weekly status notice is turned off.' }
+  if (result.reason === 'no_eligible_recipients') return { error: `No recipient currently has workers' comp access.${skipped}` }
+
+  return { message: `Week of ${weekOf}: queued ${result.queued}, already sent ${alreadySent}.${skipped}` }
 }

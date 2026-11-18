@@ -1,0 +1,13 @@
+{
+  "ok": true,
+  "at": "2026-08-05T19:35:00.000Z",
+  "check": "B3",
+  "taskDefinition": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-platform-api:65",
+  "cognitoClientIds": [
+    "6ad44jqh9pbibkao8lqcqu4mnv",
+    "6e1g6ldnascpt46u7cukvlp5o",
+    "3rls9835j4qs3jmchb3uh7ketm"
+  ],
+  "includesIndustrial": true,
+  "industrialClientId": "3rls9835j4qs3jmchb3uh7ketm"
+}

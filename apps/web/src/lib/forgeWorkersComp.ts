@@ -47,12 +47,16 @@ export const getScopedWcCases = async ({
   organizationId,
   userId,
   permission,
-  includeArchived = false
+  includeArchived = false,
+  archivedOnly = false
 }: {
   organizationId: string
   userId: string
   permission: EffectivePermission
   includeArchived?: boolean
+
+  /** Only archived cases: the list's Archived view. */
+  archivedOnly?: boolean
 }) => {
   const supabase = createServiceRoleClient() as any
   let query = supabase
@@ -61,7 +65,8 @@ export const getScopedWcCases = async ({
     .eq('organization_id', organizationId)
     .order('injury_date', { ascending: false })
 
-  if (!includeArchived) query = query.neq('status', 'archived')
+  if (archivedOnly) query = query.eq('status', 'archived')
+  else if (!includeArchived) query = query.neq('status', 'archived')
 
   const { data, error } = await query
 
@@ -313,6 +318,7 @@ export const wcWriteErrorMessage = (error: { code?: string; message?: string } |
   if (/forge_wc_cases_privacy_recordable/.test(message)) return 'Only OSHA-recordable cases can be privacy cases.'
   if (/forge_wc_cases_self_pay_carrier/.test(message)) return 'A self-pay case cannot also have a carrier.'
   if (/forge_wc_weekly_updates_case_id_week_of_key/.test(message)) return 'This case already has an update for that week.'
+  if (/linked to an OSHA case/.test(message)) return 'This case is linked to a live OSHA case, so its incident and employee cannot change. Clear the OSHA recordable flag and save first.'
 
   return message || 'Unable to save the workers\' comp case.'
 }

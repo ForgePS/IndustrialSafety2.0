@@ -1,0 +1,11 @@
+{
+  "tag": "import-s5-20260729135433",
+  "api": {
+    "repository": "forge-development-ecr-platformapi",
+    "digest": "sha256:4fc9acf08b09d9e8a15cc9125565a6aa10953aa81b69cd17c7a4347082d051cc"
+  },
+  "worker": {
+    "repository": "forge-development-ecr-workerservice",
+    "digest": "sha256:d42a2ffdb25dbcbfab3aed99d0ee783f14d5796951971f85c8fa235c77921cd3"
+  }
+}

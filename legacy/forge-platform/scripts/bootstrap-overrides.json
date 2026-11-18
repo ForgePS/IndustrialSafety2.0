@@ -1,0 +1,8 @@
+{
+  "containerOverrides": [
+    {
+      "name": "platform-api",
+      "command": ["node", "/app/packages/database/dist/bootstrap-admin-ecs.js"]
+    }
+  ]
+}

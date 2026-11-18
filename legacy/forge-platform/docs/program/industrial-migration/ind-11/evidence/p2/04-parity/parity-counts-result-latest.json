@@ -1,0 +1,8 @@
+{
+  "ok": true,
+  "at": "2026-08-06T15:28:21.518Z",
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/cd47f886fbe048169590be069a5477c6",
+  "exitCode": 0,
+  "countsUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/completion-counts.mjs",
+  "logExcerpt": "{\t  \"ok\": true,\t  \"phase\": \"IND-11B-completion-counts\",\t  \"tenantA\": \"0882c865-59c2-49a6-ab88-ce6ca89be30c\",\t  \"counts\": {\t    \"industrial_personnel\": 1008,\t    \"industrial_sites\": 26,\t    \"industrial_equipment\": 2489,\t    \"industrial_loto_procedures\": 2523,\t    \"industrial_training_records\": 17,\t    \"industrial_form_definitions\": 48,\t    \"industrial_form_submissions\": 33,\t    \"industrial_inspections\": 5,\t    \"industrial_incidents\": 12,\t    \"industrial_confined_space_records\": 26,\t    \"industrial_hot_work_records\": 25,\t    \"industrial_chemical_safety_records\": 52,\t    \"industrial_tasks\": 2,\t    \"industrial_emergency_response_records\": 30,\t    \"qr_links\": 2505,\t    \"platform_documents\": 9077,\t    \"industrial_equipment_document_links\": 12\t  },\t  \"totals\": 17890\t}"
+}

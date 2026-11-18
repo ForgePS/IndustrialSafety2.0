@@ -55,7 +55,7 @@ const RELATIONSHIP_DEFINITIONS: ForgeRelationshipDefinition[] = [
   },
   {
     relationshipType: 'generated_capa',
-    sourceTypes: ['incident', 'inspection_finding', 'observation', 'risk_register', 'jsa'],
+    sourceTypes: ['incident', 'inspection_finding', 'observation', 'risk_register', 'jsa', 'loto_procedure', 'loto_application'],
     targetTypes: ['corrective_action'],
     reciprocalDisplay: true,
     allowDuplicate: false,
@@ -80,7 +80,7 @@ const RELATIONSHIP_DEFINITIONS: ForgeRelationshipDefinition[] = [
   {
     relationshipType: 'equipment',
     sourceTypes: ['incident', 'inspection', 'inspection_finding', 'corrective_action', 'task', 'loto_procedure', 'loto_application'],
-    targetTypes: ['asset'],
+    targetTypes: ['asset', 'fleet_vehicle'],
     reciprocalDisplay: true,
     allowDuplicate: false,
     archivable: true

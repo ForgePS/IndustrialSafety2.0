@@ -69,7 +69,7 @@ test('a scoped tool call returns real plant records and is fully logged', async 
 
   expect(run.status).toBe('completed')
   expect(run.provider).toBe('test')
-  expect(run.prompt_key).toBe('assistant.general')
+  expect(run.prompt_key).toBe('agent.incident')
   expect(run.prompt_version).toBe(1)
   expect(run.tool_calls).toBe(1)
 

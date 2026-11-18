@@ -6,11 +6,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@repo/ui/components/ui/table'
 import { createServiceRoleClient } from '@repo/supabase/server'
 
+import OshaAwaitingReview from './OshaAwaitingReview'
+import type { AwaitingIncident } from './OshaAwaitingReview'
 import OshaFilters from './OshaFilters'
+import OshaPrintIssues from './OshaPrintIssues'
 import { parseOshaParams } from './params'
-import { OSHA_TIME_ZONE, getOshaLocations, getOshaYearSummary, getScopedOshaCases, oshaLocationIdsInScope } from '@/lib/forgeOsha'
-import { OSHA_CASE_OUTCOME_LABELS, OSHA_RECORDABILITY_LABELS, zonedDateTimeParts } from '@/lib/forgeOshaRules'
+import {
+  OSHA_TIME_ZONE,
+  getOshaLocations,
+  getOshaYearSummary,
+  getScopedOshaCases,
+  oshaLocationIdsInScope,
+  oshaRecordWithinScope
+} from '@/lib/forgeOsha'
+import { OSHA_CASE_OUTCOME_LABELS, OSHA_RECORDABILITY_LABELS, form300PrintIssues, zonedDateTimeParts } from '@/lib/forgeOshaRules'
 import type { OshaCaseOutcome, OshaRecordability } from '@/lib/forgeOshaRules'
+import { getPersonnelStructureOptions } from '@/lib/forgePersonnelStructure'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 
 export const metadata: Metadata = { title: 'OSHA Recordkeeping' }
@@ -40,7 +51,7 @@ const OshaPage = async ({ searchParams }: { searchParams: Promise<Record<string,
     ? (
         await supabase
           .from('forge_incidents')
-          .select('id, incident_number, summary, occurred_at, location_id, locations(name), forge_osha_cases(id, status)')
+          .select('id, incident_number, summary, occurred_at, location_id, division_id, reported_by_personnel_id, locations(name), forge_osha_cases(id, status)')
           .eq('organization_id', organizationId)
           .in('location_id', selectedIds)
           .or('involves_injury.eq.true,incident_type.eq.injury,osha_review_flag.eq.true')
@@ -57,7 +68,56 @@ const OshaPage = async ({ searchParams }: { searchParams: Promise<Record<string,
       !(incident.forge_osha_cases || []).some((item: any) => item.status !== 'voided')
   )
 
-  const canEdit = context.access.effective.some(item => item.permissionKey === 'osha.edit' && item.allowed)
+  // "Open OSHA case" uses the same server action as the incident page panel, which re-checks osha.edit scope,
+  // incident scope and the employee. The button only shows where the viewer's osha.edit scope reaches.
+  const editPermission = context.access.effective.find(item => item.permissionKey === 'osha.edit' && item.allowed)
+
+  const openable = editPermission
+    ? await Promise.all(
+        awaitingReview.map((incident: any) =>
+          oshaRecordWithinScope({
+            organizationId,
+            userId: context.user.id,
+            scope: editPermission.scope,
+            record: { organization_id: organizationId, location_id: incident.location_id, division_id: incident.division_id, created_by: context.user.id }
+          })
+        )
+      )
+    : awaitingReview.map(() => false)
+
+  const anyOpenable = openable.some(Boolean)
+
+  const [{ data: injuredPeople }, structure] = anyOpenable
+    ? await Promise.all([
+        supabase
+          .from('forge_incident_people')
+          .select('incident_id, personnel_id, created_at')
+          .eq('organization_id', organizationId)
+          .in('incident_id', awaitingReview.map((incident: any) => incident.id))
+          .eq('role', 'injured')
+          .not('personnel_id', 'is', null)
+          .order('created_at'),
+        getPersonnelStructureOptions({ organizationId })
+      ])
+    : [{ data: [] }, null]
+
+  const firstInjured = new Map<string, string>()
+
+  for (const item of injuredPeople || []) {
+    if (!firstInjured.has(item.incident_id)) firstInjured.set(item.incident_id, item.personnel_id)
+  }
+
+  const awaitingItems: AwaitingIncident[] = awaitingReview.map((incident: any, index: number) => ({
+    id: incident.id,
+    incidentNumber: incident.incident_number,
+    summary: incident.summary,
+    locationName: incident.locations?.name || '—',
+    occurredOn: new Date(incident.occurred_at).toLocaleDateString(),
+    defaultPersonnelId: firstInjured.get(incident.id) || incident.reported_by_personnel_id || null,
+    canOpen: openable[index]
+  }))
+
+  const printIssues = form300PrintIssues(cases)
   const query = `?year=${year}${locationId ? `&location=${locationId}` : ''}`
   const totals = summary.combined.totals
 
@@ -107,28 +167,18 @@ const OshaPage = async ({ searchParams }: { searchParams: Promise<Record<string,
       <Card>
         <CardHeader>
           <CardTitle>Injury incidents awaiting an OSHA decision</CardTitle>
-          <CardDescription>Open a case from the incident to decide whether it is recordable.</CardDescription>
+          <CardDescription>Open a case for the injured or ill employee to decide whether it is recordable.</CardDescription>
         </CardHeader>
         <CardContent>
-          {awaitingReview.length ? (
-            <ul className='flex flex-col gap-3' data-testid='osha-awaiting-review'>
-              {awaitingReview.map((incident: any) => (
-                <li key={incident.id} className='flex flex-wrap items-center justify-between gap-3 border-b pb-3 last:border-b-0'>
-                  <div>
-                    <div className='text-textPrimary font-semibold'>{incident.incident_number} · {incident.summary}</div>
-                    <div className='text-textSecondary text-sm'>{incident.locations?.name || '—'} · {new Date(incident.occurred_at).toLocaleDateString()}</div>
-                  </div>
-                  <Button size='sm' variant='outline' asChild>
-                    <Link href={`/incidents/${incident.id}`}>{canEdit ? 'Review incident' : 'View incident'}</Link>
-                  </Button>
-                </li>
-              ))}
-            </ul>
+          {awaitingItems.length ? (
+            <OshaAwaitingReview incidents={awaitingItems} people={structure?.supervisors || []} />
           ) : (
             <p className='text-textSecondary text-sm'>No injury incidents are waiting for an OSHA decision.</p>
           )}
         </CardContent>
       </Card>
+
+      <OshaPrintIssues issues={printIssues} year={year} />
 
       <Card>
         <CardHeader>

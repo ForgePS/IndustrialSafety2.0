@@ -1,15 +1,27 @@
 'use client'
 
-import type { HTMLAttributeAnchorTarget, ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { ComponentType, HTMLAttributeAnchorTarget, ReactNode } from 'react'
 
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
-  TbCircle,
+  TbAlertTriangle,
+  TbBuildingFactory2,
+  TbChevronRight,
+  TbClipboardCheck,
   TbDashboard,
+  TbFolder,
   TbHeadset,
+  TbLock,
+  TbSettings,
   TbSettingsAutomation,
-  TbUser
+  TbShieldCheck,
+  TbSparkles,
+  TbTool,
+  TbUrgent,
+  TbUser,
+  TbUsers
 } from 'react-icons/tb'
 import {
   Sidebar,
@@ -20,13 +32,19 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarRail,
   SidebarSeparator,
   useSidebar
 } from '@repo/ui/components/ui/sidebar'
+
 import { useAuthContext } from '@repo/auth/AuthProvider'
 import { cn } from '@repo/ui/lib/utils'
 import type { SidebarMenuButtonProps } from '@repo/ui/components/ui/sidebar'
+
+import { activeRoute, groupNavigation } from '@/lib/navigationGroups'
 
 import Logo from './Logo'
 
@@ -67,6 +85,119 @@ const MenuButton = ({ children, href, target = '_self', exactMatch = true, ...pr
       )}
     </SidebarMenuButton>
   )
+}
+
+const GROUP_ICONS: Record<string, ComponentType> = {
+  'People & Training': TbUsers,
+  'Incident & Claims': TbAlertTriangle,
+  'Risk & Prevention': TbShieldCheck,
+  'Compliance Programs': TbClipboardCheck,
+  'Equipment & Operations': TbTool,
+  'High-Risk Work': TbLock,
+  'Facility & Operations Safety': TbBuildingFactory2,
+  'Emergency Management': TbUrgent,
+  'Forge AI': TbSparkles,
+  'System Tools': TbSettings
+}
+
+// Which group is open, kept per browser like 1.0's menu.
+const OPEN_GROUP_KEY = 'forge2-nav-open-group'
+
+const readOpenGroup = () => {
+  try {
+    return window.localStorage.getItem(OPEN_GROUP_KEY)
+  } catch {
+    return null
+  }
+}
+
+const storeOpenGroup = (group: string | null) => {
+  try {
+    if (group) window.localStorage.setItem(OPEN_GROUP_KEY, group)
+    else window.localStorage.removeItem(OPEN_GROUP_KEY)
+  } catch {
+    // private mode or storage blocked: the menu still works, it just won't remember
+  }
+}
+
+/**
+ * The tenant's menu in 1.0's groups. One group open at a time; the group holding the current page
+ * opens when the page changes, and the person's own open/close choice is remembered otherwise.
+ */
+const GroupedNavigation = ({ items }: { items: TenantNavigationItem[] }) => {
+  const pathname = usePathname()
+  const { state, isMobile, setOpen } = useSidebar()
+  const groups = useMemo(() => groupNavigation(items), [items])
+  const current = activeRoute(pathname, items.map(item => item.route))
+  const currentGroup = groups.find(group => group.items.some(item => item.route === current))?.name ?? null
+  const [openGroup, setOpenGroup] = useState<string | null>(null)
+  const lastPath = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (lastPath.current === null) {
+      lastPath.current = pathname
+      setOpenGroup(currentGroup ?? readOpenGroup())
+
+      return
+    }
+
+    if (lastPath.current !== pathname) {
+      lastPath.current = pathname
+      if (currentGroup) setOpenGroup(currentGroup)
+    }
+  }, [pathname, currentGroup])
+
+  const toggle = (name: string) => {
+    // Collapsed to icons, a group's entries are hidden, so open the sidebar and the group.
+    if (state === 'collapsed' && !isMobile) {
+      setOpen(true)
+      setOpenGroup(name)
+      storeOpenGroup(name)
+
+      return
+    }
+
+    const next = openGroup === name ? null : name
+
+    setOpenGroup(next)
+    storeOpenGroup(next)
+  }
+
+  return <>{groups.map(group => {
+    const Icon = GROUP_ICONS[group.name] ?? TbFolder
+    const open = openGroup === group.name
+
+    return (
+      <SidebarMenuItem key={group.name}>
+        <SidebarMenuButton
+          tooltip={group.name}
+          isActive={state === 'collapsed' && group.name === currentGroup}
+          aria-expanded={open}
+          onClick={() => toggle(group.name)}
+        >
+          <Icon />
+          <span>{group.name}</span>
+          <TbChevronRight
+            aria-hidden
+            className={cn('mis-auto transition-transform duration-200', { 'rotate-90': open })}
+          />
+        </SidebarMenuButton>
+        {open ? (
+          <SidebarMenuSub>
+            {group.items.map(item => (
+              <SidebarMenuSubItem key={item.id}>
+                <SidebarMenuSubButton asChild size='sm' isActive={item.route === current}>
+                  <Link href={item.route || '/dashboard'}>
+                    <span>{item.label}</span>
+                  </Link>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+            ))}
+          </SidebarMenuSub>
+        ) : null}
+      </SidebarMenuItem>
+    )
+  })}</>
 }
 
 const AppSidebar = ({
@@ -118,14 +249,7 @@ const AppSidebar = ({
                 </MenuButton>
               </SidebarMenuItem>
 
-              {tenantNavigation.map(item => (
-                <SidebarMenuItem key={item.id}>
-                  <MenuButton href={item.route || '/dashboard'} exactMatch={false} tooltip={item.label}>
-                    <TbCircle />
-                    <span>{item.label}</span>
-                  </MenuButton>
-                </SidebarMenuItem>
-              ))}
+              <GroupedNavigation items={tenantNavigation} />
 
               <SidebarMenuItem>
                 <MenuButton href='/my-profile' tooltip='My Profile'>

@@ -1,0 +1,23 @@
+{
+  "evidenceId": "GAP-009-APPROVAL",
+  "status": "APPROVED",
+  "requestedAt": "2026-07-27T11:15:00Z",
+  "approvedAt": "2026-07-27T12:03:00Z",
+  "stack": "Forge-Development-Data",
+  "constructId": "ForgeData",
+  "strategy": "A_IMPORT_BY_NAME",
+  "diffSummary": "0 differences (ForgeData/Network/Security) at pre-approval sample; re-check required immediately before deploy",
+  "confirmationsRequired": {
+    "secretValueUnchanged": true,
+    "secretArnUnchanged": true,
+    "auroraNotReplaced": true,
+    "ecsReferencesRemainValid": true,
+    "noSecretCreateInTemplate": true,
+    "exclusivelyDataOnly": true
+  },
+  "approverName": "Jeremy Powell",
+  "approverRole": "Founder, Forge Public Safety",
+  "approverDecision": "APPROVED",
+  "approverDate": "2026-07-27",
+  "notes": "Authorize ForgeData / Forge-Development-Data only. Stop on secret/Aurora destructive CFN proposals."
+}

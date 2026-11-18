@@ -1,19 +1,40 @@
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Badge } from '@repo/ui/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@repo/ui/components/ui/table'
 import { createServiceRoleClient } from '@repo/supabase/server'
+
 import ManagedQrForm from '../ManagedQrForm'
 import QrArchiveCard from '../QrArchiveCard'
 import QrVisualCard from '../QrVisualCard'
 import type { QrFormValues } from '../actions'
+import { loadQrFormOptions } from '../qrFormOptions'
 import { getScopedAssets } from '@/lib/forgeAssets'
 import { getEffectiveForm } from '@/lib/forgeForms'
 import { getEffectiveLookup } from '@/lib/forgeLookups'
+import { getUserNames } from '@/lib/forgeLoto'
 import { generateForgeQrSvg } from '@/lib/forgeQrSvg'
-import { describeQrDestination } from '@/lib/forgeQrDestination'
-import { getForgeQrScanUrl, getQrScanHistory, qrCodeWithinScope } from '@/lib/forgeQr'
+import {
+  QR_SCAN_RESULT_LABELS,
+  QR_TARGET_TYPE_LABELS,
+  SCAN_RECORD_TYPE_LABELS,
+  describeQrScanEvent,
+  scanRecordHref,
+  summarizeQrScans
+} from '@/lib/forgeQrDestination'
+import { getForgeQrScanUrl, getQrScanEventsSince, getQrScanHistory, getQrTarget, qrCodeWithinScope } from '@/lib/forgeQr'
+import {
+  SCAN_ACCESS_MODE_LABELS,
+  SCAN_FREQUENCIES,
+  SCAN_FREQUENCY_LABELS,
+  parseQrActionConfig,
+  parseScanAccessMode,
+  personnelDisplayName,
+  scanPath
+} from '@/lib/forgeScanRules'
+import type { ScanTargetType } from '@/lib/forgeScanRules'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import ForgeAiContextButton from '@/components/forge-ai/ForgeAiContextButton'
 
@@ -53,12 +74,8 @@ const QrCodeDetailPage = async ({ params }: { params: Promise<{ id: string }> })
 
   if (!mayView) notFound()
 
-  const { data: targetAsset } = await supabase
-    .from('forge_assets')
-    .select('id, asset_number, name, status, retired_at')
-    .eq('organization_id', organizationId)
-    .eq('id', qrCode.target_id)
-    .maybeSingle()
+  const target = await getQrTarget({ organizationId, targetType: qrCode.target_type, targetId: qrCode.target_id })
+  const targetAsset = target?.asset || null
 
   const permissions = new Map(
     context.access.effective
@@ -82,7 +99,7 @@ const QrCodeDetailPage = async ({ params }: { params: Promise<{ id: string }> })
         })
       : false
 
-  const [canEdit, canRotate, canArchive, canViewScans, editableAssets] = await Promise.all([
+  const [canEdit, canRotate, canArchive, canViewScans, editableAssets, options] = await Promise.all([
     within(editPermission),
     within(rotatePermission),
     within(deletePermission),
@@ -94,18 +111,62 @@ const QrCodeDetailPage = async ({ params }: { params: Promise<{ id: string }> })
           permission: editPermission,
           includeRetired: true
         })
-      : Promise.resolve(targetAsset ? [targetAsset] : [])
+      : Promise.resolve(targetAsset ? [targetAsset] : []),
+    loadQrFormOptions({ organizationId, userId: context.user.id, scope: editPermission?.scope ?? context.permission.scope })
   ])
 
-  const scans = canViewScans
-    ? await getQrScanHistory({ organizationId, qrCodeId: qrCode.id, limit: 100 })
-    : []
+  const [scans, recentEvents] = canViewScans
+    ? await Promise.all([
+        getQrScanHistory({ organizationId, qrCodeId: qrCode.id, limit: 100 }),
+        getQrScanEventsSince({ organizationId, qrCodeId: qrCode.id, days: 30 })
+      ])
+    : [[], []]
+
+  const summary = summarizeQrScans(recentEvents)
+
+  const personnelIds = Array.from(new Set(scans.map((scan: any) => scan.personnel_id).filter(Boolean))) as string[]
+
+  const [personnelResult, userNames] = await Promise.all([
+    personnelIds.length
+      ? supabase.from('forge_personnel').select('id, first_name, last_name, preferred_name').eq('organization_id', organizationId).in('id', personnelIds)
+      : Promise.resolve({ data: [] }),
+    getUserNames({ organizationId, userIds: scans.map((scan: any) => scan.auth_user_id) })
+  ])
+
+  const personnelNames = new Map<string, string>((personnelResult.data || []).map((person: any) => [person.id, personnelDisplayName(person)]))
+
+  const personFor = (scan: any) => {
+    if (scan.personnel_id && personnelNames.has(scan.personnel_id)) return personnelNames.get(scan.personnel_id) as string
+    if (scan.auth_user_id) return userNames[scan.auth_user_id] || 'Signed-in user'
+    if (scan.metadata?.reporter_name) return String(scan.metadata.reporter_name)
+
+    return 'Not identified'
+  }
 
   const scanUrl = getForgeQrScanUrl(qrCode.token)
   const svg = generateForgeQrSvg(scanUrl)
+  const opensMenu = qrCode.default_action === 'scan_menu' || qrCode.target_type !== 'asset'
+  const isVehicle = qrCode.target_type === 'vehicle'
+  const serviceTarget = qrCode.target_type === 'asset' || isVehicle
 
   const statusLabels = Object.fromEntries(statusLookup.options.map(option => [option.key, option.label]))
   const actionLabels = Object.fromEntries(actionLookup.options.map(option => [option.key, option.label]))
+  const accessMode = parseScanAccessMode(qrCode.access_mode)
+  const config = parseQrActionConfig(qrCode.action_config)
+  const templateNames = new Map(options.inspectionTemplates.map(item => [item.id, item.label]))
+
+  // Keep the current target selectable even if it is no longer active or in the option lists.
+  const locationOptions = target?.type === 'location' && !options.locations.some(item => item.id === target.id)
+    ? [...options.locations, { id: target.id, label: target.name }]
+    : options.locations
+
+  const vehicleOptions = target?.type === 'vehicle' && !options.vehicles.some(item => item.id === target.id)
+    ? [...options.vehicles, { id: target.id, label: (target.detail ? target.detail + ' · ' : '') + target.name + ' (removed)' }]
+    : options.vehicles
+
+  const formOptions = target?.type === 'form' && !options.forms.some(item => item.id === target.id)
+    ? [...options.forms, { id: target.id, label: target.name + ' (not published)' }]
+    : options.forms
 
   const expiresAt = qrCode.expires_at
     ? String(qrCode.expires_at).slice(0, 16)
@@ -114,11 +175,24 @@ const QrCodeDetailPage = async ({ params }: { params: Promise<{ id: string }> })
   const values: QrFormValues = {
     name: qrCode.name,
     description: qrCode.description || '',
-    asset_id: qrCode.target_id,
+    asset_id: qrCode.target_type === 'asset' ? qrCode.target_id : '',
     default_action: qrCode.default_action,
     status: qrCode.status,
     expires_at: expiresAt
   }
+
+  const targetLabel = target
+    ? QR_TARGET_TYPE_LABELS[target.type] + ': ' + (target.detail && (target.type === 'asset' || target.type === 'vehicle') ? target.detail + ' · ' : '') + target.name
+    : 'Missing target'
+
+  const stats = [
+    { label: 'Scans', value: summary.scans },
+    { label: 'Inspections started', value: summary.inspectionsStarted },
+    { label: 'Inspections completed', value: summary.inspectionsCompleted },
+    { label: 'Issues reported', value: summary.issuesReported },
+    { label: 'Marked out of service', value: summary.outOfService },
+    { label: 'Returned to service', value: summary.returnedToService }
+  ]
 
   return (
     <div className='flex flex-col gap-6'>
@@ -131,7 +205,10 @@ const QrCodeDetailPage = async ({ params }: { params: Promise<{ id: string }> })
               {statusLabels[qrCode.status] || qrCode.status}
             </Badge>
           </div>
-          <p className='text-textSecondary mt-2'>{qrCode.qr_number} · {targetAsset ? targetAsset.asset_number + ' · ' + targetAsset.name : 'Missing target asset'}</p>
+          <p className='text-textSecondary mt-2' data-qr-target>
+            {qrCode.qr_number} ·{' '}
+            {target?.href ? <Link className='text-primary hover:underline' href={target.href}>{targetLabel}</Link> : targetLabel}
+          </p>
         </div>
         {canUseAi ? (
           <ForgeAiContextButton
@@ -145,7 +222,7 @@ const QrCodeDetailPage = async ({ params }: { params: Promise<{ id: string }> })
       <div className='grid gap-4 md:grid-cols-3'>
         <Card>
           <CardHeader className='pb-2'><CardDescription>Default Action</CardDescription></CardHeader>
-          <CardContent><div className='font-semibold'>{actionLabels[qrCode.default_action] || qrCode.default_action}</div></CardContent>
+          <CardContent><div className='font-semibold' data-qr-default-action>{actionLabels[qrCode.default_action] || qrCode.default_action}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className='pb-2'><CardDescription>Total Scans</CardDescription></CardHeader>
@@ -157,6 +234,44 @@ const QrCodeDetailPage = async ({ params }: { params: Promise<{ id: string }> })
         </Card>
       </div>
 
+      <Card data-qr-scan-setup>
+        <CardHeader>
+          <CardTitle>Scan setup</CardTitle>
+          <CardDescription>{opensMenu ? 'Scanning opens the scan menu.' : 'Scanning opens ' + (actionLabels[qrCode.default_action] || qrCode.default_action) + ' directly.'}</CardDescription>
+        </CardHeader>
+        <CardContent className='grid gap-4 text-sm md:grid-cols-2'>
+          <div>
+            <div className='text-textSecondary text-xs uppercase tracking-wide'>Who can use it</div>
+            <div className='mt-1 font-medium' data-qr-access-mode>{SCAN_ACCESS_MODE_LABELS[accessMode]}</div>
+          </div>
+          <div>
+            <div className='text-textSecondary text-xs uppercase tracking-wide'>Inspections</div>
+            <div className='mt-1' data-qr-inspections>
+              {isVehicle ? 'Pre-trip and post-trip DVIRs for DOT-regulated vehicles' : null}
+              {isVehicle ? null : SCAN_FREQUENCIES.filter(frequency => config.inspectionTemplates[frequency]).map(frequency => (
+                <div key={frequency}>
+                  {SCAN_FREQUENCY_LABELS[frequency]}: {templateNames.get(config.inspectionTemplates[frequency] as string) || 'Inactive template'}
+                </div>
+              ))}
+              {!isVehicle && SCAN_FREQUENCIES.every(frequency => !config.inspectionTemplates[frequency]) ? 'None' : null}
+            </div>
+          </div>
+          <div className='md:col-span-2'>
+            <div className='text-textSecondary text-xs uppercase tracking-wide'>Menu actions</div>
+            <div className='mt-1 flex flex-wrap gap-2' data-qr-enabled-actions>
+              {config.reportIssue ? <Badge variant='outline'>Report an issue</Badge> : null}
+              {serviceTarget && config.markOutOfService ? <Badge variant='outline'>Mark out of service</Badge> : null}
+              {serviceTarget && config.returnToService ? <Badge variant='outline'>Return to service</Badge> : null}
+              {serviceTarget && config.employeeReturnToService ? <Badge variant='outline'>Employees can return to service</Badge> : null}
+              {qrCode.target_type === 'asset' && config.outOfServiceOnFailedInspection ? <Badge variant='outline'>Failed inspection tags it out</Badge> : null}
+              {serviceTarget && config.history ? <Badge variant='outline'>{isVehicle ? 'Vehicle history' : 'Equipment history'}</Badge> : null}
+              {qrCode.target_type === 'asset' && config.lotoView ? <Badge variant='outline'>LOTO procedure</Badge> : null}
+              {config.formTemplateIds.length ? <Badge variant='outline'>{config.formTemplateIds.length} linked form{config.formTemplateIds.length === 1 ? '' : 's'}</Badge> : null}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {qrCode.status !== 'archived' ? (
         <QrVisualCard
           qrCodeId={qrCode.id}
@@ -165,6 +280,7 @@ const QrCodeDetailPage = async ({ params }: { params: Promise<{ id: string }> })
           scanUrl={scanUrl}
           svg={svg}
           canRotate={Boolean(canRotate)}
+          previewHref={opensMenu ? scanPath(qrCode.token) : null}
         />
       ) : null}
 
@@ -172,38 +288,79 @@ const QrCodeDetailPage = async ({ params }: { params: Promise<{ id: string }> })
         form={form}
         qrCodeId={qrCode.id}
         initialValues={values}
+        initialSettings={{
+          targetType: qrCode.target_type as ScanTargetType,
+          targetId: qrCode.target_id,
+          accessMode,
+          actionConfig: qrCode.action_config
+        }}
         readOnly={!canEdit || qrCode.status === 'archived'}
         assets={(editableAssets || []).map((asset: any) => ({
           id: asset.id,
           label: asset.asset_number + ' · ' + asset.name
         }))}
+        locations={locationOptions}
+        vehicles={vehicleOptions}
+        forms={formOptions}
+        inspectionTemplates={options.inspectionTemplates}
       />
 
       {canViewScans ? (
-        <Card>
+        <Card data-qr-scan-summary>
+          <CardHeader>
+            <CardTitle>Last 30 days</CardTitle>
+            <CardDescription>What people did with this QR code.</CardDescription>
+          </CardHeader>
+          <CardContent className='grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6'>
+            {stats.map(stat => (
+              <div key={stat.label} className='rounded-lg border p-3'>
+                <div className='text-textSecondary text-xs'>{stat.label}</div>
+                <div className='mt-1 text-2xl font-semibold'>{stat.value}</div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {canViewScans ? (
+        <Card data-qr-scan-log>
           <CardHeader>
             <CardTitle>Scan History</CardTitle>
-            <CardDescription>Recent scan events. Forge does not store a raw scanner IP address in this ledger.</CardDescription>
+            <CardDescription>Recent scans and what was done. Forge does not store a raw scanner IP address in this ledger.</CardDescription>
           </CardHeader>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Scanned</TableHead>
-                <TableHead>Session</TableHead>
-                <TableHead>Destination</TableHead>
-                <TableHead>User Agent</TableHead>
+                <TableHead>When</TableHead>
+                <TableHead>Action</TableHead>
+                <TableHead>Result</TableHead>
+                <TableHead>Person</TableHead>
+                <TableHead>Record</TableHead>
+                <TableHead>Device</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {scans.length ? scans.map((scan: any) => (
-                <TableRow key={scan.id}>
-                  <TableCell>{new Date(scan.scanned_at).toLocaleString()}</TableCell>
-                  <TableCell>{scan.auth_user_id ? 'Authenticated' : 'Not signed in'}</TableCell>
-                  <TableCell>{describeQrDestination(scan.destination_path, targetAsset?.name)}</TableCell>
-                  <TableCell className='max-w-md truncate'>{scan.user_agent || '—'}</TableCell>
-                </TableRow>
-              )) : (
-                <TableRow><TableCell colSpan={4} className='py-8 text-center'>This QR code has not been scanned yet.</TableCell></TableRow>
+              {scans.length ? scans.map((scan: any) => {
+                const href = scanRecordHref(scan.record_type, scan.record_id)
+                const recordLabel = scan.record_type ? SCAN_RECORD_TYPE_LABELS[scan.record_type] || String(scan.record_type).replaceAll('_', ' ') : null
+                const result = scan.result || 'ok'
+
+                return (
+                  <TableRow key={scan.id}>
+                    <TableCell className='whitespace-nowrap'>{new Date(scan.scanned_at).toLocaleString()}</TableCell>
+                    <TableCell>{describeQrScanEvent(scan, targetAsset?.name)}</TableCell>
+                    <TableCell>
+                      <Badge size='sm' variant={result === 'ok' ? 'tonalSuccess' : 'destructive'}>{QR_SCAN_RESULT_LABELS[result] || result}</Badge>
+                    </TableCell>
+                    <TableCell>{personFor(scan)}</TableCell>
+                    <TableCell>
+                      {href ? <Link className='text-primary hover:underline' href={href}>{recordLabel}</Link> : recordLabel || '—'}
+                    </TableCell>
+                    <TableCell className='max-w-xs truncate'>{scan.user_agent || '—'}</TableCell>
+                  </TableRow>
+                )
+              }) : (
+                <TableRow><TableCell colSpan={6} className='py-8 text-center'>This QR code has not been scanned yet.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>

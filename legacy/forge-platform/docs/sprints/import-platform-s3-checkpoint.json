@@ -1,0 +1,34 @@
+{
+  "sprint": "S3",
+  "capability": "Universal Import Platform - Upload Orchestration",
+  "status": "READY_FOR_REVIEW",
+  "date": "2026-07-29",
+  "migration": "0024_import_platform_s3_upload",
+  "deploy": {
+    "apiTd": 34,
+    "workerTd": 20,
+    "imageTag": "import-s3-20260729092615",
+    "migrateTask": "de1a4227562045d1855848411d3df22b",
+    "migrateExit": 0,
+    "health": 200,
+    "uploadUnauth": 401
+  },
+  "apis": [
+    "POST /api/v1/imports/upload",
+    "POST /api/v1/imports/upload/{jobId}/parts",
+    "POST /api/v1/imports/upload/{jobId}/complete",
+    "POST /api/v1/imports/upload/{jobId}/abort",
+    "GET /api/v1/imports/{jobId}",
+    "GET /api/v1/imports/{jobId}/status",
+    "GET /api/v1/imports/{jobId}/file",
+    "POST /api/v1/imports/{jobId}/cancel"
+  ],
+  "worker": "ImportUploadSqsConsumer on SQS_IMPORT_QUEUE_URL",
+  "deferred": {
+    "malware": "S6",
+    "duplicates_zip": "S4",
+    "row_execution": "S5",
+    "ui": "S7"
+  },
+  "next": "Await ACCEPTED before S4"
+}

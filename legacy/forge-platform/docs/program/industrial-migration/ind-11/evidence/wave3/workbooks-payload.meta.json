@@ -1,0 +1,31 @@
+{
+  "generatedAt": "2026-08-05T11:42:48.178Z",
+  "migrationBatchId": "04cf2eae-6102-40e2-baa9-6b9572dfb776",
+  "correlationId": "d25410a0-0735-45a8-8b01-b9dc9e75e5c9",
+  "wave": "3-workbooks",
+  "counts": {
+    "confinedSpaceRecords": 26,
+    "hotWorkRecords": 25,
+    "workingAtHeightsRecords": 25,
+    "electricalSafetyRecords": 25,
+    "cranesRiggingRecords": 30,
+    "machineSafetyRecords": 35,
+    "dotComplianceRecords": 47,
+    "forkliftRecords": 40,
+    "workersCompCases": 27,
+    "oshaCases": 1,
+    "chemicalSafetyRecords": 52,
+    "warehouseSafetyRecords": 51,
+    "manufacturingSafetyRecords": 41,
+    "contractorSafetyRecords": 30,
+    "processSafetyRecords": 35,
+    "environmentalSafetyRecords": 30
+  },
+  "tenantMappings": [
+    {
+      "sourceOrganizationId": "business-1782553339499",
+      "targetTenantId": "019faa15-e558-70b6-adcd-a510c3c995f4",
+      "mappingStatus": "APPROVED"
+    }
+  ]
+}

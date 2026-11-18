@@ -5,6 +5,7 @@ import { Badge } from '@repo/ui/components/ui/badge'
 import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
 import { createServiceRoleClient } from '@repo/supabase/server'
+import CloseoutLinkPanel from '../CloseoutLinkPanel'
 import CorrectiveActionControls from '../CorrectiveActionControls'
 import CorrectiveActionRecordForm from '../CorrectiveActionRecordForm'
 import type { CorrectiveActionFormValues } from '../actions'
@@ -468,6 +469,8 @@ const CorrectiveActionDetailPage = async ({
         canArchive={Boolean(canArchive)}
         archived={Boolean(record.archived_at)}
       />
+
+      <CloseoutLinkPanel organizationId={organizationId} correctiveActionId={record.id} status={record.status} archived={Boolean(record.archived_at)} canManage={Boolean(canEdit)} />
 
       <div className='flex flex-col gap-4'>
         <div className='flex flex-wrap items-center gap-3'>

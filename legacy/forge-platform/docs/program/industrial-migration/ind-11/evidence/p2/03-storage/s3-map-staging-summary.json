@@ -1,0 +1,84 @@
+{
+  "ok": true,
+  "mappedAt": "2026-08-06T11:13:35.876Z",
+  "sourceInventory": "storage-inventory-latest.json",
+  "sourceInventoryFreezeAt": "2026-08-06T01:06:44.696Z",
+  "target": {
+    "which": "staging",
+    "slug": "producers-rice-mill-staging",
+    "tenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+    "destBucket": "forge-development-documents-511343547817-us-east-1",
+    "keyConvention": "tenants/{tenantId}/documents/{documentId}/{versionId}/{filename}",
+    "idStrategy": "sha256-derived UUID v5-style from businessId+sourcePath (+generation/md5 for version)"
+  },
+  "decision": {
+    "m1": "Map staging first; prod-twin reuses documentId/versionId with tenant UUID swapped in key prefix",
+    "copyGate": "FORGE_P2_STORAGE_COPY_AUTHORIZED + APPROVE-PRODUCERS-STORAGE-COPY.md"
+  },
+  "counts": {
+    "mapped": 9077,
+    "uniqueKeys": 9077,
+    "collisions": 0,
+    "byCategory": {
+      "certificates": 1,
+      "dot": 602,
+      "equipment": 2985,
+      "module_attachments": 92,
+      "loto": 5395,
+      "other": 2
+    },
+    "bytes": 16516836986
+  },
+  "collisionPreview": [],
+  "sampleMappings": [
+    {
+      "sourcePath": "certificates/business-1782553339499/library/local-cert-lib-img-1782553896018-w206il/1782553896018-Producers_Logo.png",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/c12f2fb5-5e59-55ce-b02b-be7bd669d603/8901ddd6-9c69-58fa-aefb-d0f6668dcfab/1782553896018-Producers_Logo.png",
+      "category": "certificates",
+      "size": 1106901
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/driversApplicationCopy/1783950366452-26-06-02.pdf",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/2f6194ee-979b-5968-916f-5877618761b0/d0c96298-feaa-5ead-99a9-7bd938fddbcf/1783950366452-26-06-02.pdf",
+      "category": "dot",
+      "size": 4463438
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/driversApplicationCopy/1783956143029-26-06-22.pdf",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/39913157-4cbe-5da1-8b0d-f0d50091fbfa/110f4ca1-2e3d-5aeb-9124-0b49d2e14d6a/1783956143029-26-06-22.pdf",
+      "category": "dot",
+      "size": 3766300
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/driversLicenseCopy/1783950054916-EXP_29-12-22.pdf",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/f09baddc-cf5b-5c78-9154-0c375e1f98d4/dc698973-c04f-5a22-86f0-41ac824528cc/1783950054916-EXP_29-12-22.pdf",
+      "category": "dot",
+      "size": 310428
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/driversLicenseCopy/1783951184054-EXP_27-04-23.pdf",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/97ad59e8-2bfd-507c-a4ae-d2b6edb7431d/71c9e51f-5825-5f99-becd-d24d5a611d52/1783951184054-EXP_27-04-23.pdf",
+      "category": "dot",
+      "size": 271985
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/driversLicenseCopy/1783951638558-EXP_28-11-16.pdf",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/8241b740-6127-59e2-abf7-bbf6a53adc91/ecdf10db-2b56-5b3d-9abb-74bfb61c8f90/1783951638558-EXP_28-11-16.pdf",
+      "category": "dot",
+      "size": 753122
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/driversLicenseCopy/1783955960096-EXP_29-05-18.pdf",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/733440ba-1ef4-53f6-92e1-501287ab9f6a/fe65b638-677d-5c12-bd74-17634e0fc8ca/1783955960096-EXP_29-05-18.pdf",
+      "category": "dot",
+      "size": 281630
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/drugAlcoholRecordkeepingLogCopy/1783956213587-26-06-24.pdf",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/13f174ba-047f-5c11-afea-8a7c28d33f98/30592851-fa34-50e9-a33c-2f2994e69938/1783956213587-26-06-24.pdf",
+      "category": "dot",
+      "size": 2321186
+    }
+  ],
+  "mapFile": "s3-map-staging-2026-08-06T11-13-35-876Z.json"
+}

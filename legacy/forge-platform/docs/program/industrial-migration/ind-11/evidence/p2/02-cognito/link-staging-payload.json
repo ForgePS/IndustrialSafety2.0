@@ -1,0 +1,44 @@
+[
+  {
+    "ok": true,
+    "email": "admin@forgepublicsafety.com",
+    "subject": "e498c4d8-f091-7083-0ac4-ad145fe79b39",
+    "roleCode": "IND3V_INDUSTRIAL_ADMIN",
+    "firebaseUid": "JQcTmbOoefM7nOgQ1RMc6FMtKdB3"
+  },
+  {
+    "ok": true,
+    "email": "jlackie@producersrice.com",
+    "subject": "c48884b8-2091-7040-12a9-f7355eacb8af",
+    "roleCode": "IND3V_INDUSTRIAL_OPERATOR",
+    "firebaseUid": "kd9THbtx4jVkx874a3K4Mlzgcz82"
+  },
+  {
+    "ok": true,
+    "email": "kmcpherson@producersrice.com",
+    "subject": "c4f82458-b061-703a-04fd-9454ce3c0b6d",
+    "roleCode": "IND3V_INDUSTRIAL_OPERATOR",
+    "firebaseUid": "0D6EUP2D8AeIC8BuQZuFbz4s3bb2"
+  },
+  {
+    "ok": true,
+    "email": "safetyadmin@producersrice.com",
+    "subject": "e418e4c8-10e1-7075-2960-7173cd8f5642",
+    "roleCode": "IND3V_INDUSTRIAL_ADMIN",
+    "firebaseUid": "k8h1Ui0LrNcAsFNJiGibz571e653"
+  },
+  {
+    "ok": true,
+    "email": "sdavis2@producersrice.com",
+    "subject": "b4e8b4d8-4051-7025-5ea2-a75cefb1a013",
+    "roleCode": "IND3V_INDUSTRIAL_OPERATOR",
+    "firebaseUid": "TOuqrfkcJoTkJQRaldUgetDZNzt2"
+  },
+  {
+    "ok": true,
+    "email": "tbogy@producersrice.com",
+    "subject": "54683448-30d1-702f-ac6a-ca6b5cfe8b0c",
+    "roleCode": "IND3V_INDUSTRIAL_OPERATOR",
+    "firebaseUid": "6XaBJh0wiEXoO3xse8a8SiXJ0Cb2"
+  }
+]

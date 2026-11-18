@@ -1,0 +1,14 @@
+{
+  "name": "@forge/department-portal",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "node -e \"console.log('NOT_STARTED')\"",
+    "lint": "node -e \"console.log('NOT_STARTED')\"",
+    "typecheck": "node -e \"console.log('NOT_STARTED')\"",
+    "test": "node -e \"console.log('NOT_STARTED')\"",
+    "test:unit": "node -e \"console.log('NOT_STARTED')\"",
+    "dev": "node -e \"console.log('NOT_STARTED')\"",
+    "clean": "node -e \"console.log('NOT_STARTED')\""
+  }
+}

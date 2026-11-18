@@ -1,0 +1,6 @@
+{
+  "ok": true,
+  "at": "2026-08-05T11:50:15.906Z",
+  "exitCode": 0,
+  "logExcerpt": "{\t  \"ok\": true,\t  \"phase\": \"IND-11B-completion-counts\",\t  \"tenantA\": \"019faa15-e558-70b6-adcd-a510c3c995f4\",\t  \"counts\": {\t    \"industrial_personnel\": 1009,\t    \"industrial_sites\": 27,\t    \"industrial_equipment\": 2490,\t    \"industrial_loto_procedures\": 2524,\t    \"industrial_training_records\": 18,\t    \"industrial_form_definitions\": 49,\t    \"industrial_form_submissions\": 34,\t    \"industrial_inspections\": 6,\t    \"industrial_incidents\": 13,\t    \"industrial_confined_space_records\": 27,\t    \"industrial_hot_work_records\": 26,\t    \"industrial_chemical_safety_records\": 53,\t    \"industrial_tasks\": 3,\t    \"industrial_emergency_response_records\": 31,\t    \"qr_links\": 2505,\t    \"platform_documents\": 8,\t    \"industrial_equipment_document_links\": 12\t  },\t  \"totals\": 8835\t}"
+}

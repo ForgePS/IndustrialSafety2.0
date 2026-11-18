@@ -172,3 +172,110 @@ export const fillBlanks = <T extends Record<string, unknown>>(existing: T, seed:
 
   return changes
 }
+
+/** The Form 300 fields the print checks read. Matches forge_osha_cases columns. */
+export type OshaPrintCheckCase = {
+  id: string
+  case_number: string | null
+  location_id?: string | null
+  employee_name: string | null
+  job_title: string | null
+  injury_date: string | null
+  event_location: string | null
+  injury_description: string | null
+  recordability: string
+  is_privacy_case: boolean
+  case_outcome: string | null
+  case_type: string | null
+  days_away: number | null
+  restricted_days: number | null
+  date_of_death: string | null
+  status?: string | null
+}
+
+export type OshaPrintIssue = { caseId: string; label: string; issues: string[] }
+
+const blank = (value: string | null | undefined) => !value || !value.trim()
+
+/**
+ * What is missing or inconsistent on one Form 300 case. A case with problems here prints wrong or is left
+ * out of the Form 300A totals. Ported from 1.0's oshaCaseIssues (lib/osha-module.ts); 2.0 also flags the
+ * blank job title (C) and "where the event occurred" (E) columns, which 1.0 did not check.
+ */
+export const oshaCasePrintIssues = (row: OshaPrintCheckCase): string[] => {
+  const issues: string[] = []
+
+  if (blank(row.case_number)) issues.push('No case number (column A).')
+  if (!row.is_privacy_case && blank(row.employee_name)) issues.push('No employee name (column B).')
+  if (blank(row.job_title)) issues.push('No job title (column C).')
+  if (blank(row.injury_date)) issues.push('No date of injury or onset of illness (column D).')
+  if (blank(row.event_location)) issues.push('No location where the event occurred (column E).')
+  if (blank(row.injury_description)) issues.push('No description of the injury or illness (column F).')
+
+  if (!row.case_outcome) issues.push('No outcome checked (columns G-J), so it is missing from the 300A case counts.')
+  if (!row.case_type) issues.push('No injury or illness type (column M), so it is missing from the 300A type totals.')
+
+  const away = row.days_away ?? 0
+  const restricted = row.restricted_days ?? 0
+
+  if (away < 0 || restricted < 0) issues.push('Day counts cannot be negative.')
+
+  if (row.case_outcome === 'days_away' && away <= 0) issues.push('Outcome is days away from work but column K has no days.')
+
+  if (row.case_outcome === 'job_transfer_restriction' && restricted <= 0) {
+    issues.push('Outcome is job transfer or restriction but column L has no days.')
+  }
+
+  if (row.case_outcome === 'job_transfer_restriction' && away > 0) {
+    issues.push('Case has days away, so the most serious outcome is days away (H), not I.')
+  }
+
+  if (row.case_outcome === 'other_recordable' && (away > 0 || restricted > 0)) {
+    issues.push('Case has days counted, so the outcome should be H or I, not other recordable.')
+  }
+
+  if (row.case_outcome === 'death' && blank(row.date_of_death)) {
+    issues.push('Outcome is death but no date of death is entered (Form 301 field 18).')
+  }
+
+  if (row.date_of_death && row.case_outcome !== 'death') issues.push('A date of death is entered but the outcome is not death (G).')
+
+  if (away + restricted > OSHA_DAY_CAP) issues.push(`Days are capped at ${OSHA_DAY_CAP} combined on the forms.`)
+
+  return issues
+}
+
+/**
+ * Everything to fix before printing or exporting the Form 300 log: every recordable, non-voided case with
+ * problems, plus case numbers used twice on the same establishment's log. Ported from 1.0's
+ * form300PrintIssues. 1.0's "unplaced" cases (no injury date or no establishment) cannot exist in 2.0: the
+ * database requires both, so they are covered by the per-case checks only.
+ */
+export const form300PrintIssues = (cases: OshaPrintCheckCase[]): OshaPrintIssue[] => {
+  const logCases = cases.filter(row => row.recordability === 'recordable' && row.status !== 'voided')
+  const numberKey = (row: OshaPrintCheckCase) => (blank(row.case_number) ? '' : `${row.location_id || ''}|${row.case_number!.trim().toLowerCase()}`)
+  const seen = new Map<string, number>()
+
+  for (const row of logCases) {
+    const key = numberKey(row)
+
+    if (key) seen.set(key, (seen.get(key) ?? 0) + 1)
+  }
+
+  const out: OshaPrintIssue[] = []
+
+  for (const row of logCases) {
+    const issues = oshaCasePrintIssues(row)
+    const key = numberKey(row)
+
+    if (key && (seen.get(key) ?? 0) > 1) issues.unshift(`Case number ${row.case_number!.trim()} is used more than once on this log.`)
+
+    if (issues.length) {
+      const name = row.is_privacy_case ? OSHA_PRIVACY_CASE_NAME : row.employee_name?.trim() || 'No name'
+
+      out.push({ caseId: row.id, label: `${blank(row.case_number) ? 'Unnumbered case' : `Case ${row.case_number!.trim()}`} - ${name}`, issues })
+    }
+  }
+
+  return out
+}

@@ -1,0 +1,15 @@
+{
+  "correlationId": "s8-dlq-poison-1785422688999",
+  "operator": "Jeremy",
+  "env": "development",
+  "messageId": "6004af6e-24d9-4484-9a9b-de2ffb10e7a0",
+  "bodyNotLogged": true,
+  "waitedMs": 180531,
+  "dlqDepth": 0,
+  "inspectExit": 0,
+  "dryRunExit": 0,
+  "inspectStdout": "{\n  \"correlationId\": \"dlq-ops-1785422870746-kkhj0q\",\n  \"operator\": \"Jeremy\",\n  \"env\": \"development\",\n  \"mode\": \"inspect\",\n  \"dlqUrl\": \"https://sqs.us-east-1.amazonaws.com/511343547817/forge-development-sqs-imports-dlq\",\n  \"mainUrl\": \"https://sqs.us-east-1.amazonaws.com/511343547817/forge-development-sqs-imports\",\n  \"timestamp\": \"2026-07-30T14:47:50.746Z\"\n}\n{\n  \"count\": 0,\n  \"messages\": []\n}\n",
+  "dryRunStdout": "{\n  \"correlationId\": \"dlq-ops-1785422871823-1se448\",\n  \"operator\": \"Jeremy\",\n  \"env\": \"development\",\n  \"mode\": \"dry-run-replay\",\n  \"dlqUrl\": \"https://sqs.us-east-1.amazonaws.com/511343547817/forge-development-sqs-imports-dlq\",\n  \"mainUrl\": \"https://sqs.us-east-1.amazonaws.com/511343547817/forge-development-sqs-imports\",\n  \"timestamp\": \"2026-07-30T14:47:51.823Z\"\n}\n{\n  \"count\": 0,\n  \"messages\": []\n}\n{\n  \"dryRun\": true,\n  \"wouldReplayMessageId\": null,\n  \"wouldSource\": \"https://sqs.us-east-1.amazonaws.com/511343547817/forge-development-sqs-imports-dlq\",\n  \"wouldDestination\": \"https://sqs.us-east-1.amazonaws.com/511343547817/forge-development-sqs-imports\",\n  \"note\": \"No StartMessageMoveTask executed. Pass --mode replay --confirm-replay --message-id <id>\"\n}\n",
+  "note": "Replay of poison not auto-executed; operator may purge or leave for investigation",
+  "at": "2026-07-30T14:47:52.909Z"
+}

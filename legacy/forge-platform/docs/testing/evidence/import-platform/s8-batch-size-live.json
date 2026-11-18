@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-30T18:32:00.000Z",
+  "defect": "DEF-S8-020",
+  "status": "VERIFIED",
+  "environment": {
+    "name": "development",
+    "api": "https://d108fstxdv69bo.cloudfront.net",
+    "awsRegion": "us-east-1",
+    "apiTaskDefinitionRevision": 42,
+    "workerTaskDefinitionRevision": 26
+  },
+  "method": {
+    "script": "scripts/import-s8-perf-smoke.mjs",
+    "path": "authenticated API -> S3 -> SQS -> ECS worker -> Aurora",
+    "adapterKey": "reference:generic:record@1",
+    "syntheticDataOnly": true,
+    "rowsPerRun": 500,
+    "comparison": [50, 200]
+  },
+  "runs": [
+    {
+      "label": "batch-500-b50-stable",
+      "jobId": "019fb447-b9ae-722a-9008-b9f165d3ae5e",
+      "tenantId": "019faa15-e558-70b6-adcd-a510c3c995f4",
+      "rows": 500,
+      "batchSize": 50,
+      "workflowWallMs": 21994,
+      "workerDurationMs": 11718,
+      "finalStatus": "COMPLETED",
+      "successfulRows": 500,
+      "failedRows": 0
+    },
+    {
+      "label": "batch-500-b200-stable",
+      "jobId": "019fb44a-9f78-7689-91e0-680688373cc4",
+      "tenantId": "019faa15-e558-70b6-adcd-a510c3c995f4",
+      "rows": 500,
+      "batchSize": 200,
+      "createdAt": "2026-07-30T18:30:17.208Z",
+      "executionStartedAt": "2026-07-30T18:30:26.571Z",
+      "completedAt": "2026-07-30T18:30:36.787Z",
+      "workflowWallMs": 19579,
+      "workerDurationMs": 10216,
+      "finalStatus": "COMPLETED",
+      "successfulRows": 500,
+      "failedRows": 0
+    }
+  ],
+  "result": {
+    "defaultBatchSize": 50,
+    "maximumAllowedBatchSize": 500,
+    "recommendedRange": [50, 250],
+    "decision": "Keep the default at 50. Both 50 and 200 completed without row errors. This bounded comparison does not authorize raising the maximum above 500.",
+    "workerDurationDifferenceMs": 1502,
+    "note": "The 200-row batch was faster in this single small-job sample, but one sample is not sufficient to optimize the default."
+  },
+  "sharedTelemetry": "docs/testing/evidence/import-platform/s8-aurora-perf-matrix.json"
+}

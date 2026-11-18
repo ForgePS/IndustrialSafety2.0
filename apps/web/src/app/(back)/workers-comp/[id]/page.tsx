@@ -9,6 +9,7 @@ import { WcCaseEditor, WcMedicalPanel, WcRestrictionsPanel, WcWeeklyPanel, WcWor
 import WcFormsPanel from './forms/WcFormsPanel'
 import RecordEvidencePanel from '@/components/workflow/RecordEvidencePanel'
 import { listRecordEvidence } from '@/lib/forgeEvidence'
+import { incidentWithinScope } from '@/lib/forgeIncidents'
 import { getActiveWcFormTemplates, wcFormAccess, wcFormSignedDate } from '@/lib/forgeWcForms'
 import { WC_FORM_DEFINITIONS } from '@/lib/forgeWcFormsRules'
 import type { WcFormKey } from '@/lib/forgeWcFormsRules'
@@ -101,6 +102,65 @@ const WcCasePage = async ({ params }: { params: Promise<{ id: string }> }) => {
   const live = withWorkDays(record, periods, today)
   const editable = canEdit && record.status !== 'archived'
 
+  // Choices for changing the employee, incident and Location (only loaded for editors of a live case).
+  const incidentView = permission('incidents.view')
+
+  const [{ data: personnelRows }, { data: incidentRows }, { data: locationRows }] = editable
+    ? await Promise.all([
+        supabase
+          .from('forge_personnel')
+          .select('id, first_name, middle_name, last_name, suffix, employee_number, archived_at')
+          .eq('organization_id', organizationId)
+          .order('last_name')
+          .order('first_name'),
+        incidentView
+          ? supabase
+              .from('forge_incidents')
+              .select('id, organization_id, incident_number, summary, occurred_at, reported_by_user_id, assigned_to_user_id, reported_by_personnel_id, location_id, division_id')
+              .eq('organization_id', organizationId)
+              .or(`involves_injury.eq.true,incident_type.eq.injury${record.incident_id ? `,id.eq.${record.incident_id}` : ''}`)
+              .order('occurred_at', { ascending: false })
+              .limit(200)
+          : Promise.resolve({ data: [] }),
+        supabase.from('locations').select('id, name, code, is_active').eq('organization_id', organizationId).order('name')
+      ])
+    : [{ data: [] }, { data: [] }, { data: [] }]
+
+  const scopedIncidents = incidentView
+    ? (
+        await Promise.all(
+          (incidentRows || []).map(async (incident: any) => ({
+            incident,
+            allowed: await incidentWithinScope({ organizationId, userId, scope: incidentView.scope, incident })
+          }))
+        )
+      )
+        .filter(item => item.allowed)
+        .map(item => item.incident)
+    : []
+
+  const incidentOptions = scopedIncidents.map((incident: any) => ({
+    id: incident.id,
+    label: `${incident.incident_number} · ${new Date(incident.occurred_at).toLocaleDateString()} · ${incident.summary}`
+  }))
+
+  // The current incident stays selectable even when the editor cannot see it, so saving never unlinks it by accident.
+  if (record.incident_id && !incidentOptions.some(item => item.id === record.incident_id)) {
+    incidentOptions.unshift({ id: record.incident_id, label: record.forge_incidents?.incident_number || 'Current incident' })
+  }
+
+  const personnelOptions = (personnelRows || [])
+    .filter((item: any) => !item.archived_at || item.id === record.personnel_id)
+    .map((item: any) => {
+      const name = [item.first_name, item.middle_name, item.last_name, item.suffix].filter(Boolean).join(' ')
+
+      return { id: item.id, label: `${name}${item.employee_number ? ` · ${item.employee_number}` : ''}${item.archived_at ? ' (archived)' : ''}` }
+    })
+
+  const locationOptions = (locationRows || [])
+    .filter((item: any) => item.is_active || item.id === record.location_id)
+    .map((item: any) => ({ id: item.id, label: `${item.code ? `${item.name} (${item.code})` : item.name}${item.is_active ? '' : ' (inactive)'}` }))
+
   const restrictionSummary = (item: any) => [
     item.transitional_hours_per_day ? `${item.transitional_hours_per_day} hours/day` : null,
     item.stand_walk_hours ? `Stand/walk ${item.stand_walk_hours} h` : null,
@@ -135,6 +195,12 @@ const WcCasePage = async ({ params }: { params: Promise<{ id: string }> }) => {
         </p>
       </div>
 
+      {record.status === 'archived' ? (
+        <div className='rounded-md border border-warning p-3 text-sm' data-testid='wc-archived-banner'>
+          This case is archived and read-only. It stays here for the record and is left out of the dashboard, queues and weekly updates.
+        </div>
+      ) : null}
+
       <WcCaseEditor
         key={record.row_version}
         caseId={record.id}
@@ -142,6 +208,8 @@ const WcCasePage = async ({ params }: { params: Promise<{ id: string }> }) => {
         status={record.status}
         hasIncident={Boolean(record.incident_id)}
         canEdit={Boolean(canEdit)}
+        linkOptions={{ people: personnelOptions, incidents: incidentOptions, locations: locationOptions }}
+        oshaLinked={Boolean(record.osha_case_id && record.osha_recordable)}
         carriers={(carriers || [])
           .filter((item: any) => item.is_active || item.id === record.carrier_id)
           .map((item: any) => ({ id: item.id, label: item.is_active ? item.name : `${item.name} (inactive)` }))}
@@ -171,7 +239,10 @@ const WcCasePage = async ({ params }: { params: Promise<{ id: string }> }) => {
           osha_recordable: record.osha_recordable,
           osha_privacy_case: record.osha_privacy_case,
           osha_case_type: record.osha_case_type || '',
-          osha_case_outcome_override: record.osha_case_outcome_override || ''
+          osha_case_outcome_override: record.osha_case_outcome_override || '',
+          personnel_id: text(record.personnel_id),
+          incident_id: text(record.incident_id),
+          location_id: text(record.location_id)
         }}
       />
 

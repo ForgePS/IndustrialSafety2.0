@@ -1,0 +1,3 @@
+# @forge/public-registration
+
+Status: **NOT_STARTED** (placeholder for a later sprint).

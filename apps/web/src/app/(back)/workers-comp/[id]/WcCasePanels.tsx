@@ -78,11 +78,12 @@ export const WcCaseEditor = ({
   caseId,
   rowVersion,
   status,
-  hasIncident,
   carriers,
   initialValues,
   canEdit,
-  oshaCase
+  oshaCase,
+  linkOptions,
+  oshaLinked
 }: {
   caseId: string
   rowVersion: number
@@ -92,6 +93,10 @@ export const WcCaseEditor = ({
   initialValues: WcCaseValues
   canEdit: boolean
   oshaCase: { id: string; caseNumber: string; recordability: string; daysAway: number; restrictedDays: number } | null
+  linkOptions: { people: Array<{ id: string; label: string }>; incidents: Array<{ id: string; label: string }>; locations: Array<{ id: string; label: string }> }
+
+  /** On the OSHA log as recordable: the incident and employee stay fixed until the flag is cleared. */
+  oshaLinked: boolean
 }) => {
   const { pending, run } = useAction()
   const [values, setValues] = useState<WcCaseValues>(initialValues)
@@ -105,8 +110,36 @@ export const WcCaseEditor = ({
     </div>
   )
 
+  const linkSelect = (key: 'personnel_id' | 'incident_id' | 'location_id', label: string, empty: string, options: Array<{ id: string; label: string }>, locked = false) => (
+    <div className='md:col-span-4'>
+      <Label htmlFor={`wc-${key}`}>{label}</Label>
+      <select id={`wc-${key}`} className={selectClass} value={String(values[key] ?? '')} disabled={disabled || locked} onChange={event => set(key, event.target.value)}>
+        <option value=''>{empty}</option>
+        {options.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
+      </select>
+    </div>
+  )
+
   return (
     <div className='flex flex-col gap-6'>
+      {canEdit && status !== 'archived' ? (
+        <Card data-testid='wc-links'>
+          <CardHeader>
+            <CardTitle>Employee, Incident and Location</CardTitle>
+            <CardDescription>
+              {oshaLinked
+                ? 'This case is on the OSHA log, so its employee and incident stay fixed. Clear the OSHA recordable flag and save to change them.'
+                : 'Correct the links if the case was opened against the wrong record. Linking an injury incident lets the case go on the OSHA log.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className='grid grid-cols-1 gap-5 md:grid-cols-12'>
+            {linkSelect('personnel_id', 'Employee', 'Not in personnel (keep name)', linkOptions.people, oshaLinked)}
+            {linkSelect('incident_id', 'Injury incident', 'No incident', linkOptions.incidents, oshaLinked)}
+            {linkSelect('location_id', 'Location', 'No Location', linkOptions.locations)}
+          </CardContent>
+        </Card>
+      ) : null}
+
       <Card>
         <CardHeader>
           <CardTitle>Case</CardTitle>
@@ -191,8 +224,8 @@ export const WcCaseEditor = ({
         </CardHeader>
         <CardContent className='grid grid-cols-1 gap-5 md:grid-cols-12'>
           <div className='flex items-center gap-3 md:col-span-6'>
-            <Switch id='wc-osha_recordable' checked={Boolean(values.osha_recordable)} disabled={disabled || !hasIncident} onCheckedChange={checked => set('osha_recordable', checked)} />
-            <Label htmlFor='wc-osha_recordable'>OSHA recordable{!hasIncident ? ' (link an injury incident first)' : ''}</Label>
+            <Switch id='wc-osha_recordable' checked={Boolean(values.osha_recordable)} disabled={disabled || !values.incident_id} onCheckedChange={checked => set('osha_recordable', checked)} />
+            <Label htmlFor='wc-osha_recordable'>OSHA recordable{!values.incident_id ? ' (link an injury incident first)' : ''}</Label>
           </div>
           {values.osha_recordable ? (
             <>

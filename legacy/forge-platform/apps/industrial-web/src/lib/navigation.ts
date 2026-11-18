@@ -1,0 +1,222 @@
+import {
+  INDUSTRIAL_MODULE_REGISTRY,
+  industrialAvailabilityLabel,
+  industrialModuleNavPermissionOk,
+  industrialModuleRoleAccess,
+  type IndustrialImplementationStatus,
+} from "@forge/contracts";
+
+export type IndustrialNavItem = {
+  code: string;
+  name: string;
+  group: string;
+  route: string;
+  /** @deprecated Prefer implementationStatus for UX. */
+  migrationStatus: string;
+  implementationStatus: IndustrialImplementationStatus;
+  awsEnabled: boolean;
+  customerEnabled: boolean;
+  available: boolean;
+  requiredPermissions: string[];
+};
+
+const FLAG_BY_CODE: Record<string, string> = {
+  CORE: "industrial.enabled",
+  ANALYTICS: "industrial.module.analytics.enabled",
+  PERSONNEL: "industrial.module.personnel.enabled",
+  FIRST_AID: "industrial.module.first_aid.enabled",
+  INCIDENTS: "industrial.module.incidents.enabled",
+  INSPECTIONS: "industrial.module.inspections.enabled",
+  SANITATION: "industrial.module.sanitation.enabled",
+  TRAINING: "industrial.module.training.enabled",
+  JSAS: "industrial.module.jsa.enabled",
+  OBSERVATIONS: "industrial.module.observations.enabled",
+  FORMS: "industrial.module.forms.enabled",
+  SCAN: "industrial.module.scan.enabled",
+  QR_LINKS: "industrial.module.qr_links.enabled",
+  DOCUMENTS: "industrial.module.documents.enabled",
+  REPORTING: "industrial.module.reporting.enabled",
+  IMPORT: "industrial.enabled",
+  PRINT_MANAGER: "industrial.module.print_manager.enabled",
+  PRINT_QUEUE: "industrial.module.print_queue.enabled",
+  PRINT_HISTORY: "industrial.module.print_history.enabled",
+  LOCKOUT_TAGOUT: "industrial.module.loto.enabled",
+  EQUIPMENT: "industrial.module.equipment.enabled",
+  FLEET: "industrial.module.fleet.enabled",
+  SAFETY_SUPPLIES: "industrial.module.safety_supplies.enabled",
+  FORKLIFTS: "industrial.module.forklifts.enabled",
+  CONFINED_SPACE: "industrial.module.confined_space.enabled",
+  HOT_WORK: "industrial.module.hot_work.enabled",
+  WORKING_AT_HEIGHTS: "industrial.module.working_at_heights.enabled",
+  ELECTRICAL_SAFETY: "industrial.module.electrical_safety.enabled",
+  CRANES_RIGGING: "industrial.module.cranes_rigging.enabled",
+  MACHINE_SAFETY: "industrial.module.machine_safety.enabled",
+  DOT_COMPLIANCE: "industrial.module.dot.enabled",
+  WORKERS_COMP: "industrial.module.workers_comp.enabled",
+  OSHA: "industrial.module.osha.enabled",
+  RISK: "industrial.module.risk.enabled",
+  CHEMICAL_SAFETY: "industrial.module.chemical_safety.enabled",
+  WAREHOUSE_SAFETY: "industrial.module.warehouse_safety.enabled",
+  MANUFACTURING_SAFETY: "industrial.module.manufacturing_safety.enabled",
+  CONTRACTOR_SAFETY: "industrial.module.contractor_safety.enabled",
+  PROCESS_SAFETY: "industrial.module.process_safety.enabled",
+  ENVIRONMENTAL_SAFETY: "industrial.module.environmental_safety.enabled",
+  TASKS: "industrial.module.tasks.enabled",
+  CALENDAR: "industrial.module.calendar.enabled",
+  REMINDERS: "industrial.module.reminders.enabled",
+  MESSAGING: "industrial.module.messaging.enabled",
+  EMERGENCY_RESPONSE: "industrial.module.emergency_response.enabled",
+  EMERGENCY_ALERTS: "industrial.module.emergency_alerts.enabled",
+};
+
+export function featureFlagForModule(code: string): string {
+  return FLAG_BY_CODE[code] ?? `industrial.module.${code.toLowerCase()}.enabled`;
+}
+
+function asSet(value?: ReadonlySet<string> | readonly string[] | null): Set<string> {
+  if (!value) return new Set();
+  return value instanceof Set ? new Set(value) : new Set(value);
+}
+
+/**
+ * Resolve whether a deployment feature flag blocks an AVAILABLE module.
+ * Missing flag keys default ON for AVAILABLE modules so Creator entitlements
+ * are the commercial control plane (flags stay Advanced overrides).
+ */
+function deploymentAllows(
+  implementationStatus: IndustrialImplementationStatus,
+  flagKey: string,
+  flags: Record<string, boolean>,
+): boolean {
+  if (implementationStatus !== "AVAILABLE") {
+    return Boolean(flags[flagKey]);
+  }
+  if (Object.prototype.hasOwnProperty.call(flags, flagKey)) {
+    return Boolean(flags[flagKey]);
+  }
+  return true;
+}
+
+export function buildIndustrialNavigation(input: {
+  entitled: boolean;
+  permissions: ReadonlySet<string> | string[];
+  flags: Record<string, boolean>;
+  /** Customer module entitlements / me.activeModules. CORE follows product entitlement. */
+  enabledModules?: ReadonlySet<string> | readonly string[] | null;
+  /**
+   * When true, an empty enabledModules set means only CORE is customer-enabled
+   * (Creator entitlements are authoritative). When false, empty falls back to
+   * deployment flags for backward-compatible bootstrap-only shells.
+   */
+  strictEntitlements?: boolean;
+  /** When true (platform admin diagnostic), keep non-available modules in the returned list. */
+  includeUnavailable?: boolean;
+}): IndustrialNavItem[] {
+  if (!input.entitled) {
+    return [];
+  }
+  const perms = asSet(input.permissions);
+  if (!perms.has("industrial.access")) {
+    return [];
+  }
+  const enabledModules = asSet(input.enabledModules);
+  const strict = Boolean(input.strictEntitlements);
+
+  const items = INDUSTRIAL_MODULE_REGISTRY.map((entry) => {
+    const flagKey = featureFlagForModule(entry.code);
+    const moduleAccess = industrialModuleRoleAccess(entry.code);
+    const requiredPermissions =
+      entry.code === "CORE"
+        ? ["industrial.access"]
+        : moduleAccess
+          ? ["industrial.access", ...moduleAccess.accessPermissions]
+          : ["industrial.access"];
+    const hasPerms =
+      perms.has("industrial.access") && industrialModuleNavPermissionOk(entry.code, perms);
+    const implementationStatus = entry.implementationStatus;
+    const deploymentOk = deploymentAllows(implementationStatus, flagKey, input.flags);
+    const customerEnabled =
+      entry.code === "CORE"
+        ? true
+        : entry.code === "PRINT_MANAGER" && (strict || enabledModules.size > 0)
+          ? enabledModules.has("PRINT_MANAGER") ||
+            enabledModules.has("PRINT_QUEUE") ||
+            enabledModules.has("PRINT_HISTORY")
+          : strict || enabledModules.size > 0
+            ? enabledModules.has(entry.code)
+            : deploymentOk;
+
+    // Print Manager also requires forge.printing.enabled / print_manager when set.
+    const printingOk =
+      entry.code !== "PRINT_MANAGER" ||
+      (deploymentAllows("AVAILABLE", "forge.printing.enabled", input.flags) &&
+        deploymentAllows("AVAILABLE", "forge.printing.print_manager.enabled", input.flags));
+
+    const awsEnabled = deploymentOk && printingOk;
+    const available =
+      hasPerms && implementationStatus === "AVAILABLE" && customerEnabled && awsEnabled;
+
+    return {
+      code: entry.code,
+      name: entry.name,
+      group: entry.group,
+      route: entry.route,
+      migrationStatus: entry.migrationStatus,
+      implementationStatus,
+      awsEnabled,
+      customerEnabled,
+      available,
+      requiredPermissions,
+    };
+  });
+
+  if (input.includeUnavailable) {
+    return items;
+  }
+  const available = items.filter((item) => item.available);
+  // When Print Manager is on, prefer the hub and hide legacy System Tools duplicates.
+  if (available.some((item) => item.code === "PRINT_MANAGER")) {
+    return available.filter((item) => item.code !== "PRINT_QUEUE" && item.code !== "PRINT_HISTORY");
+  }
+  return available;
+}
+
+export function moduleUnavailableMessage(moduleName: string): string {
+  // Customer-facing copy: never name hosting/infrastructure. The adjacent
+  // availability label carries the distinction between "not enabled for you"
+  // and "not built yet".
+  return `${moduleName} is not available for your organization yet.`;
+}
+
+export function moduleAvailabilityCaption(
+  item: Pick<IndustrialNavItem, "implementationStatus" | "customerEnabled" | "available">,
+): string {
+  if (item.available) return "Ready";
+  if (item.implementationStatus !== "AVAILABLE") {
+    return industrialAvailabilityLabel(item.implementationStatus);
+  }
+  if (!item.customerEnabled) return "Not enabled";
+  return "Unavailable";
+}
+
+/** Modules shown in nav with a Coming soon affordance (not yet product-ready). */
+export const COMING_SOON_MODULE_CODES = new Set([
+  "JSAS",
+  "OBSERVATIONS",
+  "RISK",
+  "CORRECTIVE_ACTIONS",
+  "FORKLIFTS",
+  "CRANES_RIGGING",
+  "MACHINE_SAFETY",
+  "ELECTRICAL_SAFETY",
+  "CONFINED_SPACE",
+  "HOT_WORK",
+  "WORKING_AT_HEIGHTS",
+  "CHEMICAL_SAFETY",
+  "WAREHOUSE_SAFETY",
+  "MANUFACTURING_SAFETY",
+]);
+
+export function isComingSoonModule(code: string): boolean {
+  return COMING_SOON_MODULE_CODES.has(code);
+}

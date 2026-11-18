@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "at": "2026-08-06T15:20:05.410Z",
+  "wave": "wave1",
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/73a85f4717fd48efa0a346dff424b1b3",
+  "exitCode": 0,
+  "payloadUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave1/payload.json",
+  "loaderUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave1/ecs-loader.mjs",
+  "remappedSha256": "d712f4223ac1235595d242777c6fd7c5e3bb37deee844ff578015d50071d2956",
+  "logExcerpt": "{\"dbUser\":\"forge_admin\",\"batchId\":\"80af4d82-2b9b-59ad-b40b-92be1b89a048\"}\t{\t  \"ok\": true,\t  \"phase\": \"IND-11B\",\t  \"mode\": \"NONPRODUCTION_LOAD\",\t  \"environment\": \"development\",\t  \"migrationBatchId\": \"p4-staging-wave1-2026-08-06T15-15-28-618Z\",\t  \"dbBatchId\": \"80af4d82-2b9b-59ad-b40b-92be1b89a048\",\t  \"counts\": {\t    \"sites\": 26,\t    \"areas\": 87,\t    \"equipment\": 2489,\t    \"lotoProcedures\": 2523,\t    \"lotoRevisions\": 2523\t  },\t  \"errorCount\": 0,\t  \"errors\": []\t}"
+}

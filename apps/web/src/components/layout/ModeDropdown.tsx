@@ -55,7 +55,7 @@ const ModeDropdown = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant='ghost' size='icon' aria-label='mode-dropdown'>
+        <Button variant='ghost' size='icon' aria-label='Theme' title='Theme: light, dark or system' data-testid='theme-switcher'>
           {getModeIcon()}
         </Button>
       </DropdownMenuTrigger>

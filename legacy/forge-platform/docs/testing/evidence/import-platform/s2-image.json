@@ -1,0 +1,6 @@
+{
+  "tag": "import-s2-20260729072334",
+  "digest": "sha256:017657bc49ea9cf8b9eb5613a8d7439bfb69e86d97dd97386bea44183e71d208",
+  "image": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-platformapi:import-s2-20260729072334",
+  "localTag": "import-s2-local-20260728185457"
+}

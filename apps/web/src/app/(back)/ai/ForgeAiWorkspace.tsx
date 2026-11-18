@@ -11,6 +11,9 @@ import {
   TbMessageCirclePlus,
   TbPin,
   TbPinned,
+  TbGauge,
+  TbBulb,
+  TbLayoutDashboard,
   TbRadar,
   TbReportAnalytics,
   TbShieldCheck,
@@ -24,6 +27,8 @@ import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
 import { Textarea } from '@repo/ui/components/ui/textarea'
 import { toast } from '@repo/ui/utils/toast'
+import { FORGE_AI_AGENTS } from '@/lib/forgeAiAgents'
+import type { ForgeAiSource } from '@/lib/forgeAiResponseCheck'
 import {
   archiveForgeAiConversation,
   deleteForgeAiConversation,
@@ -54,11 +59,30 @@ type PreparedAction = {
   expires_at?: string | null
 }
 
+type AgentLabel = { key: string; name: string; reason?: string }
+
+// Detail pages for records an answer cites.
+const RECORD_ROUTES: Record<string, string> = {
+  incident: '/incidents/',
+  inspection: '/inspections/',
+  asset: '/assets/',
+  corrective_action: '/corrective-actions/',
+  risk: '/risk-register/',
+  jsa: '/jsas/',
+  loto: '/loto/',
+  task: '/tasks/',
+  personnel: '/personnel/',
+  training_course: '/training/courses/',
+  observation: '/observations/'
+}
+
 type Message = {
   id: string | number
   role: 'user' | 'assistant'
   content: string
   created_at: string
+  agent?: AgentLabel | null
+  sources?: ForgeAiSource[]
   source_refs?: SourceRef[]
   prepared_actions?: PreparedAction[]
   rating?: -1 | 0 | 1
@@ -77,6 +101,9 @@ const ForgeAiWorkspace = ({
   canViewUsage,
   canUseActions,
   canViewWatch,
+  canViewCommandCenter = false,
+  canViewRisk = false,
+  canViewRecommendations = false,
   canViewAnalytics
 }: {
   assistantName: string
@@ -91,6 +118,9 @@ const ForgeAiWorkspace = ({
   canViewUsage: boolean
   canUseActions: boolean
   canViewWatch: boolean
+  canViewCommandCenter?: boolean
+  canViewRisk?: boolean
+  canViewRecommendations?: boolean
   canViewAnalytics: boolean
 }) => {
   const router = useRouter()
@@ -100,6 +130,7 @@ const ForgeAiWorkspace = ({
   const [input, setInput] = useState(initialPrompt)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [agentChoice, setAgentChoice] = useState('auto')
   const requestIdRef = useRef(0)
 
   const hasConversation = messages.length > 0
@@ -139,7 +170,8 @@ const ForgeAiWorkspace = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           conversationId,
-          message: text
+          message: text,
+          agent: agentChoice
         })
       })
 
@@ -161,6 +193,8 @@ const ForgeAiWorkspace = ({
           role: 'assistant',
           content: payload.message.content,
           source_refs: payload.message.source_refs || [],
+          sources: payload.message.sources || [],
+          agent: payload.message.agent || null,
           prepared_actions: payload.message.prepared_actions || [],
           rating: 0,
           created_at: payload.message.created_at
@@ -303,11 +337,38 @@ const ForgeAiWorkspace = ({
               </Button>
             ) : null}
 
+            {canViewCommandCenter ? (
+              <Button className='mt-2 w-full' variant='outline' asChild>
+                <Link href='/ai/command-center'>
+                  <TbLayoutDashboard />
+                  Command Center
+                </Link>
+              </Button>
+            ) : null}
+
             {canViewWatch ? (
               <Button className='mt-2 w-full' variant='outline' asChild>
                 <Link href='/ai/watch'>
                   <TbRadar />
                   AI Watch
+                </Link>
+              </Button>
+            ) : null}
+
+            {canViewRisk ? (
+              <Button className='mt-2 w-full' variant='outline' asChild>
+                <Link href='/ai/risk'>
+                  <TbGauge />
+                  Risk Indicators
+                </Link>
+              </Button>
+            ) : null}
+
+            {canViewRecommendations ? (
+              <Button className='mt-2 w-full' variant='outline' asChild>
+                <Link href='/ai/recommendations'>
+                  <TbBulb />
+                  Recommendations
                 </Link>
               </Button>
             ) : null}
@@ -447,7 +508,45 @@ const ForgeAiWorkspace = ({
                           : 'border bg-card')
                       }
                     >
+                      {message.role === 'assistant' && message.agent && message.agent.key !== 'general' ? (
+                        <div className='mb-2'>
+                          <Badge size='sm' variant='tonalPrimary' data-testid='answering-agent'>
+                            <TbBrain className='me-1' />
+                            {message.agent.name}
+                          </Badge>
+                        </div>
+                      ) : null}
+
                       <div className='whitespace-pre-wrap text-sm leading-6'>{message.content}</div>
+
+                      {message.role === 'assistant' && message.sources?.some(source => source.kind === 'record') ? (
+                        <div className='mt-4 border-t pt-3' data-testid='record-sources'>
+                          <div className='text-textSecondary flex items-center gap-2 text-xs font-semibold uppercase tracking-wide'>
+                            <TbShieldCheck />
+                            Forge Records Cited
+                          </div>
+                          <div className='mt-2 flex flex-wrap gap-2'>
+                            {message.sources.map(source =>
+                              source.kind === 'record' ? (
+                                source.id && RECORD_ROUTES[source.recordType] ? (
+                                  <Link
+                                    key={source.reference}
+                                    href={RECORD_ROUTES[source.recordType] + source.id}
+                                    className='rounded-md border px-2 py-1 text-xs font-medium hover:bg-primary/5'
+                                    title={source.title || undefined}
+                                  >
+                                    {source.reference}
+                                  </Link>
+                                ) : (
+                                  <span key={source.reference} className='rounded-md border px-2 py-1 text-xs' title={source.title || undefined}>
+                                    {source.reference}
+                                  </span>
+                                )
+                              ) : null
+                            )}
+                          </div>
+                        </div>
+                      ) : null}
 
                       {message.role === 'assistant' && message.source_refs?.length ? (
                         <div className='mt-4 border-t pt-3'>
@@ -561,8 +660,26 @@ const ForgeAiWorkspace = ({
                     }
                   }}
                 />
-                <div className='mt-2 flex items-center justify-between gap-3'>
-                  <div className='text-textSecondary text-xs'>
+                <div className='mt-2 flex flex-wrap items-center justify-between gap-3'>
+                  <label className='text-textSecondary flex items-center gap-2 text-xs'>
+                    <TbBrain />
+                    <span className='sr-only'>Agent</span>
+                    <select
+                      aria-label='Forge AI agent'
+                      value={agentChoice}
+                      onChange={event => setAgentChoice(event.target.value)}
+                      disabled={pending}
+                      className='border-input bg-card h-8 rounded-md border px-2 text-xs'
+                    >
+                      <option value='auto'>Auto-select agent</option>
+                      {FORGE_AI_AGENTS.map(agent => (
+                        <option key={agent.key} value={agent.key} title={agent.summary}>
+                          {agent.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <div className='text-textSecondary min-is-0 flex-1 text-xs'>
                     AI output should be reviewed before safety-critical, regulatory, or personnel decisions.
                   </div>
                   <Button type='submit' size='sm' disabled={pending || !input.trim()}>

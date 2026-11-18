@@ -1,0 +1,16 @@
+{
+  "sprint": "S5",
+  "capability": "Universal Import Platform - Execution Engine",
+  "status": "READY_FOR_REVIEW",
+  "date": "2026-07-29",
+  "migration": "0026_import_platform_s5_execution",
+  "apiTaskDefinition": 38,
+  "workerTaskDefinition": 23,
+  "imageTag": "import-s5-20260729135433",
+  "migrateExitCode": 0,
+  "stepFunctions": "DEFINITION_COMPLETE_DEPLOYMENT_PENDING",
+  "unitTests": { "package": "@forge/imports", "passed": 38 },
+  "smoke": { "health": 200, "executeUnauth": 401, "statusUnauth": 401 },
+  "prior": { "S4": "ACCEPTED" },
+  "next": "Await ACCEPTED before S6"
+}

@@ -12,6 +12,7 @@ import IncidentWorkflowActions from '../IncidentWorkflowActions'
 import IncidentEquipment from '../IncidentEquipment'
 import IncidentCrossModuleActions from '../IncidentCrossModuleActions'
 import IncidentOshaPanel from '../IncidentOshaPanel'
+import IncidentRcaSection from '../IncidentRcaSection'
 import type { IncidentFormValues } from '../actions'
 import { oshaRecordWithinScope } from '@/lib/forgeOsha'
 import { OSHA_RECORDABILITY_LABELS } from '@/lib/forgeOshaRules'
@@ -299,6 +300,7 @@ const IncidentDetailPage = async ({ params }: { params: Promise<{ id: string }> 
           <IncidentCrossModuleActions
             incidentId={incident.id}
             canCreateRisk={canCreateRisk}
+            canCreateCapa={Boolean(permissionByKey.get('corrective_actions.create'))}
           />
           {canUseAi ? (
             <ForgeAiContextButton
@@ -415,6 +417,13 @@ const IncidentDetailPage = async ({ params }: { params: Promise<{ id: string }> 
           canOpen={Boolean(canOpenOsha)}
         />
       ) : null}
+
+      <IncidentRcaSection
+        organizationId={organizationId}
+        incident={incident}
+        canEdit={Boolean(mayEditByScope) && incident.status !== 'closed'}
+        canViewCapa={Boolean(permissionByKey.get('corrective_actions.view'))}
+      />
 
       {assetViewPermission ? <IncidentEquipment incidentId={incident.id} equipment={linkedEquipment} canEdit={canEdit} /> : null}
 

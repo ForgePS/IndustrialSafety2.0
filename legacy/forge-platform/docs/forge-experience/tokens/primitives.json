@@ -1,0 +1,58 @@
+{
+  "$schema": "https://forge.local/schemas/fx-tokens-primitive.json",
+  "program": "FX-S0",
+  "description": "Primitive scales. Semantic tokens reference these; components never use primitives directly.",
+  "color": {
+    "neutral": {
+      "0": "#FFFFFF",
+      "50": "#F4F6F8",
+      "100": "#E8ECF0",
+      "200": "#D0D7DE",
+      "300": "#A8B3BF",
+      "400": "#7A8794",
+      "500": "#5B6772",
+      "600": "#44505A",
+      "700": "#2F3942",
+      "800": "#1E262D",
+      "900": "#12171C",
+      "950": "#0A0D10"
+    },
+    "brand": {
+      "50": "#E8F1F8",
+      "100": "#C9DCEC",
+      "200": "#95B8D6",
+      "300": "#5E92BC",
+      "400": "#3A739E",
+      "500": "#1F5A86",
+      "600": "#184A6E",
+      "700": "#123A57",
+      "800": "#0C2B41",
+      "900": "#081C2B"
+    },
+    "success": {
+      "400": "#3D9B6E",
+      "500": "#2F7D57",
+      "600": "#246345"
+    },
+    "warning": {
+      "400": "#D4A017",
+      "500": "#B8860B",
+      "600": "#8F6A08"
+    },
+    "danger": {
+      "400": "#D4534F",
+      "500": "#B83A36",
+      "600": "#922E2B"
+    },
+    "info": {
+      "400": "#4A90C4",
+      "500": "#2F74A8",
+      "600": "#245C86"
+    }
+  },
+  "fontFamily": {
+    "sans": "\"Source Sans 3\", \"Segoe UI\", system-ui, sans-serif",
+    "display": "\"IBM Plex Sans\", \"Source Sans 3\", system-ui, sans-serif",
+    "mono": "\"IBM Plex Mono\", \"Consolas\", ui-monospace, monospace"
+  }
+}

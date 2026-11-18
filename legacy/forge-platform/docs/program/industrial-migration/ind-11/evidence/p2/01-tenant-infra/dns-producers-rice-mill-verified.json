@@ -1,0 +1,23 @@
+{
+  "at": "2026-08-05T18:10:35.000Z",
+  "hostname": "producers-rice-mill.forgepublicsafety.com",
+  "nslookup": {
+    "cnameAlias": "producers-rice-mill.forgepublicsafety.com",
+    "canonicalName": "d2ed3566n8x2gi.cloudfront.net",
+    "ok": true
+  },
+  "httpsRoot": {
+    "url": "https://producers-rice-mill.forgepublicsafety.com/",
+    "status": 200,
+    "via": "CloudFront",
+    "ok": true
+  },
+  "httpsCallback": {
+    "url": "https://producers-rice-mill.forgepublicsafety.com/auth/callback/",
+    "status": 200,
+    "ok": true
+  },
+  "distributionId": "EXIC8HBMJ4I2Z",
+  "status": "DNS_LIVE_PRE_ANNOUNCE",
+  "note": "CNAME applied externally. Site resolves and serves Industrial static. Treat as dark/pre-announce until Phase 5 operator cutover."
+}

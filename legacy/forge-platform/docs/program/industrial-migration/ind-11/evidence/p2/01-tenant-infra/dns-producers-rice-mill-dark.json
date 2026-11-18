@@ -1,0 +1,15 @@
+{
+  "at": "2026-08-05T18:01:15.524Z",
+  "distributionId": "EXIC8HBMJ4I2Z",
+  "domainName": "d2ed3566n8x2gi.cloudfront.net",
+  "aliasAdded": "producers-rice-mill.forgepublicsafety.com",
+  "certificateArn": "arn:aws:acm:us-east-1:511343547817:certificate/ca267baa-304e-4ffd-be51-7350abab0c3f",
+  "certificateCovers": [
+    "forgepublicsafety.com",
+    "*.forgepublicsafety.com"
+  ],
+  "status": "DNS_LIVE_PRE_ANNOUNCE",
+  "verifiedAt": "2026-08-05T18:10:35.000Z",
+  "verifiedEvidence": "dns-producers-rice-mill-verified.json",
+  "note": "CNAME applied externally and verified. Hostname resolves to Industrial CloudFront. Pre-announce until Phase 5. Nested *.industrial.* hostname abandoned for TLS wildcard limits."
+}

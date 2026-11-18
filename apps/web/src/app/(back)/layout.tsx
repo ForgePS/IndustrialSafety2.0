@@ -1,5 +1,5 @@
 // React Imports
-import type { ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
 
 // Next Imports
 import { cookies } from 'next/headers'
@@ -9,7 +9,7 @@ import type { Metadata } from 'next'
 // Third-party Imports
 import { SidebarProvider } from '@repo/ui/components/ui/sidebar'
 import VerticalLayout from '@repo/ui/layouts/VerticalLayout'
-import { getAuthUser } from '@repo/supabase/serverHelpers'
+import { currentUser } from '@/lib/platform/identity'
 
 // Component Imports
 import Sidebar from '@components/layout/vertical/Sidebar'
@@ -23,6 +23,8 @@ import { getForgePlatformRole } from '@/lib/forgeCreatorAuth'
 import { getTenantContext } from '@/lib/forgeTenantContext'
 import { getEffectiveExperience } from '@/lib/forgeExperience'
 import { getHelpdeskStaffAccess } from '@/lib/forgeHelpdeskAccess'
+import { getForgeAiHeaderState } from '@/lib/forgeAiHeader'
+import NavigationProgress from '@components/layout/NavigationProgress'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -37,9 +39,7 @@ const AdminLayout = async ({ children }: { children: ReactNode }) => {
   const cookieStore = await cookies()
   const sidebarCookie = cookieStore.get('is-sidebar-open')
 
-  const {
-    data: { user }
-  } = await getAuthUser()
+  const user = await currentUser()
 
   if (!user) redirect('/auth/login')
 
@@ -58,8 +58,16 @@ const AdminLayout = async ({ children }: { children: ReactNode }) => {
         })
       : []
 
+  const forgeAi =
+    tenantContext.user && tenantContext.activeOrganization
+      ? await getForgeAiHeaderState({ organizationId: tenantContext.activeOrganization.id, userId: tenantContext.user.id })
+      : null
+
   return (
     <SidebarProvider defaultOpen={sidebarCookie ? JSON.parse(sidebarCookie.value) : appConfig.layout === 'vertical'}>
+      <Suspense fallback={null}>
+        <NavigationProgress />
+      </Suspense>
       <VerticalLayout
         navigation={
           <Sidebar
@@ -75,6 +83,7 @@ const AdminLayout = async ({ children }: { children: ReactNode }) => {
           <Header
             organizations={tenantContext.organizations}
             activeOrganizationId={tenantContext.activeOrganization?.id || null}
+            forgeAi={forgeAi}
           />
         }
       >

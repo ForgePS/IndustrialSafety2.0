@@ -1,0 +1,85 @@
+{
+  "ok": true,
+  "at": "2026-08-06T15:40:42.509Z",
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/a219971e95f14db1af227c49152c2e22",
+  "exitCode": 0,
+  "loaderUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-rls/2026-08-06T15-39-34-413Z/rls-ecs-loader.mjs",
+  "result": {
+    "ok": true,
+    "phase": "PRODUCERS-P4-R3-rls",
+    "at": "2026-08-06T15:40:09.016Z",
+    "staging": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+    "twin": "5da680d3-50f5-46ac-8b85-6cf454b6a0da",
+    "tenantA": "019faa15-e558-70b6-adcd-a510c3c995f4",
+    "secretArnHint": "database-app",
+    "currentUser": "forge_app",
+    "sessionUser": "forge_app",
+    "relForce": {
+      "industrial_equipment": {
+        "rowSecurity": true,
+        "forceRls": true
+      },
+      "industrial_loto_procedures": {
+        "rowSecurity": true,
+        "forceRls": true
+      },
+      "industrial_personnel": {
+        "rowSecurity": true,
+        "forceRls": true
+      },
+      "industrial_sites": {
+        "rowSecurity": true,
+        "forceRls": true
+      },
+      "platform_documents": {
+        "rowSecurity": true,
+        "forceRls": true
+      },
+      "qr_links": {
+        "rowSecurity": true,
+        "forceRls": true
+      }
+    },
+    "counts": {
+      "staging": {
+        "industrial_sites": 26,
+        "industrial_equipment": 2489,
+        "industrial_personnel": 1008,
+        "industrial_loto_procedures": 2523,
+        "qr_links": 2505,
+        "platform_documents": 9077
+      },
+      "twin": {
+        "industrial_sites": 0,
+        "industrial_equipment": 0,
+        "industrial_personnel": 0,
+        "industrial_loto_procedures": 0,
+        "qr_links": 0,
+        "platform_documents": 0
+      },
+      "tenantA": {
+        "industrial_sites": 27,
+        "industrial_equipment": 2490,
+        "industrial_personnel": 1009,
+        "industrial_loto_procedures": 2524,
+        "qr_links": 2506,
+        "platform_documents": 8
+      }
+    },
+    "stagingEquipmentSample": 200,
+    "twinSeesStagingEquipmentIds": [],
+    "tenantASeesStagingEquipmentIds": [],
+    "crossTenantInsertBlocked": true,
+    "crossTenantInsertError": "new row violates row-level security policy for table \"industrial_sites\"",
+    "checks": {
+      "forgeApp": true,
+      "rlsEnabled": true,
+      "forceRlsAll": true,
+      "stagingLoaded": true,
+      "twinSparse": true,
+      "noCrossTenantLeak": true,
+      "crossTenantInsertBlocked": true
+    }
+  },
+  "logExcerpt": "{\"ok\":true,\"phase\":\"PRODUCERS-P4-R3-rls\",\"at\":\"2026-08-06T15:40:09.016Z\",\"staging\":\"0882c865-59c2-49a6-ab88-ce6ca89be30c\",\"twin\":\"5da680d3-50f5-46ac-8b85-6cf454b6a0da\",\"tenantA\":\"019faa15-e558-70b6-adcd-a510c3c995f4\",\"secretArnHint\":\"database-app\",\"currentUser\":\"forge_app\",\"sessionUser\":\"forge_app\",\"relForce\":{\"industrial_equipment\":{\"rowSecurity\":true,\"forceRls\":true},\"industrial_loto_procedures\":{\"rowSecurity\":true,\"forceRls\":true},\"industrial_personnel\":{\"rowSecurity\":true,\"forceRls\":true},\"industrial_sites\":{\"rowSecurity\":true,\"forceRls\":true},\"platform_documents\":{\"rowSecurity\":true,\"forceRls\":true},\"qr_links\":{\"rowSecurity\":true,\"forceRls\":true}},\"counts\":{\"staging\":{\"industrial_sites\":26,\"industrial_equipment\":2489,\"industrial_personnel\":1008,\"industrial_loto_procedures\":2523,\"qr_links\":2505,\"platform_documents\":9077},\"twin\":{\"industrial_sites\":0,\"industrial_equipment\":0,\"industrial_personnel\":0,\"industrial_loto_procedures\":0,\"qr_links\":0,\"platform_documents\":0},\"tenantA\":{\"industrial_sites\":27,\"industrial_equipment\":2490,\"industrial_personnel\":1009,\"industrial_loto_procedures\":2524,\"qr_links\":2506,\"platform_documents\":8}},\"stagingEquipmentSample\":200,\"twinSeesStagingEquipmentIds\":[],\"tenantASeesStagingEquipmentIds\":[],\"crossTenantInsertBlocked\":true,\"crossTenantInsertError\":\"new row violates row-level security policy for table \\\"industrial_sites\\\"\",\"checks\":{\"forgeApp\":true,\"rlsEnabled\":true,\"forceRlsAll\":true,\"stagingLoaded\":true,\"twinSparse\":true,\"noCrossTenantLeak\":true,\"crossTenantInsertBlocked\":true}}"
+}

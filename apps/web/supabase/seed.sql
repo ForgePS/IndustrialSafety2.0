@@ -1538,7 +1538,7 @@ where not exists (
 );
 
 
--- Local Forge AI Assistant enablement for the demo tenant.
+-- Local Forge AI Assistant and Command Center enablement for the demo tenant.
 insert into public.forge_tenant_entitlement_overrides (
   organization_id,
   feature_id,
@@ -1555,7 +1555,7 @@ select
   '{"local_demo":true}'::jsonb,
   'Local Forge AI development and validation'
 from public.forge_feature_registry f
-where f.feature_key='forge_ai'
+where f.feature_key in ('forge_ai','forge_ai_command_center')
 on conflict (organization_id, feature_id) do update
 set enabled=true,
     tenant_can_configure=true,
@@ -1618,7 +1618,7 @@ select
   false,
   '{"local_demo":true}'::jsonb
 from public.forge_ai_action_registry a
-where a.action_key in ('inspection.create_finding','asset.add_maintenance')
+where a.action_key in ('inspection.create_finding','asset.add_maintenance','corrective_action.create')
 on conflict (organization_id, action_id) do update
 set enabled=true,
     tenant_can_configure=false,

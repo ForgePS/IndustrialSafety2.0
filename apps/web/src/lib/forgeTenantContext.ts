@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers'
 import { createServiceRoleClient } from '@repo/supabase/server'
-import { getAuthUser } from '@repo/supabase/serverHelpers'
+import { currentUser } from '@/lib/platform/identity'
 
 export const ACTIVE_ORGANIZATION_COOKIE = 'forge-active-organization'
 
@@ -12,9 +12,7 @@ export type TenantContextOrganization = {
 }
 
 export const getTenantContext = async () => {
-  const {
-    data: { user }
-  } = await getAuthUser()
+  const user = await currentUser()
 
   if (!user) {
     return {

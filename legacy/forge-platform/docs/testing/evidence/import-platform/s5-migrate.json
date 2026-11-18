@@ -1,0 +1,9 @@
+{
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/ac76fbaf51cf40ba8d7616bc4388d691",
+  "taskDef": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-platform-api:38",
+  "exitCode": 0,
+  "adminSecret": "forge-development-secrets-database",
+  "migration": "0026_import_platform_s5_execution",
+  "status": "STOPPED",
+  "stopCode": "EssentialContainerExited"
+}

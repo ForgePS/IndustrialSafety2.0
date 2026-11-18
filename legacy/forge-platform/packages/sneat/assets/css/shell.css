@@ -1,0 +1,72 @@
+/*
+ * Shared Sneat shell hardening for Forge apps using @forge/sneat.
+ * Complements theme-default.css where PerfectScrollbar is not bundled.
+ */
+
+.app-brand-text {
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* Compact theme toggle when .btn-icon is thin in Free core */
+.btn.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+}
+
+/* Keep long vertical menus scrollable inside the fixed sidebar. */
+.layout-menu.menu-vertical,
+html.layout-menu-fixed .layout-menu {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-start: 0;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.layout-menu.menu-vertical .menu-inner,
+html.layout-menu-fixed .layout-menu .menu-inner {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.layout-menu .menu-inner > .menu-item.menu-item-pinned {
+  margin-top: auto;
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  padding-top: 0.35rem;
+  padding-bottom: 0.75rem;
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  background-color: #fff;
+}
+
+[data-bs-theme="dark"] .layout-menu .menu-inner > .menu-item.menu-item-pinned {
+  background-color: #2b2c40;
+}
+
+/* Collapsible group toggles — match Sneat menu-link sizing */
+.layout-menu .menu-inner > .menu-item > a.menu-link.menu-toggle {
+  width: calc(100% - 2rem);
+  cursor: pointer;
+}
+
+.layout-menu .menu-inner > .menu-item:not(.open) > .menu-sub {
+  display: none !important;
+}
+
+.layout-menu .menu-inner > .menu-item.open > .menu-sub {
+  display: flex !important;
+}

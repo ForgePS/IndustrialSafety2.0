@@ -1,0 +1,346 @@
+openapi: 3.0.3
+info:
+  title: Forge Configuration Studio API
+  version: 0.1.0
+  description: |
+    Versioned Configuration Studio routes under the Master Directive Configuration Platform
+    (technical-roadmap Phase 8). Complements legacy `/configuration` key-value routes in
+    `platform-openapi-v1.yaml`.
+paths:
+  /api/v1/config/catalog:
+    get:
+      tags: [ConfigurationStudio]
+      summary: List configuration namespaces and metadata
+      responses:
+        "200":
+          description: Catalog of namespaces
+  /api/v1/tenants/{tenantId}/config/ensure-defaults:
+    post:
+      tags: [ConfigurationStudio]
+      summary: Ensure default draft objects for namespaces
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Defaults ensured
+  /api/v1/tenants/{tenantId}/config/{namespace}:
+    get:
+      tags: [ConfigurationStudio]
+      summary: List config objects in namespace
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Objects
+    post:
+      tags: [ConfigurationStudio]
+      summary: Create draft config object/version
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Draft created
+  /api/v1/tenants/{tenantId}/config/{namespace}/{objectKey}/versions:
+    get:
+      tags: [ConfigurationStudio]
+      summary: List versions
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: objectKey
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Versions
+  /api/v1/tenants/{tenantId}/config/{namespace}/{objectKey}/versions/{versionId}:
+    get:
+      tags: [ConfigurationStudio]
+      summary: Get version
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: objectKey
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: versionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Version
+    patch:
+      tags: [ConfigurationStudio]
+      summary: Update draft version payload
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: objectKey
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: versionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Updated draft
+  /api/v1/tenants/{tenantId}/config/{namespace}/{objectKey}/versions/{versionId}/publish:
+    post:
+      tags: [ConfigurationStudio]
+      summary: Publish draft
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: objectKey
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: versionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Published
+  /api/v1/tenants/{tenantId}/config/{namespace}/{objectKey}/versions/{versionId}/schedule:
+    post:
+      tags: [ConfigurationStudio]
+      summary: Schedule publication
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: objectKey
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: versionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Scheduled
+  /api/v1/tenants/{tenantId}/config/{namespace}/{objectKey}/versions/{versionId}/archive:
+    post:
+      tags: [ConfigurationStudio]
+      summary: Archive version
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: objectKey
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: versionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Archived
+  /api/v1/tenants/{tenantId}/config/{namespace}/{objectKey}/versions/{versionId}/rollback:
+    post:
+      tags: [ConfigurationStudio]
+      summary: Rollback by cloning prior version into new published version
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: objectKey
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: versionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Rolled back
+  /api/v1/tenants/{tenantId}/config/{namespace}/{objectKey}/compare:
+    get:
+      tags: [ConfigurationStudio]
+      summary: Compare two versions
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: objectKey
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Diff
+  /api/v1/tenants/{tenantId}/config/{namespace}/{objectKey}/effective:
+    get:
+      tags: [ConfigurationStudio]
+      summary: Resolve effective configuration version
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: objectKey
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Effective payload
+  /api/v1/tenants/{tenantId}/config-export:
+    get:
+      tags: [ConfigurationStudio]
+      summary: Export configuration bundle (config-only; not Universal Import Platform)
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Bundle
+  /api/v1/tenants/{tenantId}/config-import:
+    post:
+      tags: [ConfigurationStudio]
+      summary: Import configuration bundle (config-only)
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Import result

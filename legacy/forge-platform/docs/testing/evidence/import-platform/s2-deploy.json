@@ -1,0 +1,21 @@
+{
+  "priorTd": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-platform-api:32",
+  "newTaskDefinition": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-platform-api:33",
+  "revision": 33,
+  "image": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-platformapi:import-s2-20260729072334",
+  "services": {
+    "value": [
+      {
+        "name": "forge-development-ecs-platform-api",
+        "td": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-platform-api:33",
+        "running": 1
+      },
+      {
+        "name": "forge-development-ecs-worker-service",
+        "td": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:19",
+        "running": 1
+      }
+    ],
+    "Count": 2
+  }
+}

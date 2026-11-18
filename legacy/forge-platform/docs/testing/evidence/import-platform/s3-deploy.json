@@ -1,0 +1,25 @@
+{
+  "priorApiTd": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-platform-api:33",
+  "apiTaskDefinition": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-platform-api:34",
+  "priorWorkerTd": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:19",
+  "workerTaskDefinition": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:20",
+  "apiRevision": 34,
+  "workerRevision": 20,
+  "apiImage": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-platformapi:import-s3-20260729092615",
+  "workerImage": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-workerservice:import-s3-20260729092615",
+  "workerS3ImportBucket": "forge-development-imports-511343547817-us-east-1",
+  "services": [
+    {
+      "name": "forge-development-ecs-platform-api",
+      "td": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-platform-api:34",
+      "running": 1,
+      "rollout": "COMPLETED"
+    },
+    {
+      "name": "forge-development-ecs-worker-service",
+      "td": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:20",
+      "running": 1,
+      "rollout": "COMPLETED"
+    }
+  ]
+}

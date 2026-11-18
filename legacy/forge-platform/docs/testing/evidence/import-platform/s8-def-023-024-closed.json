@@ -1,0 +1,15 @@
+{
+  "verifiedAt": "2026-07-30T17:32:56Z",
+  "jobId": "019fb415-e4b6-743a-b34f-3f28abb69e00",
+  "finalStatus": "COMPLETED",
+  "detectReplayUsed": false,
+  "defS8023": "AUTO_DETECT_OK",
+  "omittedAdapterKey": true,
+  "adapterKeyUsed": "reference:generic:record@1",
+  "apiTaskDefinition": "forge-development-ecs-platform-api:42",
+  "workerTaskDefinition": "forge-development-ecs-worker-service:26",
+  "imageTag": "import-s8-patch-20260730113557",
+  "evidence": "s8-authenticated-workflow-no-replay.json",
+  "defectsClosed": ["DEF-S8-023", "DEF-S8-024"],
+  "notes": "Captured from FORGE_S8_REQUIRE_NO_REPLAY=1 FORGE_S8_DEFAULT_ADAPTER=1 live run against patch baseline."
+}

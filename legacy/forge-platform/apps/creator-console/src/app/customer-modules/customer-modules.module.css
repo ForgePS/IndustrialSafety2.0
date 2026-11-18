@@ -1,0 +1,147 @@
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0 1.25rem;
+}
+
+.productCard,
+.productCardActive {
+  text-align: left;
+  border: 1px solid var(--forge-border, #e4e7ec);
+  border-radius: 0.75rem;
+  padding: 0.9rem 1rem;
+  background: var(--forge-surface, #fff);
+  cursor: pointer;
+  display: grid;
+  gap: 0.25rem;
+  font: inherit;
+  color: inherit;
+}
+
+.productCardActive {
+  border-color: var(--forge-fg, #101828);
+  box-shadow: inset 0 0 0 1px var(--forge-fg, #101828);
+}
+
+.muted {
+  color: var(--forge-muted, #667085);
+  font-size: 0.9rem;
+}
+
+.panel {
+  border: 1px solid var(--forge-border, #e4e7ec);
+  border-radius: 0.85rem;
+  padding: 1rem;
+  background: var(--forge-surface, #fff);
+}
+
+.panelHead {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.panelHead h2 {
+  margin: 0 0 0.25rem;
+}
+
+.actions,
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.toolbar {
+  margin-bottom: 1rem;
+}
+
+.search {
+  flex: 1 1 180px;
+  min-width: 160px;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--forge-border, #d0d5dd);
+  background: var(--forge-surface, #fff);
+  color: inherit;
+}
+
+.category {
+  margin: 0 0 1.25rem;
+}
+
+.category h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--forge-muted, #667085);
+}
+
+.moduleList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.moduleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--forge-border, #eef0f3);
+}
+
+.moduleRow span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.moduleRow input[type="checkbox"] {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: 0 0 auto;
+}
+
+.sr-only,
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.stickySave {
+  position: sticky;
+  bottom: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--forge-border, #e4e7ec);
+  background: var(--forge-surface, #fff);
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.08);
+}
+
+@media (max-width: 640px) {
+  .moduleRow {
+    align-items: flex-start;
+  }
+}

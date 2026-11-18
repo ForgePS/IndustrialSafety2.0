@@ -13,9 +13,12 @@ import { assetWithinScope, getAssetDetailData } from '@/lib/forgeAssets'
 import { incidentWithinScope } from '@/lib/forgeIncidents'
 import { getEffectiveForm } from '@/lib/forgeForms'
 import { getEffectiveLookup } from '@/lib/forgeLookups'
+import { getLotoProceduresForAsset } from '@/lib/forgeLoto'
+import { isOpenLockout } from '@/lib/forgeLotoRules'
 import { getScopedPersonnel } from '@/lib/forgePersonnel'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import ForgeAiContextButton from '@/components/forge-ai/ForgeAiContextButton'
+import AssetScanPanels from '@/components/qr/AssetScanPanels'
 
 export const metadata: Metadata = { title: 'Asset & Equipment' }
 
@@ -83,6 +86,8 @@ const AssetDetailPage = async ({ params }: { params: Promise<{ id: string }> }) 
   const lotoCreatePermission = permissions.get('loto.create')
   const canUseAi = Boolean(permissions.get('forge_ai.use'))
   const incidentViewPermission = permissions.get('incidents.view')
+  const lotoViewPermission = permissions.get('loto.view')
+  const qrViewPermission = permissions.get('qr_management.view')
 
   const within = async (permission: any) =>
     permission
@@ -94,7 +99,7 @@ const AssetDetailPage = async ({ params }: { params: Promise<{ id: string }> }) 
         })
       : false
 
-  const [canEdit, canAssign, canMaintain, canMeter, canRetire, canCreateQr, canCreateLoto, personnel] = await Promise.all([
+  const [canEdit, canAssign, canMaintain, canMeter, canRetire, canCreateQr, canCreateLoto, personnel, canViewQr] = await Promise.all([
     within(editPermission),
     within(assignPermission),
     within(maintenancePermission),
@@ -108,8 +113,13 @@ const AssetDetailPage = async ({ params }: { params: Promise<{ id: string }> }) 
           userId: context.user.id,
           permission: (assignPermission || editPermission) as any
         })
-      : Promise.resolve([])
+      : Promise.resolve([]),
+    within(qrViewPermission)
   ])
+
+  const lotoProcedures: any[] = (await within(lotoViewPermission))
+    ? await getLotoProceduresForAsset({ organizationId, assetId: id })
+    : []
 
   let relatedIncidents: Array<{ id: string; number: string; summary: string; status: string }> = []
   if (incidentViewPermission) {
@@ -232,6 +242,50 @@ const AssetDetailPage = async ({ params }: { params: Promise<{ id: string }> }) 
             : person.first_name + ' ' + person.last_name
         }))}
       />
+
+      <AssetScanPanels
+        organizationId={organizationId}
+        assetId={asset.id}
+        statusLabels={statusLabels}
+        showQrCodes={Boolean(canViewQr)}
+        canCreateQr={Boolean(canCreateQr) && !asset.retired_at}
+      />
+
+      {lotoViewPermission ? (
+        <Card data-asset-loto>
+          <CardHeader>
+            <CardTitle>Lockout / Tagout</CardTitle>
+            <CardDescription>Energy-control procedures for this equipment.</CardDescription>
+          </CardHeader>
+          <CardContent className='flex flex-col gap-3'>
+            {lotoProcedures.length ? lotoProcedures.map(procedure => {
+              const lockedOut = (procedure.forge_loto_applications || []).some((item: any) => isOpenLockout(item.status))
+
+              return (
+                <div key={procedure.id} className='flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3'>
+                  <div>
+                    <Link className='text-primary font-semibold hover:underline' href={'/loto/' + procedure.id}>
+                      {procedure.procedure_number} · {procedure.title}
+                    </Link>
+                    <div className='text-textSecondary mt-1 text-sm'>
+                      Rev {procedure.revision_number || 1} · {String(procedure.status).replaceAll('_', ' ')}
+                      {procedure.next_review_date ? ' · review ' + procedure.next_review_date : ''}
+                    </div>
+                  </div>
+                  <div className='flex gap-2'>
+                    {lockedOut ? <Badge variant='destructive'>Locked out</Badge> : null}
+                    {procedure.status !== 'retired' ? (
+                      <Button size='sm' variant='outline' asChild>
+                        <Link href={'/loto-print?ids=' + procedure.id} target='_blank' rel='noopener'>Print</Link>
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+              )
+            }) : <p className='text-textSecondary text-sm'>No LOTO procedures for this equipment yet.</p>}
+          </CardContent>
+        </Card>
+      ) : null}
 
       {incidentViewPermission ? (
         <Card>

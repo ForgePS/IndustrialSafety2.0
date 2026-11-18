@@ -1,0 +1,232 @@
+{
+  "at": "2026-07-28T15:15:27.917Z",
+  "base": "https://d108fstxdv69bo.cloudfront.net",
+  "tenantId": "019f9e06-a0b2-75f4-9e0b-5ae9befd8193",
+  "totals": {
+    "cases": 22,
+    "passed": 22,
+    "failed": 0
+  },
+  "cases": [
+    {
+      "name": "creator.catalog",
+      "persona": "forge_creator",
+      "permission": "platform.*",
+      "expectedEffect": "allow",
+      "actualStatus": 200,
+      "expectedStatus": 200,
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "creator.draft",
+      "persona": "forge_creator",
+      "permission": "platform.configuration.update",
+      "expectedEffect": "allow",
+      "actualStatus": 201,
+      "expectedStatus": [200, 201],
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "creator.publish",
+      "persona": "forge_creator",
+      "permission": "platform.configuration.publish",
+      "expectedEffect": "allow",
+      "actualStatus": 201,
+      "expectedStatus": [200, 201],
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "support.catalog",
+      "persona": "platform_support",
+      "permission": "update|publish",
+      "expectedEffect": "allow",
+      "actualStatus": 200,
+      "expectedStatus": 200,
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "support.draft",
+      "persona": "platform_support",
+      "permission": "platform.configuration.update",
+      "expectedEffect": "allow",
+      "actualStatus": 201,
+      "expectedStatus": [200, 201],
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "support.publish",
+      "persona": "platform_support",
+      "permission": "platform.configuration.publish",
+      "expectedEffect": "allow",
+      "actualStatus": 201,
+      "expectedStatus": [200, 201],
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "support.security",
+      "persona": "platform_support",
+      "permission": "platform.configuration.update",
+      "expectedEffect": "allow",
+      "actualStatus": 201,
+      "expectedStatus": [200, 201],
+      "pass": true,
+      "notes": "support may manage security NS"
+    },
+    {
+      "name": "ta.branding",
+      "persona": "tenant_admin",
+      "permission": "tenant.configuration.update",
+      "expectedEffect": "allow",
+      "actualStatus": 201,
+      "expectedStatus": [200, 201],
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "ta.security_deny",
+      "persona": "tenant_admin",
+      "permission": "namespace allowlist",
+      "expectedEffect": "deny",
+      "actualStatus": 403,
+      "expectedStatus": 403,
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "cm.draft",
+      "persona": "configuration_manager",
+      "permission": "tenant.configuration.update",
+      "expectedEffect": "allow",
+      "actualStatus": 201,
+      "expectedStatus": [200, 201],
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "cm.security_deny",
+      "persona": "configuration_manager",
+      "permission": "namespace allowlist",
+      "expectedEffect": "deny",
+      "actualStatus": 403,
+      "expectedStatus": 403,
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "auditor.catalog",
+      "persona": "read_only_auditor",
+      "permission": "platform.audit.read",
+      "expectedEffect": "allow",
+      "actualStatus": 200,
+      "expectedStatus": 200,
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "auditor.list",
+      "persona": "read_only_auditor",
+      "permission": "platform.audit.read",
+      "expectedEffect": "allow",
+      "actualStatus": 200,
+      "expectedStatus": 200,
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "auditor.draft_deny",
+      "persona": "read_only_auditor",
+      "permission": "update",
+      "expectedEffect": "deny",
+      "actualStatus": 403,
+      "expectedStatus": 403,
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "standard.catalog_deny",
+      "persona": "standard_user",
+      "permission": "none",
+      "expectedEffect": "deny",
+      "actualStatus": 403,
+      "expectedStatus": 403,
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "standard.draft_deny",
+      "persona": "standard_user",
+      "permission": "none",
+      "expectedEffect": "deny",
+      "actualStatus": 403,
+      "expectedStatus": 403,
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "update_only.draft",
+      "persona": "update_only",
+      "permission": "platform.configuration.update",
+      "expectedEffect": "allow",
+      "actualStatus": 201,
+      "expectedStatus": [200, 201],
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "update_only.publish_deny",
+      "persona": "update_only",
+      "permission": "platform.configuration.publish",
+      "expectedEffect": "deny",
+      "actualStatus": 403,
+      "expectedStatus": 403,
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "publish_only.draft_deny",
+      "persona": "publish_only",
+      "permission": "platform.configuration.update",
+      "expectedEffect": "deny",
+      "actualStatus": 403,
+      "expectedStatus": 403,
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "publish_only.catalog",
+      "persona": "publish_only",
+      "permission": "platform.configuration.publish",
+      "expectedEffect": "allow",
+      "actualStatus": 200,
+      "expectedStatus": 200,
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "unauth.catalog",
+      "persona": "unauthorized",
+      "permission": "none",
+      "expectedEffect": "deny",
+      "actualStatus": 401,
+      "expectedStatus": 401,
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "dry_run_import",
+      "persona": "forge_creator",
+      "permission": "platform.configuration.update",
+      "expectedEffect": "allow",
+      "actualStatus": 201,
+      "expectedStatus": [200, 201],
+      "pass": true,
+      "notes": "validation-only no persistence"
+    }
+  ]
+}

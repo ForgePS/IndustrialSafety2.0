@@ -1,0 +1,148 @@
+{
+  "ok": true,
+  "phase": "PRODUCERS-P4-Q2-freeze",
+  "at": "2026-08-06T15:15:48.871Z",
+  "stamp": "2026-08-06T15-15-28-618Z",
+  "prefix": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z",
+  "method": "remap-prior-s3-wave-payloads",
+  "dressRehearsal": true,
+  "tenantMapping": {
+    "ok": true,
+    "at": "2026-08-06T15:15:48.871Z",
+    "sourceBusinessId": "business-1782553339499",
+    "firebaseProject": "forge-industrial-safety",
+    "target": {
+      "tenantKey": "producers-rice-mill-staging",
+      "tenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c"
+    },
+    "explicitlyNot": {
+      "tenantKey": "import-acceptance-tenant-a",
+      "tenantId": "019faa15-e558-70b6-adcd-a510c3c995f4"
+    },
+    "status": "APPROVED",
+    "dressRehearsal": true
+  },
+  "waves": [
+    {
+      "id": "wave1",
+      "namespace": "forge-ind11b-p4-staging-wave1-v1",
+      "sourceUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/wave1/2026-08-04T11-03-54-081Z/payload.json",
+      "sourceSha256": "f36280c1a3f5728e48a55c5799eb0bd7c8109234f830d00e25a6d3c4be5bd963",
+      "remappedSha256": "d712f4223ac1235595d242777c6fd7c5e3bb37deee844ff578015d50071d2956",
+      "payloadUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave1/payload.json",
+      "loaderUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave1/ecs-loader.mjs",
+      "counts": {
+        "organizationFilter": 1,
+        "tenantMappings": 1,
+        "sites": 26,
+        "departments": 87,
+        "assetRecords": 2489,
+        "lotoProcedures": 2523
+      },
+      "strippedControlledDocuments": 0
+    },
+    {
+      "id": "wave2a",
+      "namespace": "forge-ind11b-p4-staging-wave2a-v1",
+      "sourceUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/wave2a/2026-08-05T09-34-42-012Z/payload.json",
+      "sourceSha256": "2f35f8e8d8e758195fc652959145d5c2543848d2e7b69e352d3f5f8073efe5ce",
+      "remappedSha256": "637ce28af298aa426dc363bd7199d20d2b1e1f85bf12e4e54ead3bb8bd4271e7",
+      "payloadUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave2a/payload.json",
+      "loaderUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave2a/ecs-loader.mjs",
+      "counts": {
+        "organizationFilter": 1,
+        "tenantMappings": 1,
+        "personnelRecords": 1008
+      },
+      "strippedControlledDocuments": 0
+    },
+    {
+      "id": "wave2-remaining",
+      "namespace": "forge-ind11b-p4-staging-wave2-v1",
+      "sourceUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/wave2-remaining/2026-08-05T10-53-29-690Z/payload.json",
+      "sourceSha256": "21f0e26b0a6895ab2117db99a9153a1164eb59d15d35c720f1ac36e13ab77a0f",
+      "remappedSha256": "1d5f9bc1997d43c76c8cd035a1640b0057f70a6c367ac7060357332aa1475e00",
+      "payloadUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave2-remaining/payload.json",
+      "loaderUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave2-remaining/ecs-loader.mjs",
+      "counts": {
+        "organizationFilter": 1,
+        "tenantMappings": 1,
+        "training_courses": 16,
+        "training_enrollments": 1,
+        "formTemplates": 48,
+        "formSubmissions": 33,
+        "inspectionTemplates": 1,
+        "inspectionRecords": 5,
+        "incidents": 12
+      },
+      "strippedControlledDocuments": 0
+    },
+    {
+      "id": "wave3-workbooks",
+      "namespace": "forge-ind11b-p4-staging-wave3-v1",
+      "sourceUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/wave3-workbooks/2026-08-05T11-42-44-439Z/payload.json",
+      "sourceSha256": "7ffc2d545427aec7564421fe5b0dc1a88412801c660e608b30b9ca1e3f2fcbb2",
+      "remappedSha256": "d9e2e4c3690288140c04cb2a51060d0167c672e6c416c8ce700b5efd77bbe7d0",
+      "payloadUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave3-workbooks/payload.json",
+      "loaderUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave3-workbooks/ecs-loader.mjs",
+      "counts": {
+        "organizationFilter": 1,
+        "tenantMappings": 1,
+        "confinedSpaceRecords": 26,
+        "hotWorkRecords": 25,
+        "workingAtHeightsRecords": 25,
+        "electricalSafetyRecords": 25,
+        "cranesRiggingRecords": 30,
+        "machineSafetyRecords": 35,
+        "dotComplianceRecords": 47,
+        "forkliftRecords": 40,
+        "workersCompCases": 27,
+        "oshaCases": 1,
+        "chemicalSafetyRecords": 52,
+        "warehouseSafetyRecords": 51,
+        "manufacturingSafetyRecords": 41,
+        "contractorSafetyRecords": 30,
+        "processSafetyRecords": 35,
+        "environmentalSafetyRecords": 30
+      },
+      "strippedControlledDocuments": 0
+    },
+    {
+      "id": "wave3-coord",
+      "namespace": "forge-ind11b-p4-staging-wave3-v1",
+      "sourceUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/wave3-coord/2026-08-05T11-45-24-813Z/payload.json",
+      "sourceSha256": "3e029e608c157f4e2d15a554cd09e77e1dd916db22df92fa68bc918b35e4daa1",
+      "remappedSha256": "f12b7e28f7897e639269c29e317cc9c6be310b6b6e591956f82e1f8245c34f43",
+      "payloadUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave3-coord/payload.json",
+      "loaderUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave3-coord/ecs-loader.mjs",
+      "counts": {
+        "tenantMappings": 1,
+        "taskRecords": 2,
+        "conversations": 2,
+        "messages": 7,
+        "emergencyResponseRecords": 30
+      },
+      "strippedControlledDocuments": 0
+    },
+    {
+      "id": "wave3-qr-docs",
+      "namespace": "forge-ind11b-p4-staging-wave3-v1",
+      "sourceUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/wave3-qr-docs/2026-08-05T11-46-42-743Z/payload.json",
+      "sourceSha256": "25f665c15973489515808e12aa5d1819ba0bed3f59262f4272bb8b9c99599015",
+      "remappedSha256": "8f98e4303bfda803a081f6d6f26529fc2f6a2bc0ae181e781d811244ff8fd267",
+      "payloadUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave3-qr-docs/payload.json",
+      "loaderUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/wave3-qr-docs/ecs-loader.mjs",
+      "counts": {
+        "tenantMappings": 1,
+        "qr_links": 2505,
+        "qr_link_versions": 5081,
+        "controlledDocuments": 0,
+        "equipmentDocuments": 12,
+        "documentAccessEvents": 18
+      },
+      "strippedControlledDocuments": 2
+    }
+  ],
+  "completionCountsUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p4-staging/2026-08-06T15-15-28-618Z/completion-counts.mjs",
+  "note": "Live Firebase re-extract deferred; freeze SHA provenance is remapped prior uncapped Producers payloads."
+}

@@ -1,0 +1,1792 @@
+{
+  "startedAt": "2026-07-28T13:37:22.297Z",
+  "finishedAt": "2026-07-28T13:38:14.725Z",
+  "targetTenant": "019f9e06-a0b2-75f4-9e0b-5ae9befd8193",
+  "total": 27,
+  "passed": 27,
+  "failed": 0,
+  "modules": [
+    {
+      "namespace": "tenant_profile",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f1-c027-733e-900b-e563a0c6cdbe",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "organization_profile",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f1-cc3e-7205-9624-29500923426a",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "branding",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f1-d66a-767c-9b5d-d6d016b93613",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "navigation",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f1-e1c0-712d-ba47-11c105e2ae1e",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "terminology",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f1-e8e4-7029-a88c-340c05911093",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "modules",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f1-f18a-7761-abe0-f3f02e753b97",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "features",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f1-f82d-74a8-8ebb-d05f221ef5b6",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "dropdowns",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f1-ff77-71f6-85b1-845f797480ab",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "custom_fields",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f2-07a5-77b6-9f51-5bb03e62ce7b",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "forms",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f2-0e40-7673-b621-c990d55c01b3",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "workflows",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f2-1496-71bf-aca5-ab5b1793aad0",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "roles",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f2-1ae3-7523-99f6-6b2a7b80582c",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "permissions",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f2-2135-7504-817e-5a2c16bf14a0",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "notification_templates",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f2-2765-72ff-a53d-2ad0db537e0d",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "email_templates",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f2-2e1c-7109-9267-a08d842d2fbd",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "document_templates",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f2-3670-705b-b042-6eb7f44aefce",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "certificate_templates",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f2-3cb3-7454-991d-9836eda7c586",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "dashboards",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f2-42e7-7751-993a-892c3b58636e",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "reporting",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f2-4950-713e-afc6-e46449553d43",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "import_config",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f2-4fe2-7659-8cab-f300dded1247",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "export_config",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f2-5990-707e-aa38-4f58c39cb96e",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "security",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f2-5f9f-76ea-986c-f634fcf129fa",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "retention",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f2-66f3-7779-be63-e9081cf02101",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "business_hours",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f2-6f4d-7619-897c-f355a4f97d46",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "holiday_calendar",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f2-75af-775a-bd34-f11049effdf8",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "facilities",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f2-7bf2-77b8-bdcb-396bdca4b5be",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    },
+    {
+      "namespace": "locations",
+      "steps": {
+        "load": {
+          "status": 200,
+          "pass": true
+        },
+        "create": {
+          "status": 201,
+          "pass": true,
+          "versionId": "019fa8f2-829e-714e-937a-236e3391d64a",
+          "version": 1
+        },
+        "update": {
+          "status": 200,
+          "pass": true
+        },
+        "publish": {
+          "status": 201,
+          "pass": true
+        },
+        "draft2": {
+          "status": 201,
+          "pass": true
+        },
+        "compare": {
+          "status": 200,
+          "pass": true
+        },
+        "schedule": {
+          "status": 201,
+          "pass": true
+        },
+        "activate": {
+          "status": 201,
+          "pass": true
+        },
+        "versionHistory": {
+          "status": 200,
+          "pass": true,
+          "count": 2
+        },
+        "rollback": {
+          "status": 201,
+          "pass": true
+        },
+        "archive": {
+          "status": 201,
+          "pass": true
+        },
+        "permissions": {
+          "pass": true,
+          "note": "exercised via platform admin principal (update+publish)"
+        },
+        "audit": {
+          "pass": true,
+          "note": "API writes audit_events on draft/publish/schedule/archive/rollback"
+        },
+        "mockData": {
+          "pass": true,
+          "note": "live API responses only"
+        }
+      },
+      "classification": "OPERATIONAL_GENERIC_EDITOR",
+      "pass": true
+    }
+  ]
+}

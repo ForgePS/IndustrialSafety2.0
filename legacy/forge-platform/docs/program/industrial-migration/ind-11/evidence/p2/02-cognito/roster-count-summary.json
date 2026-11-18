@@ -1,0 +1,31 @@
+{
+  "ok": true,
+  "freezeAt": "2026-08-05T20:16:50.164Z",
+  "firebaseBusinessId": "business-1782553339499",
+  "counts": {
+    "authUsersTotal": 10,
+    "producersMatched": 6,
+    "producersDisabled": 0,
+    "producersMissingEmail": 0,
+    "producersMultiBusiness": 1,
+    "duplicateEmails": 0,
+    "producersriceEmailNoClaim": 0
+  },
+  "rosterFile": "roster-export-2026-08-05T20-16-50-164Z.json",
+  "exceptionsPreview": {
+    "missingEmail": 0,
+    "disabled": 0,
+    "multiBusiness": [
+      {
+        "uid": "JQcTmbOoefM7nOgQ1RMc6FMtKdB3",
+        "email": "admin@forgepublicsafety.com",
+        "businessIds": [
+          "business-1782553339499",
+          "business-forge-default"
+        ]
+      }
+    ],
+    "duplicateEmails": [],
+    "producersriceEmailNoClaim": []
+  }
+}

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createServiceRoleClient } from '@repo/supabase/server'
 import ForgeAiWorkspace from './ForgeAiWorkspace'
+import { commandCenterAvailable } from '@/lib/forgeFeatureAvailability'
 import {
   getForgeAiConversation,
   getForgeAiConversationMessages,
@@ -70,6 +71,8 @@ const ForgeAiPage = async ({
       initialMessages = messages.map((message: any) => ({
         ...message,
         prepared_actions: message.metadata?.prepared_actions || [],
+        agent: message.metadata?.agent || null,
+        sources: message.metadata?.sources || [],
         rating: feedbackByMessage.get(Number(message.id)) || 0
       }))
     }
@@ -109,6 +112,13 @@ const ForgeAiPage = async ({
       )}
       canViewWatch={runtime.access.effective.some(
         permission => permission.permissionKey === 'forge_ai.view_alerts' && permission.allowed
+      )}
+      canViewCommandCenter={commandCenterAvailable(runtime.access.effective)}
+      canViewRisk={runtime.access.effective.some(
+        permission => permission.permissionKey === 'forge_ai.view_risk' && permission.allowed
+      )}
+      canViewRecommendations={runtime.access.effective.some(
+        permission => permission.permissionKey === 'forge_ai.view_recommendations' && permission.allowed
       )}
       canViewAnalytics={runtime.access.effective.some(
         permission => permission.permissionKey === 'forge_ai.view_analytics' && permission.allowed

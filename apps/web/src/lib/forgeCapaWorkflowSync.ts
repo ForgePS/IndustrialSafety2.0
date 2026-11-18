@@ -40,7 +40,7 @@ export const ensureCapaWorkflowInstance = async ({
   organizationId: string
   capaId: string
   status: string
-  actorUserId: string
+  actorUserId: string | null
 }) => {
   const workflowState = capaStatusToWorkflowState(status)
   if (!workflowState) throw new Error('Unsupported CAPA status for workflow: ' + status)
@@ -100,7 +100,9 @@ export const performAtomicCapaLifecycleTransition = async ({
   capaId: string
   fromStatus: string
   toStatus: string
-  actorUserId: string
+
+  /** null for system transitions (the public closeout link). */
+  actorUserId: string | null
   comment?: string | null
   capaPatch?: Record<string, unknown>
   metadata?: Record<string, unknown>

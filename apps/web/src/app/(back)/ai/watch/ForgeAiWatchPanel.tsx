@@ -341,16 +341,21 @@ const ForgeAiWatchPanel = ({
                         <Input
                           className='mt-2'
                           type={typeof value === 'number' ? 'number' : 'text'}
-                          value={String(value ?? '')}
+                          value={Array.isArray(value) ? value.join(', ') : String(value ?? '')}
                           onChange={event => setRuleDrafts(current => ({
                             ...current,
                             [rule.id]: {
                               ...current[rule.id],
                               config: {
                                 ...current[rule.id].config,
+                                // Lists are edited comma-separated; true/false settings stay booleans.
                                 [key]: typeof value === 'number'
                                   ? Number(event.target.value)
-                                  : event.target.value
+                                  : Array.isArray(value)
+                                    ? event.target.value.split(',').map(item => item.trim())
+                                    : typeof value === 'boolean'
+                                      ? event.target.value.trim().toLowerCase() === 'true'
+                                      : event.target.value
                               }
                             }
                           }))}

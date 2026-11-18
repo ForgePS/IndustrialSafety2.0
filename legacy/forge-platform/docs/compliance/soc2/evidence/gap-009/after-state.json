@@ -1,0 +1,60 @@
+{
+  "evidenceId": "GAP-009-AFTER",
+  "capturedAt": "2026-07-27T12:40:34Z",
+  "account": "511343547817",
+  "region": "us-east-1",
+  "cdkDeploy": {
+    "command": "cdk deploy ForgeData --exclusively --require-approval never",
+    "result": "no changes",
+    "deploymentTimeSeconds": 0,
+    "totalTimeSeconds": 28.46
+  },
+  "stackStatusClearing": {
+    "method": "cloudformation update-stack --use-previous-template with Gap009ReconciledAt tag",
+    "result": "UPDATE_COMPLETE",
+    "updatedAt": "2026-07-27T12:38:34Z",
+    "note": "Tag propagation updated resource tags only; no AppDbSecret create; app secret LastChangedDate unchanged"
+  },
+  "secret": {
+    "name": "forge-development-secrets-database-app",
+    "arn": "arn:aws:secretsmanager:us-east-1:511343547817:secret:forge-development-secrets-database-app-SknUu5",
+    "lastChangedDate": "2026-07-26T15:30:16.387-05:00",
+    "unchangedFromBefore": true,
+    "cloudFormationAppDbSecretPresent": false
+  },
+  "ecs": {
+    "taskDefinition": "forge-development-ecs-platform-api:16",
+    "databaseSecretArnEnv": "arn:aws:secretsmanager:us-east-1:511343547817:secret:forge-development-secrets-database-app",
+    "healthStatus": "HEALTHY"
+  },
+  "aurora": {
+    "cluster": "forge-development-rds-aurora",
+    "status": "available",
+    "replaced": false
+  },
+  "dataStackStatus": "UPDATE_COMPLETE",
+  "rlsProbe": {
+    "script": "scripts/phase2-verify-rls.mjs",
+    "exitCode": 0,
+    "ok": true,
+    "note": "current_user forge_app + FORCE RLS asserted in ECS one-off"
+  },
+  "playwright": {
+    "isolation": "7 passed",
+    "phase3Specialty": "3 passed (review smoke, scenario 1, scenario 10)",
+    "total": "10 passed"
+  },
+  "health": {
+    "api": 200,
+    "rms": 200
+  },
+  "cloudTrail": {
+    "isLogging": true,
+    "latestDeliveryTime": "2026-07-27T07:32:08.568-05:00"
+  },
+  "cloudWatch": {
+    "api-5xx": "OK",
+    "api-cf-5xx": "OK",
+    "api-running-tasks": "OK"
+  }
+}

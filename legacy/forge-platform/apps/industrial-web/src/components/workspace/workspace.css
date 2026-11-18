@@ -1,0 +1,248 @@
+/* My Workspace — variable-size module grid + live widgets */
+
+.forge-ws-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+.forge-ws-cell {
+  min-width: 0;
+}
+
+/* Full-width rule between "What Needs Your Attention" and the rest of the dashboard. */
+.forge-ws-divider {
+  grid-column: 1 / -1;
+  margin: 0.5rem 0;
+  border: 0;
+  border-top: 1px solid var(--bs-border-color, #d9dee3);
+  opacity: 1;
+}
+
+.forge-ws-span-1 {
+  grid-column: span 1;
+}
+.forge-ws-span-2 {
+  grid-column: span 2;
+}
+.forge-ws-span-3 {
+  grid-column: span 3;
+}
+.forge-ws-span-6 {
+  grid-column: span 6;
+}
+
+.forge-ws-card {
+  min-width: 0;
+}
+
+.forge-ws-card-actions .btn-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+}
+
+.forge-ws-drag {
+  cursor: grab;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  font-size: 1.25rem;
+  user-select: none;
+}
+
+.forge-ws-card[draggable="true"],
+.forge-dash-block[draggable="true"] {
+  cursor: grab;
+}
+
+.forge-ws-card[draggable="true"]:active,
+.forge-dash-block[draggable="true"]:active {
+  cursor: grabbing;
+  opacity: 0.92;
+}
+
+.forge-dash-block-preview {
+  /* Keep nested My Workspace module DnD interactive while customizing. */
+  min-height: 4rem;
+}
+
+.forge-dash-block-chrome {
+  border-style: dashed;
+}
+
+.forge-ws-customize-hint {
+  font-size: 0.8125rem;
+}
+
+/* Customize mode: keep full module names readable on compact cards */
+.forge-ws-card-edit__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.forge-ws-card-edit__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
+  padding-top: 0.2rem;
+}
+
+.forge-ws-card-edit__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.forge-ws-card-edit__controls .form-select {
+  flex: 1 1 5.5rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.forge-ws-widget-body {
+  min-height: 0;
+}
+
+/* Calendar live widget */
+.forge-ws-cal-scroll {
+  max-height: 22rem;
+}
+
+.forge-ws-card--large .forge-ws-cal-scroll,
+.forge-ws-card--full .forge-ws-cal-scroll {
+  max-height: 28rem;
+}
+
+.forge-ws-cal-event:hover .text-heading {
+  text-decoration: underline;
+}
+
+.forge-ws-cal-month {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.15rem;
+}
+
+.forge-ws-cal-month-head {
+  font-size: 0.7rem;
+  padding: 0.15rem 0;
+}
+
+.forge-ws-cal-month-cell {
+  position: relative;
+  min-height: 1.75rem;
+  padding: 0.15rem;
+  line-height: 1.2;
+  font-size: 0.75rem;
+}
+
+.forge-ws-cal-dot {
+  display: block;
+  width: 0.28rem;
+  height: 0.28rem;
+  margin: 0.1rem auto 0;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+.forge-ws-cal-week {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr));
+  gap: 0.5rem;
+}
+
+/* Tasks live widget */
+.forge-ws-tasks-scroll {
+  max-height: 22rem;
+}
+
+.forge-ws-card--large .forge-ws-tasks-scroll,
+.forge-ws-card--full .forge-ws-tasks-scroll {
+  max-height: 28rem;
+}
+
+.forge-ws-task-row .form-check-input {
+  cursor: pointer;
+}
+
+/* Reminders live widget */
+.forge-ws-reminders-scroll {
+  max-height: 22rem;
+}
+
+.forge-ws-card--large .forge-ws-reminders-scroll,
+.forge-ws-card--full .forge-ws-reminders-scroll {
+  max-height: 28rem;
+}
+
+.forge-ws-reminder-row:last-child {
+  border-bottom: 0 !important;
+}
+
+/* Shared summary widgets (Phase 6) */
+.forge-ws-summary-scroll {
+  max-height: 22rem;
+}
+
+.forge-ws-card--large .forge-ws-summary-scroll,
+.forge-ws-card--full .forge-ws-summary-scroll {
+  max-height: 28rem;
+}
+
+.forge-ws-summary-row:last-child {
+  border-bottom: 0 !important;
+}
+
+.forge-ws-summary-row:hover .text-heading {
+  text-decoration: underline;
+}
+
+@media (max-width: 1199.98px) {
+  .forge-ws-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .forge-ws-span-3,
+  .forge-ws-span-6 {
+    grid-column: span 4;
+  }
+
+  .forge-ws-span-2 {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .forge-ws-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .forge-ws-span-2,
+  .forge-ws-span-3,
+  .forge-ws-span-6 {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .forge-ws-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .forge-ws-span-1,
+  .forge-ws-span-2,
+  .forge-ws-span-3,
+  .forge-ws-span-6 {
+    grid-column: auto;
+  }
+}

@@ -1,0 +1,198 @@
+/* Forge Experience design tokens — bridged to Sneat (ThemeSelection, MIT)
+ * Semantic --fx-* names preserved for RMS / FX components.
+ * Brand + neutrals follow Sneat Free v1.0.0.
+ */
+
+:root,
+[data-fx-theme="light"] {
+  --fx-color-neutral-0: #ffffff;
+  --fx-color-neutral-50: #f5f5f9;
+  --fx-color-neutral-100: #ebeef0;
+  --fx-color-neutral-200: #d9dee3;
+  --fx-color-neutral-300: #a1acb8;
+  --fx-color-neutral-400: #8592a3;
+  --fx-color-neutral-500: #697a8d;
+  --fx-color-neutral-600: #566a7f;
+  --fx-color-neutral-700: #435971;
+  --fx-color-neutral-800: #384551;
+  --fx-color-neutral-900: #233446;
+  --fx-color-neutral-950: #1a2530;
+
+  /* Sneat primary purple */
+  --fx-color-brand-300: #8b8eff;
+  --fx-color-brand-500: #696cff;
+  --fx-color-brand-600: #5f61e6;
+
+  --fx-color-success-400: #8ee65a;
+  --fx-color-success-500: #71dd37;
+  --fx-color-success-600: #56c51f;
+  --fx-color-warning-400: #ffc233;
+  --fx-color-warning-500: #ffab00;
+  --fx-color-warning-600: #e09600;
+  --fx-color-danger-400: #ff6a4d;
+  --fx-color-danger-500: #ff3e1d;
+  --fx-color-danger-600: #e02f12;
+  --fx-color-info-400: #33d0f0;
+  --fx-color-info-500: #03c3ec;
+  --fx-color-info-600: #02a8cc;
+
+  --fx-color-surface-default: var(--fx-color-neutral-0);
+  --fx-color-surface-secondary: var(--fx-color-neutral-50);
+  --fx-color-surface-tertiary: var(--fx-color-neutral-100);
+  --fx-color-surface-inverse: var(--fx-color-neutral-900);
+  --fx-color-surface-overlay: rgba(35, 52, 70, 0.45);
+  --fx-color-surface-disabled: var(--fx-color-neutral-100);
+
+  --fx-color-text-primary: var(--fx-color-neutral-800);
+  --fx-color-text-secondary: var(--fx-color-neutral-600);
+  --fx-color-text-muted: var(--fx-color-neutral-400);
+  --fx-color-text-inverse: var(--fx-color-neutral-0);
+
+  --fx-color-border-default: var(--fx-color-neutral-200);
+  --fx-color-border-subtle: var(--fx-color-neutral-100);
+  --fx-color-border-focus: var(--fx-color-brand-500);
+  --fx-color-border-danger: var(--fx-color-danger-500);
+  --fx-color-text-danger: var(--fx-color-danger-600);
+
+  --fx-color-action-primary: var(--fx-color-brand-500);
+  --fx-color-action-secondary: var(--fx-color-neutral-700);
+  --fx-color-action-success: var(--fx-color-success-600);
+  --fx-color-action-warning: var(--fx-color-warning-600);
+  --fx-color-action-danger: var(--fx-color-danger-600);
+  --fx-color-action-disabled: var(--fx-color-neutral-300);
+
+  --fx-color-status-success: var(--fx-color-success-500);
+  --fx-color-status-warning: var(--fx-color-warning-500);
+  --fx-color-status-danger: var(--fx-color-danger-500);
+  --fx-color-status-info: var(--fx-color-info-500);
+  --fx-color-status-neutral: var(--fx-color-neutral-500);
+
+  --fx-color-priority-low: var(--fx-color-neutral-400);
+  --fx-color-priority-normal: var(--fx-color-info-500);
+  --fx-color-priority-high: var(--fx-color-warning-500);
+  --fx-color-priority-critical: var(--fx-color-danger-500);
+
+  --fx-font-sans:
+    "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --fx-font-display:
+    "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --fx-font-mono: "SFMono-Regular", Menlo, Monaco, Consolas, ui-monospace, monospace;
+
+  --fx-space-4: 4px;
+  --fx-space-8: 8px;
+  --fx-space-12: 12px;
+  --fx-space-16: 16px;
+  --fx-space-20: 20px;
+  --fx-space-24: 24px;
+  --fx-space-32: 32px;
+  --fx-space-40: 40px;
+  --fx-space-48: 48px;
+  --fx-space-64: 64px;
+  --fx-space-80: 80px;
+  --fx-space-96: 96px;
+
+  --fx-radius-small: 4px;
+  --fx-radius-medium: 6px;
+  --fx-radius-large: 8px;
+  --fx-radius-xl: 10px;
+  --fx-radius-round: 9999px;
+
+  --fx-shadow-small: 0 0.125rem 0.25rem rgba(161, 172, 184, 0.4);
+  --fx-shadow-medium: 0 0.25rem 1rem rgba(161, 172, 184, 0.45);
+  --fx-shadow-large: 0 0.625rem 1.25rem rgba(161, 172, 184, 0.5);
+  --fx-shadow-floating: 0 0.75rem 1.5rem rgba(161, 172, 184, 0.5);
+  --fx-shadow-modal: 0 1rem 2rem rgba(161, 172, 184, 0.55);
+
+  --fx-elevation-0: 0;
+  --fx-elevation-1: 10;
+  --fx-elevation-2: 20;
+  --fx-elevation-3: 30;
+  --fx-elevation-4: 40;
+
+  --fx-motion-fast: 120ms;
+  --fx-motion-normal: 200ms;
+  --fx-motion-slow: 320ms;
+  --fx-motion-easing: cubic-bezier(0.2, 0, 0, 1);
+
+  --fx-touch-min: 44px;
+}
+
+[data-fx-theme="dark"] {
+  --fx-color-surface-default: #2b2c40;
+  --fx-color-surface-secondary: #232333;
+  --fx-color-surface-tertiary: #32334a;
+  --fx-color-surface-inverse: #f5f5f9;
+  --fx-color-surface-overlay: rgba(0, 0, 0, 0.65);
+  --fx-color-surface-disabled: #3b3c54;
+
+  --fx-color-text-primary: #cbcbe2;
+  --fx-color-text-secondary: #b2b3ca;
+  --fx-color-text-muted: #7983bb;
+  --fx-color-text-inverse: #232333;
+
+  --fx-color-border-default: #444564;
+  --fx-color-border-subtle: #3b3c54;
+  --fx-color-border-focus: #8b8eff;
+
+  --fx-color-action-primary: #696cff;
+  --fx-color-action-secondary: #cbcbe2;
+  --fx-color-action-success: #71dd37;
+  --fx-color-action-warning: #ffab00;
+  --fx-color-action-danger: #ff4d4f;
+  --fx-color-action-disabled: #5a5b7a;
+
+  --fx-color-status-success: #71dd37;
+  --fx-color-status-warning: #ffab00;
+  --fx-color-status-danger: #ff4d4f;
+  --fx-color-status-info: #03c3ec;
+  --fx-color-status-neutral: #7983bb;
+
+  --fx-color-priority-low: #7983bb;
+  --fx-color-priority-normal: #03c3ec;
+  --fx-color-priority-high: #ffab00;
+  --fx-color-priority-critical: #ff4d4f;
+}
+
+[data-fx-theme="high-contrast"] {
+  --fx-color-surface-default: #ffffff;
+  --fx-color-surface-secondary: #ffffff;
+  --fx-color-surface-tertiary: #f0f0f0;
+  --fx-color-surface-inverse: #000000;
+  --fx-color-surface-overlay: rgba(0, 0, 0, 0.75);
+  --fx-color-surface-disabled: #e0e0e0;
+
+  --fx-color-text-primary: #000000;
+  --fx-color-text-secondary: #000000;
+  --fx-color-text-muted: #222222;
+  --fx-color-text-inverse: #ffffff;
+
+  --fx-color-border-default: #000000;
+  --fx-color-border-subtle: #333333;
+  --fx-color-border-focus: #0000ee;
+
+  --fx-color-action-primary: #0000ee;
+  --fx-color-action-secondary: #000000;
+  --fx-color-action-success: #006400;
+  --fx-color-action-warning: #7a5a00;
+  --fx-color-action-danger: #8b0000;
+  --fx-color-action-disabled: #666666;
+
+  --fx-color-status-success: #006400;
+  --fx-color-status-warning: #7a5a00;
+  --fx-color-status-danger: #8b0000;
+  --fx-color-status-info: #0000ee;
+  --fx-color-status-neutral: #333333;
+
+  --fx-color-priority-low: #333333;
+  --fx-color-priority-normal: #0000ee;
+  --fx-color-priority-high: #7a5a00;
+  --fx-color-priority-critical: #8b0000;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --fx-motion-fast: 0ms;
+    --fx-motion-normal: 0ms;
+    --fx-motion-slow: 0ms;
+  }
+}

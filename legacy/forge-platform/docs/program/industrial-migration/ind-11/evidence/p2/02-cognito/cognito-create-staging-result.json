@@ -1,0 +1,93 @@
+{
+  "ok": true,
+  "at": "2026-08-05T20:32:53.478Z",
+  "phase": "PRODUCERS-P2-cognito-create-staging",
+  "poolId": "us-east-1_VYjUFLXG4",
+  "targetTenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+  "counts": {
+    "total": 6,
+    "created": 4,
+    "linkedExisting": 1,
+    "passwordFileLocal": "C:\\Users\\jerem\\.forge\\producers-p2\\staging-temp-passwords-2026-08-05T20-32-53-478Z.json",
+    "passwordsIssued": 4
+  },
+  "users": [
+    {
+      "email": "admin@forgepublicsafety.com",
+      "ok": true,
+      "cognitoAction": "LINK_EXISTING",
+      "created": false,
+      "subject": "e498c4d8-f091-7083-0ac4-ad145fe79b39",
+      "username": "e498c4d8-f091-7083-0ac4-ad145fe79b39",
+      "status": "CONFIRMED",
+      "roleCode": "IND3V_INDUSTRIAL_ADMIN",
+      "firebaseUid": "JQcTmbOoefM7nOgQ1RMc6FMtKdB3",
+      "targetTenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c"
+    },
+    {
+      "email": "jlackie@producersrice.com",
+      "ok": true,
+      "cognitoAction": "CREATE_IF_MISSING",
+      "created": true,
+      "subject": "c48884b8-2091-7040-12a9-f7355eacb8af",
+      "username": "c48884b8-2091-7040-12a9-f7355eacb8af",
+      "status": "FORCE_CHANGE_PASSWORD",
+      "roleCode": "IND3V_INDUSTRIAL_OPERATOR",
+      "firebaseUid": "kd9THbtx4jVkx874a3K4Mlzgcz82",
+      "targetTenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+      "temporaryPasswordIssued": true
+    },
+    {
+      "email": "kmcpherson@producersrice.com",
+      "ok": true,
+      "cognitoAction": "CREATE_IF_MISSING",
+      "created": true,
+      "subject": "c4f82458-b061-703a-04fd-9454ce3c0b6d",
+      "username": "c4f82458-b061-703a-04fd-9454ce3c0b6d",
+      "status": "FORCE_CHANGE_PASSWORD",
+      "roleCode": "IND3V_INDUSTRIAL_OPERATOR",
+      "firebaseUid": "0D6EUP2D8AeIC8BuQZuFbz4s3bb2",
+      "targetTenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+      "temporaryPasswordIssued": true
+    },
+    {
+      "email": "safetyadmin@producersrice.com",
+      "ok": true,
+      "cognitoAction": "CREATE_IF_MISSING",
+      "created": true,
+      "subject": "e418e4c8-10e1-7075-2960-7173cd8f5642",
+      "username": "e418e4c8-10e1-7075-2960-7173cd8f5642",
+      "status": "FORCE_CHANGE_PASSWORD",
+      "roleCode": "IND3V_INDUSTRIAL_ADMIN",
+      "firebaseUid": "k8h1Ui0LrNcAsFNJiGibz571e653",
+      "targetTenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+      "temporaryPasswordIssued": true
+    },
+    {
+      "email": "sdavis2@producersrice.com",
+      "ok": true,
+      "cognitoAction": "CREATE_IF_MISSING",
+      "created": true,
+      "subject": "b4e8b4d8-4051-7025-5ea2-a75cefb1a013",
+      "username": "b4e8b4d8-4051-7025-5ea2-a75cefb1a013",
+      "status": "FORCE_CHANGE_PASSWORD",
+      "roleCode": "IND3V_INDUSTRIAL_OPERATOR",
+      "firebaseUid": "TOuqrfkcJoTkJQRaldUgetDZNzt2",
+      "targetTenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+      "temporaryPasswordIssued": true
+    },
+    {
+      "email": "tbogy@producersrice.com",
+      "ok": true,
+      "cognitoAction": "CREATE_IF_MISSING",
+      "created": false,
+      "subject": "54683448-30d1-702f-ac6a-ca6b5cfe8b0c",
+      "username": "54683448-30d1-702f-ac6a-ca6b5cfe8b0c",
+      "status": "FORCE_CHANGE_PASSWORD",
+      "roleCode": "IND3V_INDUSTRIAL_OPERATOR",
+      "firebaseUid": "6XaBJh0wiEXoO3xse8a8SiXJ0Cb2",
+      "targetTenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+      "temporaryPasswordIssued": false
+    }
+  ]
+}

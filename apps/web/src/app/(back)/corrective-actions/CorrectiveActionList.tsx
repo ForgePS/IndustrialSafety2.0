@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { TbAlertTriangle, TbPlus, TbSearch } from 'react-icons/tb'
+import { TbAlertTriangle, TbPlus, TbReportAnalytics, TbSearch } from 'react-icons/tb'
 import { Badge } from '@repo/ui/components/ui/badge'
 import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent } from '@repo/ui/components/ui/card'
@@ -76,14 +76,22 @@ const CorrectiveActionList = ({
             Corrective and preventive actions, root cause, verification, effectiveness review, and closure.
           </p>
         </div>
-        {canCreate ? (
-          <Button asChild>
-            <Link href='/corrective-actions/create'>
-              <TbPlus />
-              Create Corrective Action
+        <div className='flex flex-wrap gap-2'>
+          <Button asChild variant='outline'>
+            <Link href='/corrective-actions/reports'>
+              <TbReportAnalytics />
+              Reports
             </Link>
           </Button>
-        ) : null}
+          {canCreate ? (
+            <Button asChild>
+              <Link href='/corrective-actions/create'>
+                <TbPlus />
+                Create Corrective Action
+              </Link>
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       <Card>

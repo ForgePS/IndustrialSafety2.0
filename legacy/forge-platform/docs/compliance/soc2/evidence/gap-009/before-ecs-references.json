@@ -1,0 +1,34 @@
+{
+  "evidenceId": "GAP-009-BEFORE-ECS",
+  "capturedAt": "2026-07-27T11:12:00Z",
+  "cluster": "forge-development-ecs-platform",
+  "services": [
+    {
+      "service": "forge-development-ecs-platform-api",
+      "taskDefinition": "forge-development-ecs-platform-api:16",
+      "runningCount": 1,
+      "desiredCount": 1,
+      "healthStatus": "HEALTHY",
+      "container": "platform-api",
+      "environment": [
+        {
+          "name": "DATABASE_SECRET_ARN",
+          "value": "arn:aws:secretsmanager:us-east-1:511343547817:secret:forge-development-secrets-database-app"
+        }
+      ]
+    },
+    {
+      "service": "forge-development-ecs-worker-service",
+      "taskDefinitionFamily": "forge-development-ecs-worker-service",
+      "revisionSampled": 14,
+      "environment": [
+        {
+          "name": "DATABASE_SECRET_ARN",
+          "value": "arn:aws:secretsmanager:us-east-1:511343547817:secret:forge-development-secrets-database-app"
+        }
+      ]
+    }
+  ],
+  "runtimeRoleExpected": "forge_app",
+  "notes": "No secret values. ARN is name-prefix form used by ECS env."
+}

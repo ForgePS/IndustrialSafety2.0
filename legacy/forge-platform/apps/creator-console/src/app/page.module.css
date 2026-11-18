@@ -1,0 +1,369 @@
+.page h1 {
+  margin: 0 0 0.35rem;
+  font-family: var(--forge-font-sans);
+  font-size: 1.75rem;
+  letter-spacing: -0.02em;
+}
+
+.lead {
+  margin: 0 0 1.25rem;
+  opacity: 0.8;
+}
+
+.muted {
+  opacity: 0.75;
+  font-size: 0.95rem;
+}
+
+.error {
+  margin: 0 0 1rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--forge-radius-lg);
+  background: color-mix(in srgb, var(--forge-color-warning) 14%, transparent);
+  color: var(--bs-warning-text-emphasis, #a66d00);
+  border: 1px solid color-mix(in srgb, var(--forge-color-warning) 28%, transparent);
+}
+
+.success {
+  margin: 0 0 1rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--forge-radius-lg);
+  background: color-mix(in srgb, var(--forge-color-success) 14%, transparent);
+  color: var(--forge-color-success);
+}
+
+.panel {
+  margin: 0 0 1.5rem;
+  padding: 1.25rem 1.25rem;
+  border: 1px solid var(--forge-color-border);
+  border-radius: var(--forge-radius-lg);
+  background: var(--forge-color-surface);
+  box-shadow: var(--forge-shadow-sm);
+}
+
+.panel h2 {
+  margin: 0 0 0.85rem;
+  font-size: 1.05rem;
+}
+
+.form {
+  display: grid;
+  gap: 0.65rem;
+  max-width: 36rem;
+}
+
+.formRow {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.formRow label {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.formRow input,
+.formRow select,
+.formRow textarea {
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--forge-color-border);
+  border-radius: var(--forge-radius-md);
+  font: inherit;
+  background: var(--forge-color-surface);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.button {
+  appearance: none;
+  border: 1px solid transparent;
+  background: var(--forge-color-primary);
+  color: #fff;
+  border-radius: var(--forge-radius-md);
+  min-height: 2.5rem;
+  padding: 0.5rem 1.125rem;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.buttonSecondary {
+  appearance: none;
+  border: 1px solid var(--forge-color-border);
+  background: transparent;
+  color: var(--forge-color-heading);
+  border-radius: var(--forge-radius-md);
+  padding: 0.45rem 0.85rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.buttonSecondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.buttonDanger {
+  appearance: none;
+  border: 1px solid color-mix(in srgb, var(--forge-color-danger) 40%, transparent);
+  background: var(--forge-color-danger);
+  color: #fff;
+  border-radius: var(--forge-radius-md);
+  padding: 0.45rem 0.85rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.buttonDanger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 0.5rem 0.4rem;
+  border-bottom: 1px solid var(--forge-color-border-light);
+  vertical-align: top;
+}
+
+.table th {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
+
+.rowSelected td {
+  background: var(--forge-color-primary-soft);
+}
+
+.linkRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  margin: 0.75rem 0 1.25rem;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+}
+
+.dl {
+  display: grid;
+  grid-template-columns: 10rem 1fr;
+  gap: 0.35rem 0.75rem;
+  margin: 0;
+}
+
+.dl dt {
+  opacity: 0.7;
+  font-size: 0.85rem;
+}
+
+.dl dd {
+  margin: 0;
+  word-break: break-word;
+}
+
+.pre {
+  margin: 0;
+  padding: 0.75rem;
+  overflow: auto;
+  border-radius: var(--forge-radius-lg);
+  background: var(--forge-color-surface-2);
+  font-size: 0.85rem;
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.statCard {
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--forge-color-border);
+  border-radius: var(--forge-radius-lg);
+  background: var(--forge-color-surface);
+}
+
+.statLabel {
+  margin: 0 0 0.25rem;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.statValue {
+  margin: 0;
+  font-family: var(--forge-font-sans);
+  font-size: 1.65rem;
+  letter-spacing: -0.02em;
+}
+
+.listControls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  align-items: end;
+}
+
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dialogBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(35, 52, 70, 0.45);
+}
+
+.dialogBackdropButton {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.dialog {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 28rem);
+  padding: 1rem 1.1rem;
+  border-radius: var(--forge-radius-lg);
+  background: var(--forge-color-surface);
+  border: 1px solid var(--forge-color-border);
+  box-shadow: 0 12px 40px var(--forge-color-border);
+}
+
+.dialogTitle {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.dialogBody {
+  margin: 0 0 1rem;
+  opacity: 0.85;
+}
+
+.badgeOk {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: var(--forge-color-primary-soft);
+  color: var(--forge-color-primary);
+  font-size: 0.8rem;
+}
+
+.badgeWarn {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--forge-color-warning) 14%, transparent);
+  color: var(--forge-color-warning);
+  font-size: 0.8rem;
+}
+
+.badgeBad {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--forge-color-danger) 12%, transparent);
+  color: var(--forge-color-danger);
+  font-size: 0.8rem;
+}
+
+.attentionList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.attentionLink {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--forge-color-border);
+  border-radius: var(--forge-radius-md);
+  background: var(--forge-color-surface-2);
+  color: inherit;
+  text-decoration: none;
+}
+
+.attentionLink:hover {
+  border-color: var(--forge-color-primary);
+  background: var(--forge-color-primary-soft);
+}
+
+.twoCol {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+}
+
+.productCardGrid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
+.productCard {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid var(--forge-color-border);
+  border-radius: var(--forge-radius-lg);
+  background: var(--forge-color-surface);
+  cursor: pointer;
+  text-align: left;
+}
+
+.productCard.isSelected {
+  border-color: var(--forge-color-primary);
+  box-shadow: 0 0 0 0.15rem rgba(105, 108, 255, 0.25);
+}
+
+.provisionList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.provisionList li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

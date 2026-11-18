@@ -1,0 +1,12 @@
+{
+  "tenantA": {
+    "id": "019f9e06-a0b2-75f4-9e0b-5ae9befd8193",
+    "slug": "config-acceptance-tenant-a",
+    "aliasOf": "rms-synthetic-fd"
+  },
+  "tenantB": {
+    "id": "019fa5c5-6bd9-734c-ace5-76e0b8da28a0",
+    "slug": "config-acceptance-tenant-b",
+    "aliasOf": "rms-ai-synthetic-fd"
+  }
+}

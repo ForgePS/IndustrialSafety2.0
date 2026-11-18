@@ -1,0 +1,23 @@
+{
+  "suite": "import-center-s8.spec.ts",
+  "at": "2026-07-30T14:50:00.000Z",
+  "passed": 5,
+  "failed": 0,
+  "skipped": 0,
+  "durationSec": 5.8,
+  "browser": "chromium",
+  "creator": "https://ddztl9s33wu40.cloudfront.net",
+  "tenantAdmin": "https://d1uxdl4szvsixc.cloudfront.net",
+  "coverage": [
+    "unauthorized fail-closed import.view",
+    "axe critical/serious none on denial route",
+    "browser storage canary absence",
+    "tenant switch storage canary absence",
+    "tenant-admin denial"
+  ],
+  "notCovered": [
+    "full authenticated create-upload-execute workflow",
+    "keyboard-only full workflow"
+  ],
+  "log": "docs/testing/evidence/import-platform/s8-playwright-import-center.log"
+}

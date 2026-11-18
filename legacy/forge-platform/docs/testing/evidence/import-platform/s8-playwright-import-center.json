@@ -1,0 +1,27 @@
+{
+  "suite": "apps/configuration-e2e/tests/import-center-s8.spec.ts",
+  "status": "PASS",
+  "timestamp": "2026-07-30T18:10:30.000Z",
+  "command": "pnpm exec playwright test tests/import-center-s8.spec.ts",
+  "browser": "chromium",
+  "summary": { "total": 7, "passed": 7, "failed": 0, "skipped": 0 },
+  "tests": [
+    { "name": "Creator Console: fail-closes without import.view", "status": "PASS" },
+    { "name": "Creator Console: authorized operator opens Import Center", "status": "PASS" },
+    { "name": "Creator Console: axe critical/serious on authorized dashboard", "status": "PASS" },
+    { "name": "Creator Console: browser persistence has no canary values", "status": "PASS" },
+    { "name": "Creator Console: tenant switch leaves no canary values", "status": "PASS" },
+    { "name": "Tenant Admin: denies without import.view", "status": "PASS" },
+    { "name": "Tenant Admin: authorized operator opens Import Center", "status": "PASS" }
+  ],
+  "rootCauseFixed": {
+    "issue": "Deployed Creator Console baked NEXT_PUBLIC_API_URL=http://localhost:4000",
+    "fix": "scripts/sync-static-site.mjs resolveConsoleBuildEnv + rebuild/sync console and tenantadmin to https://d108fstxdv69bo.cloudfront.net",
+    "cfCors": "OriginOverride set false on forge-development-cfrhp-api so Nest CORS can answer browser preflight"
+  },
+  "remainingGaps": [
+    "DEF-S8-002: full create-upload-execute browser workflow UI path not yet automated end-to-end",
+    "DEF-S8-003: privileged download browser path still needs dedicated privileged-user tour",
+    "DEF-S8-005: dashboard axe PASS; full keyboard workflow beyond dashboard still open"
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "ok": true,
+  "phase": "PRODUCERS-P2-storage-presign-smoke",
+  "at": "2026-08-06T14:30:51.005Z",
+  "tenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+  "downloads": [
+    {
+      "label": "certificates",
+      "sourcePath": "certificates/business-1782553339499/library/local-cert-lib-img-1782553896018-w206il/1782553896018-Producers_Logo.png",
+      "category": "certificates",
+      "documentId": "c12f2fb5-5e59-55ce-b02b-be7bd669d603",
+      "versionId": "8901ddd6-9c69-58fa-aefb-d0f6668dcfab",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/c12f2fb5-5e59-55ce-b02b-be7bd669d603/8901ddd6-9c69-58fa-aefb-d0f6668dcfab/1782553896018-Producers_Logo.png",
+      "destBucket": "forge-development-documents-511343547817-us-east-1",
+      "mapSize": 1106901,
+      "headContentLength": 1106901,
+      "headETag": "\"93786959943db972eaffa2f1f9810a97\"",
+      "headContentType": "image/png",
+      "httpStatus": 200,
+      "downloadedBytes": 1106901,
+      "sizeMatch": true,
+      "httpOk": true,
+      "presignExpiresSeconds": 300
+    },
+    {
+      "label": "equipment",
+      "sourcePath": "equipment-migrations/business-1782553339499/emb-1785103153130-1e10eda0/source.csv",
+      "category": "equipment",
+      "documentId": "1d5f8100-6a70-5fc0-9612-1013e1f20afe",
+      "versionId": "6c61deca-0e67-58c9-8c0f-70c35d86a1d0",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/1d5f8100-6a70-5fc0-9612-1013e1f20afe/6c61deca-0e67-58c9-8c0f-70c35d86a1d0/source.csv",
+      "destBucket": "forge-development-documents-511343547817-us-east-1",
+      "mapSize": 2706,
+      "headContentLength": 2706,
+      "headETag": "\"b5f9461b8ab85ed28196a02b1913e95d\"",
+      "headContentType": "text/csv",
+      "httpStatus": 200,
+      "downloadedBytes": 2706,
+      "sizeMatch": true,
+      "httpOk": true,
+      "presignExpiresSeconds": 300
+    },
+    {
+      "label": "loto",
+      "sourcePath": "module-attachments/business-1782553339499/loto/lockouts/appliedLocksPhoto/1784912613267-8F886FCE-88A8-45EA-B521-4177C6AA5DBE.PNG",
+      "category": "loto",
+      "documentId": "127b0756-8e68-58c3-b9a3-1add93d9d986",
+      "versionId": "c2f4050f-26af-5daf-816e-829e77680bdd",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/127b0756-8e68-58c3-b9a3-1add93d9d986/c2f4050f-26af-5daf-816e-829e77680bdd/1784912613267-8F886FCE-88A8-45EA-B521-4177C6AA5DBE.PNG",
+      "destBucket": "forge-development-documents-511343547817-us-east-1",
+      "mapSize": 2929913,
+      "headContentLength": 2929913,
+      "headETag": "\"7d3b592f3aa64bb00297264dc3e43636\"",
+      "headContentType": "image/png",
+      "httpStatus": 200,
+      "downloadedBytes": 2929913,
+      "sizeMatch": true,
+      "httpOk": true,
+      "presignExpiresSeconds": 300
+    }
+  ],
+  "auroraCheck": {
+    "exitCode": 0,
+    "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/84fa065369514608aaa5aed1ef1f2819",
+    "result": {
+      "ok": true,
+      "phase": "PRODUCERS-P2-presign-aurora-check",
+      "rows": [
+        {
+          "version_id": "6c61deca-0e67-58c9-8c0f-70c35d86a1d0",
+          "document_id": "1d5f8100-6a70-5fc0-9612-1013e1f20afe",
+          "filename": "source.csv",
+          "storage_bucket": "forge-development-documents-511343547817-us-east-1",
+          "storage_key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/1d5f8100-6a70-5fc0-9612-1013e1f20afe/6c61deca-0e67-58c9-8c0f-70c35d86a1d0/source.csv",
+          "availability_status": "AVAILABLE",
+          "scan_status": "CLEAN",
+          "content_length": "2706",
+          "category": "EQUIPMENT",
+          "name": "source.csv"
+        },
+        {
+          "version_id": "8901ddd6-9c69-58fa-aefb-d0f6668dcfab",
+          "document_id": "c12f2fb5-5e59-55ce-b02b-be7bd669d603",
+          "filename": "1782553896018-Producers_Logo.png",
+          "storage_bucket": "forge-development-documents-511343547817-us-east-1",
+          "storage_key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/c12f2fb5-5e59-55ce-b02b-be7bd669d603/8901ddd6-9c69-58fa-aefb-d0f6668dcfab/1782553896018-Producers_Logo.png",
+          "availability_status": "AVAILABLE",
+          "scan_status": "CLEAN",
+          "content_length": "1106901",
+          "category": "CERTIFICATE",
+          "name": "1782553896018-Producers_Logo.png"
+        },
+        {
+          "version_id": "c2f4050f-26af-5daf-816e-829e77680bdd",
+          "document_id": "127b0756-8e68-58c3-b9a3-1add93d9d986",
+          "filename": "1784912613267-8F886FCE-88A8-45EA-B521-4177C6AA5DBE.PNG",
+          "storage_bucket": "forge-development-documents-511343547817-us-east-1",
+          "storage_key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/127b0756-8e68-58c3-b9a3-1add93d9d986/c2f4050f-26af-5daf-816e-829e77680bdd/1784912613267-8F886FCE-88A8-45EA-B521-4177C6AA5DBE.PNG",
+          "availability_status": "AVAILABLE",
+          "scan_status": "CLEAN",
+          "content_length": "2929913",
+          "category": "LOTO",
+          "name": "1784912613267-8F886FCE-88A8-45EA-B521-4177C6AA5DBE.PNG"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: forge-platform-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: forge
+      POSTGRES_PASSWORD: forge_local_only
+      POSTGRES_DB: forge_platform_local
+    volumes:
+      - forge_pg_data:/var/lib/postgresql/data
+      - ./database/docker/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U forge -d forge_platform_local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  forge_pg_data:

@@ -1,0 +1,7 @@
+{
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/e2737e989b7a4a71b6ea24c0d7a88c3e",
+  "exitCode": 0,
+  "logMessages": [
+    "{\"ok\":true,\"importPermissionCount\":12,\"codes\":[\"import.approve\",\"import.error.reprocess\",\"import.execute\",\"import.map\",\"import.preview\",\"import.profile.manage\",\"import.rollback\",\"import.sensitive\",\"import.template.manage\",\"import.upload\",\"import.validate\",\"import.view\"]}"
+  ]
+}

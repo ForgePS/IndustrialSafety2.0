@@ -1,0 +1,98 @@
+{
+  "ok": true,
+  "at": "2026-08-06T14:24:31.830Z",
+  "mode": "apply",
+  "cluster": "forge-development-ecs-platform",
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/f26c8065ecad4b5eb6ac34dc45f23d76",
+  "exitCode": 0,
+  "mapUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p2-doc-meta/2026-08-06T14-23-00-747Z/s3-map-staging.json",
+  "loaderUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p2-doc-meta/2026-08-06T14-23-00-747Z/aurora-document-metadata-ecs-loader.mjs",
+  "result": {
+    "ok": true,
+    "phase": "PRODUCERS-P2-storage-aurora-metadata",
+    "mode": "apply",
+    "startedAt": "2026-08-06T14:23:40.247Z",
+    "finishedAt": "2026-08-06T14:23:59.197Z",
+    "tenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+    "mapUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p2-doc-meta/2026-08-06T14-23-00-747Z/s3-map-staging.json",
+    "counts": {
+      "planned": 9077,
+      "documentsInserted": 175,
+      "documentsUpdated": 8902,
+      "versionsInserted": 175,
+      "versionsUpdated": 8902,
+      "skipped": 0,
+      "error": 0
+    },
+    "after": {
+      "platform_documents": 9077,
+      "versions_by_status": [
+        {
+          "availability_status": "AVAILABLE",
+          "c": 9077
+        }
+      ]
+    },
+    "sample": [
+      {
+        "sourcePath": "certificates/business-1782553339499/library/local-cert-lib-img-1782553896018-w206il/1782553896018-Producers_Logo.png",
+        "documentId": "c12f2fb5-5e59-55ce-b02b-be7bd669d603",
+        "versionId": "8901ddd6-9c69-58fa-aefb-d0f6668dcfab",
+        "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/c12f2fb5-5e59-55ce-b02b-be7bd669d603/8901ddd6-9c69-58fa-aefb-d0f6668dcfab/1782553896018-Producers_Logo.png",
+        "contentLength": 1106901
+      },
+      {
+        "sourcePath": "dot-compliance/business-1782553339499/drivers/driversApplicationCopy/1783950366452-26-06-02.pdf",
+        "documentId": "2f6194ee-979b-5968-916f-5877618761b0",
+        "versionId": "d0c96298-feaa-5ead-99a9-7bd938fddbcf",
+        "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/2f6194ee-979b-5968-916f-5877618761b0/d0c96298-feaa-5ead-99a9-7bd938fddbcf/1783950366452-26-06-02.pdf",
+        "contentLength": 4463438
+      },
+      {
+        "sourcePath": "dot-compliance/business-1782553339499/drivers/driversApplicationCopy/1783956143029-26-06-22.pdf",
+        "documentId": "39913157-4cbe-5da1-8b0d-f0d50091fbfa",
+        "versionId": "110f4ca1-2e3d-5aeb-9124-0b49d2e14d6a",
+        "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/39913157-4cbe-5da1-8b0d-f0d50091fbfa/110f4ca1-2e3d-5aeb-9124-0b49d2e14d6a/1783956143029-26-06-22.pdf",
+        "contentLength": 3766300
+      },
+      {
+        "sourcePath": "dot-compliance/business-1782553339499/drivers/driversLicenseCopy/1783950054916-EXP_29-12-22.pdf",
+        "documentId": "f09baddc-cf5b-5c78-9154-0c375e1f98d4",
+        "versionId": "dc698973-c04f-5a22-86f0-41ac824528cc",
+        "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/f09baddc-cf5b-5c78-9154-0c375e1f98d4/dc698973-c04f-5a22-86f0-41ac824528cc/1783950054916-EXP_29-12-22.pdf",
+        "contentLength": 310428
+      },
+      {
+        "sourcePath": "dot-compliance/business-1782553339499/drivers/driversLicenseCopy/1783951184054-EXP_27-04-23.pdf",
+        "documentId": "97ad59e8-2bfd-507c-a4ae-d2b6edb7431d",
+        "versionId": "71c9e51f-5825-5f99-becd-d24d5a611d52",
+        "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/97ad59e8-2bfd-507c-a4ae-d2b6edb7431d/71c9e51f-5825-5f99-becd-d24d5a611d52/1783951184054-EXP_27-04-23.pdf",
+        "contentLength": 271985
+      },
+      {
+        "sourcePath": "dot-compliance/business-1782553339499/drivers/driversLicenseCopy/1783951638558-EXP_28-11-16.pdf",
+        "documentId": "8241b740-6127-59e2-abf7-bbf6a53adc91",
+        "versionId": "ecdf10db-2b56-5b3d-9abb-74bfb61c8f90",
+        "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/8241b740-6127-59e2-abf7-bbf6a53adc91/ecdf10db-2b56-5b3d-9abb-74bfb61c8f90/1783951638558-EXP_28-11-16.pdf",
+        "contentLength": 753122
+      },
+      {
+        "sourcePath": "dot-compliance/business-1782553339499/drivers/driversLicenseCopy/1783955960096-EXP_29-05-18.pdf",
+        "documentId": "733440ba-1ef4-53f6-92e1-501287ab9f6a",
+        "versionId": "fe65b638-677d-5c12-bd74-17634e0fc8ca",
+        "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/733440ba-1ef4-53f6-92e1-501287ab9f6a/fe65b638-677d-5c12-bd74-17634e0fc8ca/1783955960096-EXP_29-05-18.pdf",
+        "contentLength": 281630
+      },
+      {
+        "sourcePath": "dot-compliance/business-1782553339499/drivers/drugAlcoholRecordkeepingLogCopy/1783956213587-26-06-24.pdf",
+        "documentId": "13f174ba-047f-5c11-afea-8a7c28d33f98",
+        "versionId": "30592851-fa34-50e9-a33c-2f2994e69938",
+        "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/13f174ba-047f-5c11-afea-8a7c28d33f98/30592851-fa34-50e9-a33c-2f2994e69938/1783956213587-26-06-24.pdf",
+        "contentLength": 2321186
+      }
+    ],
+    "errors": [],
+    "avNote": "AV Option B time-boxed waiver (av-approach-decision.md) expires 2026-09-05; sample re-scan committed"
+  },
+  "logTail": "{\"dbUser\":\"forge_admin\",\"tenant\":{\"id\":\"0882c865-59c2-49a6-ab88-ce6ca89be30c\",\"tenant_key\":\"producers-rice-mill-staging\",\"slug\":\"producers-rice-mill-staging\"},\"mode\":\"apply\",\"planned\":9077}\n{\n  \"ok\": true,\n  \"phase\": \"PRODUCERS-P2-storage-aurora-metadata\",\n  \"mode\": \"apply\",\n  \"startedAt\": \"2026-08-06T14:23:40.247Z\",\n  \"finishedAt\": \"2026-08-06T14:23:59.197Z\",\n  \"tenantId\": \"0882c865-59c2-49a6-ab88-ce6ca89be30c\",\n  \"mapUri\": \"s3://forge-development-imports-511343547817-us-east-1/ind11b/p2-doc-meta/2026-08-06T14-23-00-747Z/s3-map-staging.json\",\n  \"counts\": {\n    \"planned\": 9077,\n    \"documentsInserted\": 175,\n    \"documentsUpdated\": 8902,\n    \"versionsInserted\": 175,\n    \"versionsUpdated\": 8902,\n    \"skipped\": 0,\n    \"error\": 0\n  },\n  \"after\": {\n    \"platform_documents\": 9077,\n    \"versions_by_status\": [\n      {\n        \"availability_status\": \"AVAILABLE\",\n        \"c\": 9077\n      }\n    ]\n  },\n  \"sample\": [\n    {\n      \"sourcePath\": \"certificates/business-1782553339499/library/local-cert-lib-img-1782553896018-w206il/1782553896018-Producers_Logo.png\",\n      \"documentId\": \"c12f2fb5-5e59-55ce-b02b-be7bd669d603\",\n      \"versionId\": \"8901ddd6-9c69-58fa-aefb-d0f6668dcfab\",\n      \"s3Key\": \"tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/c12f2fb5-5e59-55ce-b02b-be7bd669d603/8901ddd6-9c69-58fa-aefb-d0f6668dcfab/1782553896018-Producers_Logo.png\",\n      \"contentLength\": 1106901\n    },\n    {\n      \"sourcePath\": \"dot-compliance/business-1782553339499/drivers/driversApplicationCopy/1783950366452-26-06-02.pdf\",\n      \"documentId\": \"2f6194ee-979b-5968-916f-5877618761b0\",\n      \"versionId\": \"d0c96298-feaa-5ead-99a9-7bd938fddbcf\",\n      \"s3Key\": \"tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/2f6194ee-979b-5968-916f-5877618761b0/d0c96298-feaa-5ead-99a9-7bd938fddbcf/1783950366452-26-06-02.pdf\",\n      \"contentLength\": 4463438\n    },\n    {\n      \"sourcePath\": \"dot-compliance/business-1782553339499/drivers/driversApplicationCopy/1783956143029-26-06-22.pdf\",\n      \"documentId\": \"39913157-4cbe-5da1-8b0d-f0d50091fbfa\",\n      \"versionId\": \"110f4ca1-2e3d-5aeb-9124-0b49d2e14d6a\",\n      \"s3Key\": \"tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/39913157-4cbe-5da1-8b0d-f0d50091fbfa/110f4ca1-2e3d-5aeb-9124-0b49d2e14d6a/1783956143029-26-06-22.pdf\",\n      \"contentLength\": 3766300\n    },\n    {\n      \"sourcePath\": \"dot-compliance/business-1782553339499/drivers/driversLicenseCopy/1783950054916-EXP_29-12-22.pdf\",\n      \"documentId\": \"f09baddc-cf5b-5c78-9154-0c375e1f98d4\",\n      \"versionId\": \"dc698973-c04f-5a22-86f0-41ac824528cc\",\n      \"s3Key\": \"tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/f09baddc-cf5b-5c78-9154-0c375e1f98d4/dc698973-c04f-5a22-86f0-41ac824528cc/1783950054916-EXP_29-12-22.pdf\",\n      \"contentLength\": 310428\n    },\n    {\n      \"sourcePath\": \"dot-compliance/business-1782553339499/drivers/driversLicenseCopy/1783951184054-EXP_27-04-23.pdf\",\n      \"documentId\": \"97ad59e8-2bfd-507c-a4ae-d2b6edb7431d\",\n      \"versionId\": \"71c9e51f-5825-5f99-becd-d24d5a611d52\",\n      \"s3Key\": \"tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/97ad59e8-2bfd-507c-a4ae-d2b6edb7431d/71c9e51f-5825-5f99-becd-d24d5a611d52/1783951184054-EXP_27-04-23.pdf\",\n      \"contentLength\": 271985\n    },\n    {\n      \"sourcePath\": \"dot-compliance/business-1782553339499/drivers/driversLicenseCopy/1783951638558-EXP_28-11-16.pdf\",\n      \"documentId\": \"8241b740-6127-59e2-abf7-bbf6a53adc91\",\n      \"versionId\": \"ecdf10db-2b56-5b3d-9abb-74bfb61c8f90\",\n      \"s3Key\": \"tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/8241b740-6127-59e2-abf7-bbf6a53adc91/ecdf10db-2b56-5b3d-9abb-74bfb61c8f90/1783951638558-EXP_28-11-16.pdf\",\n      \"contentLength\": 753122\n    },\n    {\n      \"sourcePath\": \"dot-compliance/business-1782553339499/drivers/driversLicenseCopy/1783955960096-EXP_29-05-18.pdf\",\n      \"documentId\": \"733440ba-1ef4-53f6-92e1-501287ab9f6a\",\n      \"versionId\": \"fe65b638-677d-5c12-bd74-17634e0fc8ca\",\n      \"s3Key\": \"tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/733440ba-1ef4-53f6-92e1-501287ab9f6a/fe65b638-677d-5c12-bd74-17634e0fc8ca/1783955960096-EXP_29-05-18.pdf\",\n      \"contentLength\": 281630\n    },\n    {\n      \"sourcePath\": \"dot-compliance/business-1782553339499/drivers/drugAlcoholRecordkeepingLogCopy/1783956213587-26-06-24.pdf\",\n      \"documentId\": \"13f174ba-047f-5c11-afea-8a7c28d33f98\",\n      \"versionId\": \"30592851-fa34-50e9-a33c-2f2994e69938\",\n      \"s3Key\": \"tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/13f174ba-047f-5c11-afea-8a7c28d33f98/30592851-fa34-50e9-a33c-2f2994e69938/1783956213587-26-06-24.pdf\",\n      \"contentLength\": 2321186\n    }\n  ],\n  \"errors\": [],\n  \"avNote\": \"AV Option B time-boxed waiver (av-approach-decision.md) expires 2026-09-05; sample re-scan committed\"\n}"
+}

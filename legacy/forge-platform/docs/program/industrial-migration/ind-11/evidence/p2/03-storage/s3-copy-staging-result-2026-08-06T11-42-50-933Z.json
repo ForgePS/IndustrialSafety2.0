@@ -1,0 +1,99 @@
+{
+  "ok": true,
+  "phase": "PRODUCERS-P2-storage-s3-copy-staging",
+  "startedAt": "2026-08-06T11:42:50.933Z",
+  "finishedAt": "2026-08-06T11:56:14.212Z",
+  "authorization": {
+    "gate": "FORGE_P2_STORAGE_COPY_AUTHORIZED",
+    "approval": "evidence/p2/03-storage/APPROVE-PRODUCERS-STORAGE-COPY.md",
+    "av": "evidence/p2/03-storage/av-approach-decision.md",
+    "signed": true
+  },
+  "source": {
+    "firebaseProject": "forge-industrial-safety",
+    "firebaseBusinessId": "business-1782553339499",
+    "bucket": "forge-industrial-safety.firebasestorage.app"
+  },
+  "target": {
+    "destBucket": "forge-development-documents-511343547817-us-east-1",
+    "tenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+    "slug": "producers-rice-mill-staging",
+    "region": "us-east-1"
+  },
+  "mapFile": "s3-map-staging-latest.json",
+  "concurrency": 10,
+  "skipExisting": true,
+  "offset": 0,
+  "limit": null,
+  "counts": {
+    "planned": 9077,
+    "copied": 9074,
+    "skipped_existing": 3,
+    "error": 0,
+    "copiedOrSkippedBytes": 16516836986
+  },
+  "errorPreview": [],
+  "errorCount": 0,
+  "sampleCopied": [
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/driversLicenseCopy/1783950054916-EXP_29-12-22.pdf",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/f09baddc-cf5b-5c78-9154-0c375e1f98d4/dc698973-c04f-5a22-86f0-41ac824528cc/1783950054916-EXP_29-12-22.pdf",
+      "size": 310428,
+      "md5Hex": "e2bfcbfe09ffdf40bd097ccb8c45ca0a"
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/driversLicenseCopy/1783951184054-EXP_27-04-23.pdf",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/97ad59e8-2bfd-507c-a4ae-d2b6edb7431d/71c9e51f-5825-5f99-becd-d24d5a611d52/1783951184054-EXP_27-04-23.pdf",
+      "size": 271985,
+      "md5Hex": "a7ec48bb29042a2e92213c92c5fa43a7"
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/driversLicenseCopy/1783951638558-EXP_28-11-16.pdf",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/8241b740-6127-59e2-abf7-bbf6a53adc91/ecdf10db-2b56-5b3d-9abb-74bfb61c8f90/1783951638558-EXP_28-11-16.pdf",
+      "size": 753122,
+      "md5Hex": "acd51bed63d2058d6383a5423bd02be3"
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/driversLicenseCopy/1783955960096-EXP_29-05-18.pdf",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/733440ba-1ef4-53f6-92e1-501287ab9f6a/fe65b638-677d-5c12-bd74-17634e0fc8ca/1783955960096-EXP_29-05-18.pdf",
+      "size": 281630,
+      "md5Hex": "3d15a8db6b26ea2437e3c229ce485440"
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/drugAlcoholRecordkeepingLogCopy/1783956213587-26-06-24.pdf",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/13f174ba-047f-5c11-afea-8a7c28d33f98/30592851-fa34-50e9-a33c-2f2994e69938/1783956213587-26-06-24.pdf",
+      "size": 2321186,
+      "md5Hex": "7edce549a3897e96495a3e865cbb2d5c"
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/drugAlcoholRecordkeepingLogCopy/1784642570152-AUSTIN_LAMBERSON_-_DRUG.pdf",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/a52f6192-087b-55ea-b8af-9915883c2882/4ef88e6f-f06e-501f-858d-5731ce0874af/1784642570152-AUSTIN_LAMBERSON_-_DRUG.pdf",
+      "size": 141649,
+      "md5Hex": "c5bd931bf669bf6d0a5d06dd6c3192c5"
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/drugAlcoholRecordkeepingLogCopy/1784642952688-JACKSON_HOLLEY_-_DRUG.pdf",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/7dc55174-eb82-5734-bc40-0baae81fbf8f/9da3aa6f-ca84-5ca1-a2d7-141b98de864b/1784642952688-JACKSON_HOLLEY_-_DRUG.pdf",
+      "size": 158236,
+      "md5Hex": "65dc6352f201724432f2a65024474906"
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/DRV-2026-0001/consentDrugAlcoholTestCopy/1782919713095-image.jpg",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/074082f7-23b6-5047-9004-012ad45f9f64/4f9c2012-9334-53f4-bd5b-caf25cbd88db/1782919713095-image.jpg",
+      "size": 2452520,
+      "md5Hex": "631219f8a1ae3ecf5b0c95617e634464"
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/DRV-2026-0001/driversApplicationCopy/1782919649569-0491_001.pdf",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/009d7f45-e8ba-5af6-b99b-e3efe4b0fdb8/7a697d29-d108-5879-99dc-bc4c96a3be95/1782919649569-0491_001.pdf",
+      "size": 463746,
+      "md5Hex": "9037c8c85daab74cf381870c4d0d8abf"
+    },
+    {
+      "sourcePath": "dot-compliance/business-1782553339499/drivers/DRV-2026-0001/driversLicenseCopy/1782919262105-image.jpg",
+      "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/117117f4-3ab4-5ded-8862-b2430d77297a/e8df50fe-5ced-5d9a-9281-f2d04784795c/1782919262105-image.jpg",
+      "size": 3443786,
+      "md5Hex": "5684cf94046cf7aeb6a9a90eb10327c9"
+    }
+  ]
+}

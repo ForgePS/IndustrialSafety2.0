@@ -16,12 +16,22 @@ import { userFacingAiError } from '@/lib/forgeAiReliability'
 import { executeForgeAiTool, getForgeAiToolDefinitions } from '@/lib/forgeAiTools'
 import { getForgeAiRecordContext } from '@/lib/forgeAiContext'
 import { getAvailableForgeAiActions } from '@/lib/forgeAiActions'
+import {
+  FORGE_AI_AGENT_KEYS,
+  agentLimits,
+  getForgeAiAgent,
+  routeForgeAiRequest,
+  selectAgentCapabilities
+} from '@/lib/forgeAiAgents'
+import { checkAssistantResponse } from '@/lib/forgeAiResponseCheck'
 
 export const dynamic = 'force-dynamic'
 
 const requestSchema = z.object({
   conversationId: z.string().uuid().nullable().optional(),
   message: z.string().trim().min(1),
+  // 'auto' (default) lets the orchestrator route; a key pins the conversation turn to one agent.
+  agent: z.enum(['auto', ...FORGE_AI_AGENT_KEYS] as [string, ...string[]]).optional(),
   context: z
     .object({
       type: z.enum(['incident', 'inspection', 'asset', 'personnel', 'training_course', 'qr', 'loto', 'task']),
@@ -206,15 +216,28 @@ return NextResponse.json({ error: 'Forge AI is not available for this session.' 
     }
   }
 
-  const tools = getForgeAiToolDefinitions(capabilities, availableActions)
+  // Orchestration: pick the agent, then narrow tools to its allowlist. An agent can only lose
+  // tools here, never gain them: the list is already filtered by this user's permissions.
+  const route = routeForgeAiRequest({
+    message: parsed.data.message,
+    requestedAgent: parsed.data.agent,
+    recordContextType: recordContext?.type ?? null
+  })
+  const agent = getForgeAiAgent(route.agentKey)
+  const agentCapabilities = agent ? selectAgentCapabilities(agent.key, capabilities) : capabilities
+  const agentRunLimits = agentLimits(route.agentKey, { maxToolCalls: settings.max_tool_calls })
+  const tools = getForgeAiToolDefinitions(agentCapabilities, availableActions)
 
   const prompt = resolveForgeAiPrompt({
     key: 'assistant.general',
+    agentKey: agent?.key ?? null,
     values: { assistant_name: settings.assistant_name, organization_name: activeOrganization.name },
     responseStyle: settings.response_style as ForgeAiResponseStyle,
     tenantInstructions: settings.system_instructions,
-    capabilities: capabilities.map((item: any) => item.capability_key)
+    capabilities: agentCapabilities.map((item: any) => item.capability_key)
   })
+
+  const toolResults: Array<{ tool: string; result: unknown }> = []
 
   const model = settings.model || process.env.FORGE_AI_MODEL || 'gpt-6-sol'
 
@@ -235,10 +258,17 @@ return NextResponse.json({ error: 'Forge AI is not available for this session.' 
         userId: user.id,
         conversationId: conversation.id,
         requestKind: 'chat',
-        agentKey: 'general',
+        intent: route.intent,
+        agentKey: route.agentKey,
         prompt,
         providerName: settings.provider,
-        metadata: recordContext ? { record_context_type: recordContext.type } : {}
+        metadata: {
+          route_reason: route.reason,
+          route_confidence: route.confidence,
+          intent_scores: route.scores,
+          tools_offered: tools.map((tool: any) => tool.name),
+          ...(recordContext ? { record_context_type: recordContext.type } : {})
+        }
       },
       model,
       async ({ provider, limits, agentRunId }) => {
@@ -247,7 +277,8 @@ return NextResponse.json({ error: 'Forge AI is not available for this session.' 
           model,
           reasoningEffort: settings.reasoning_effort,
           maxOutputTokens: settings.max_output_tokens,
-          maxToolCalls: settings.max_tool_calls,
+          maxToolCalls: agentRunLimits.maxToolCalls,
+          maxRounds: agentRunLimits.maxRounds,
           instructions: prompt.text,
           messages: providerMessages,
           tools,
@@ -257,7 +288,7 @@ return NextResponse.json({ error: 'Forge AI is not available for this session.' 
                 user,
                 activeOrganization,
                 access,
-                capabilities,
+                capabilities: agentCapabilities,
                 permissionByKey,
                 settings: {
                   allow_sensitive_data: settings.allow_sensitive_data
@@ -269,6 +300,8 @@ return NextResponse.json({ error: 'Forge AI is not available for this session.' 
               agentRunId,
               call
             })
+
+            toolResults.push({ tool: call.name, result })
 
             if (call.name === 'knowledge_search' && Array.isArray(result)) {
               for (const item of result as any[]) {
@@ -309,7 +342,42 @@ return NextResponse.json({ error: 'Forge AI is not available for this session.' 
 
     const aiResult = outcome.result
 
-    const assistantText = aiResult.text || 'I completed the Forge data checks, but no text response was returned.'
+    // Response validation: cited record numbers must come from this turn's tool results, the
+    // user's message or the authorised record context; internal ids are removed.
+    const check = checkAssistantResponse({
+      text: aiResult.text || 'I completed the Forge data checks, but no text response was returned.',
+      toolResults,
+      trustedText: [
+        parsed.data.message,
+        ...providerMessages.filter((message: any) => message.role === 'user').map((message: any) => message.content),
+        // Records verified in earlier answers of this conversation.
+        ...history.flatMap((message: any) =>
+          Array.isArray(message.metadata?.sources)
+            ? message.metadata.sources.filter((item: any) => item?.kind === 'record').map((item: any) => String(item.reference))
+            : []
+        )
+      ]
+    })
+
+    const assistantText = check.text
+
+    if (outcome.agentRunId) {
+      await supabase
+        .from('forge_ai_agent_runs')
+        .update({
+          metadata: {
+            route_reason: route.reason,
+            route_confidence: route.confidence,
+            intent_scores: route.scores,
+            tools_offered: tools.map((tool: any) => tool.name),
+            rejected_tool_calls: aiResult.rejectedToolCalls,
+            sources: check.sources.length,
+            unverified_references: check.unverifiedReferences,
+            redacted_identifiers: check.redactedIdentifiers
+          }
+        })
+        .eq('id', outcome.agentRunId)
+    }
 
     const { data: assistantMessage, error: assistantMessageError } = await supabase
       .from('forge_ai_messages')
@@ -323,6 +391,9 @@ return NextResponse.json({ error: 'Forge AI is not available for this session.' 
           model,
           provider: outcome.provider.name,
           agent_run_id: outcome.agentRunId,
+          agent: { key: route.agentKey, name: agent?.name ?? 'Forge AI', reason: route.reason },
+          sources: check.sources,
+          unverified_references: check.unverifiedReferences,
           prompt: { key: prompt.key, version: prompt.version, hash: prompt.hash },
           provider_response_id: aiResult.responseId,
           tool_calls: aiResult.toolCalls,
@@ -360,6 +431,9 @@ return NextResponse.json({ error: 'Forge AI is not available for this session.' 
         role: 'assistant',
         content: assistantText,
         source_refs: knowledgeSourceRefs,
+        sources: check.sources,
+        agent: { key: route.agentKey, name: agent?.name ?? 'Forge AI', reason: route.reason },
+        unverified_references: check.unverifiedReferences,
         prepared_actions: preparedActions,
         created_at: assistantMessage.created_at
       },

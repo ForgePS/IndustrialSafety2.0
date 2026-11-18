@@ -1,0 +1,210 @@
+export type ForgeErrorCode =
+  | "BAD_REQUEST"
+  | "UNAUTHORIZED"
+  | "FORBIDDEN"
+  | "NOT_FOUND"
+  | "CONFLICT"
+  | "VALIDATION_FAILED"
+  | "TENANT_SUSPENDED"
+  | "TENANT_INACTIVE"
+  | "SUBSCRIPTION_INACTIVE"
+  | "ENTITLEMENT_REQUIRED"
+  | "IDEMPOTENCY_CONFLICT"
+  | "IDEMPOTENCY_IN_PROGRESS"
+  | "PRECONDITION_REQUIRED"
+  | "PRECONDITION_FAILED"
+  | "RATE_LIMITED"
+  | "INTERNAL_ERROR"
+  | "IMPORT_JOB_NOT_FOUND"
+  | "IMPORT_PROFILE_NOT_FOUND"
+  | "IMPORT_TEMPLATE_NOT_FOUND"
+  | "IMPORT_PERMISSION_DENIED"
+  | "IMPORT_INVALID_STATE_TRANSITION"
+  | "IMPORT_VALIDATION_REQUEST_NOT_AVAILABLE"
+  | "IMPORT_PREVIEW_REQUEST_NOT_AVAILABLE"
+  | "IMPORT_APPROVAL_NOT_AVAILABLE"
+  | "IMPORT_IDEMPOTENCY_CONFLICT"
+  | "IMPORT_MAPPING_INVALID"
+  | "IMPORT_TENANT_CONTEXT_REQUIRED"
+  | "IMPORT_ENTITLEMENT_REQUIRED"
+  | "IMPORT_FILE_NOT_FOUND"
+  | "IMPORT_UPLOAD_INVALID"
+  | "IMPORT_UPLOAD_NOT_FOUND"
+  | "IMPORT_CHECKSUM_MISMATCH"
+  | "IMPORT_DUPLICATE_CONTENT"
+  | "IMPORT_FORMAT_INVALID"
+  | "IMPORT_FORMAT_UNSUPPORTED"
+  | "IMPORT_FORMAT_MISMATCH"
+  | "IMPORT_OBJECT_MISSING"
+  | "IMPORT_BYTES_DENIED"
+  | "IMPORT_DUPLICATE_NOT_FOUND"
+  | "IMPORT_DUPLICATE_INVALID_REVIEW"
+  | "IMPORT_ROWS_REQUIRED"
+  | "IMPORT_ZIP_INVALID"
+  | "IMPORT_ZIP_MANIFEST_MISSING"
+  | "IMPORT_ZIP_MANIFEST_INVALID"
+  | "IMPORT_ZIP_UNSUPPORTED_FILE"
+  | "IMPORT_ZIP_MISSING_REQUIRED"
+  | "IMPORT_ZIP_CHECKSUM_MISMATCH"
+  | "IMPORT_ZIP_CHECKSUM_UNVERIFIED"
+  | "IMPORT_API_CONFIG_INVALID"
+  | "IMPORT_MESSAGE_INVALID"
+  | "IMPORT_ADAPTER_MISSING"
+  | "IMPORT_EXECUTION_LOCK_HELD"
+  | "IMPORT_NOT_EXECUTABLE"
+  | "IMPORT_BATCH_NOT_FOUND"
+  | "IMPORT_ROW_ERROR_NOT_FOUND"
+  | "IMPORT_ROLLBACK_NOT_PERMITTED"
+  | "IMPORT_SCAN_REQUIRED"
+  | "IMPORT_SCAN_PENDING"
+  | "IMPORT_SCAN_FAILED"
+  | "IMPORT_SCAN_TIMEOUT"
+  | "IMPORT_SCAN_INFECTED"
+  | "IMPORT_SCAN_SUSPICIOUS"
+  | "IMPORT_SCAN_HASH_MISMATCH"
+  | "IMPORT_SCAN_STALE_VERDICT"
+  | "IMPORT_FILE_QUARANTINED"
+  | "IMPORT_SECURITY_HOLD"
+  | "IMPORT_SENSITIVE_ACCESS_DENIED"
+  | "IMPORT_ARTIFACT_ACCESS_DENIED"
+  | "IMPORT_ARTIFACT_EXPIRED"
+  | "IMPORT_CROSS_TENANT_DENIED"
+  | "IMPORT_SCANNER_PROVIDER_UNAVAILABLE"
+  | "IMPORT_SCANNER_RESPONSE_INVALID"
+  | "LEGAL_ACKNOWLEDGMENT_REQUIRED"
+  | "LEGAL_DOCUMENT_NOT_FOUND"
+  | "LEGAL_DOCUMENT_VERSION_STALE"
+  | "ACKNOWLEDGMENT_ALREADY_RECORDED"
+  | "ACKNOWLEDGMENT_NOT_AUTHORIZED"
+  | "TENANT_POLICY_NOT_AUTHORIZED"
+  | "ATTESTATION_REQUIRED";
+
+export class ForgeError extends Error {
+  readonly code: ForgeErrorCode;
+  readonly statusCode: number;
+  readonly details: unknown[];
+  readonly exposeMessage: boolean;
+
+  constructor(
+    code: ForgeErrorCode,
+    message: string,
+    options?: {
+      statusCode?: number;
+      details?: unknown[];
+      cause?: unknown;
+      exposeMessage?: boolean;
+    },
+  ) {
+    super(message, options?.cause ? { cause: options.cause } : undefined);
+    this.name = "ForgeError";
+    this.code = code;
+    this.statusCode = options?.statusCode ?? defaultStatus(code);
+    this.details = options?.details ?? [];
+    this.exposeMessage = options?.exposeMessage ?? true;
+  }
+}
+
+function defaultStatus(code: ForgeErrorCode): number {
+  switch (code) {
+    case "BAD_REQUEST":
+    case "VALIDATION_FAILED":
+    case "IMPORT_MAPPING_INVALID":
+    case "IMPORT_TENANT_CONTEXT_REQUIRED":
+    case "IMPORT_UPLOAD_INVALID":
+    case "IMPORT_CHECKSUM_MISMATCH":
+    case "IMPORT_FORMAT_INVALID":
+    case "IMPORT_FORMAT_UNSUPPORTED":
+    case "IMPORT_FORMAT_MISMATCH":
+    case "IMPORT_BYTES_DENIED":
+    case "IMPORT_DUPLICATE_INVALID_REVIEW":
+    case "IMPORT_ROWS_REQUIRED":
+    case "IMPORT_ZIP_INVALID":
+    case "IMPORT_ZIP_MANIFEST_MISSING":
+    case "IMPORT_ZIP_MANIFEST_INVALID":
+    case "IMPORT_ZIP_UNSUPPORTED_FILE":
+    case "IMPORT_ZIP_MISSING_REQUIRED":
+    case "IMPORT_ZIP_CHECKSUM_MISMATCH":
+    case "IMPORT_ZIP_CHECKSUM_UNVERIFIED":
+    case "IMPORT_API_CONFIG_INVALID":
+    case "IMPORT_MESSAGE_INVALID":
+    case "IMPORT_NOT_EXECUTABLE":
+    case "IMPORT_ROLLBACK_NOT_PERMITTED":
+    case "IMPORT_SCAN_REQUIRED":
+    case "IMPORT_SCAN_PENDING":
+    case "IMPORT_SCAN_FAILED":
+    case "IMPORT_SCAN_TIMEOUT":
+    case "IMPORT_SCAN_HASH_MISMATCH":
+    case "IMPORT_SCAN_STALE_VERDICT":
+    case "IMPORT_SCANNER_RESPONSE_INVALID":
+      return 400;
+    case "UNAUTHORIZED":
+      return 401;
+    case "FORBIDDEN":
+    case "TENANT_SUSPENDED":
+    case "TENANT_INACTIVE":
+    case "SUBSCRIPTION_INACTIVE":
+    case "ENTITLEMENT_REQUIRED":
+    case "IMPORT_PERMISSION_DENIED":
+    case "IMPORT_ENTITLEMENT_REQUIRED":
+    case "IMPORT_SCAN_INFECTED":
+    case "IMPORT_SCAN_SUSPICIOUS":
+    case "IMPORT_FILE_QUARANTINED":
+    case "IMPORT_SECURITY_HOLD":
+    case "IMPORT_SENSITIVE_ACCESS_DENIED":
+    case "IMPORT_ARTIFACT_ACCESS_DENIED":
+    case "IMPORT_CROSS_TENANT_DENIED":
+    case "LEGAL_ACKNOWLEDGMENT_REQUIRED":
+    case "ACKNOWLEDGMENT_NOT_AUTHORIZED":
+    case "TENANT_POLICY_NOT_AUTHORIZED":
+    case "ATTESTATION_REQUIRED":
+      return 403;
+    case "NOT_FOUND":
+    case "IMPORT_JOB_NOT_FOUND":
+    case "IMPORT_PROFILE_NOT_FOUND":
+    case "IMPORT_TEMPLATE_NOT_FOUND":
+    case "IMPORT_FILE_NOT_FOUND":
+    case "IMPORT_UPLOAD_NOT_FOUND":
+    case "IMPORT_OBJECT_MISSING":
+    case "IMPORT_DUPLICATE_NOT_FOUND":
+    case "IMPORT_BATCH_NOT_FOUND":
+    case "IMPORT_ROW_ERROR_NOT_FOUND":
+    case "IMPORT_ARTIFACT_EXPIRED":
+    case "LEGAL_DOCUMENT_NOT_FOUND":
+      return 404;
+    case "CONFLICT":
+    case "IDEMPOTENCY_CONFLICT":
+    case "IDEMPOTENCY_IN_PROGRESS":
+    case "IMPORT_INVALID_STATE_TRANSITION":
+    case "IMPORT_VALIDATION_REQUEST_NOT_AVAILABLE":
+    case "IMPORT_PREVIEW_REQUEST_NOT_AVAILABLE":
+    case "IMPORT_APPROVAL_NOT_AVAILABLE":
+    case "IMPORT_IDEMPOTENCY_CONFLICT":
+    case "IMPORT_DUPLICATE_CONTENT":
+    case "IMPORT_EXECUTION_LOCK_HELD":
+    case "IMPORT_ADAPTER_MISSING":
+    case "IMPORT_SCANNER_PROVIDER_UNAVAILABLE":
+    case "ACKNOWLEDGMENT_ALREADY_RECORDED":
+    case "LEGAL_DOCUMENT_VERSION_STALE":
+      return 409;
+    case "PRECONDITION_FAILED":
+      return 412;
+    case "PRECONDITION_REQUIRED":
+      return 428;
+    case "RATE_LIMITED":
+      return 429;
+    default:
+      return 500;
+  }
+}
+
+export function isForgeError(error: unknown): error is ForgeError {
+  if (error instanceof ForgeError) return true;
+  // Duck-type across duplicate @forge/errors package instances (Nest/webpack).
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as { name?: unknown; code?: unknown; statusCode?: unknown };
+  return (
+    candidate.name === "ForgeError" &&
+    typeof candidate.code === "string" &&
+    typeof candidate.statusCode === "number"
+  );
+}

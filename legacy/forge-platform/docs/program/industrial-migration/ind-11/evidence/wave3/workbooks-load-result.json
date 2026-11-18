@@ -1,0 +1,29 @@
+{
+  "ok": true,
+  "at": "2026-08-05T11:44:05.434Z",
+  "wave": "3-workbooks",
+  "cluster": "forge-development-ecs-platform",
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/c3481434921d445380dc6367041b3ee8",
+  "exitCode": 0,
+  "payloadUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/wave3-workbooks/2026-08-05T11-42-44-439Z/payload.json",
+  "payloadMetaPath": "docs\\program\\industrial-migration\\ind-11\\evidence\\wave3\\workbooks-payload.meta.json",
+  "extractCounts": {
+    "confinedSpaceRecords": 26,
+    "hotWorkRecords": 25,
+    "workingAtHeightsRecords": 25,
+    "electricalSafetyRecords": 25,
+    "cranesRiggingRecords": 30,
+    "machineSafetyRecords": 35,
+    "dotComplianceRecords": 47,
+    "forkliftRecords": 40,
+    "workersCompCases": 27,
+    "oshaCases": 1,
+    "chemicalSafetyRecords": 52,
+    "warehouseSafetyRecords": 51,
+    "manufacturingSafetyRecords": 41,
+    "contractorSafetyRecords": 30,
+    "processSafetyRecords": 35,
+    "environmentalSafetyRecords": 30
+  },
+  "logExcerpt": "{\"dbUser\":\"forge_admin\",\"batchId\":\"8d248160-be3d-5266-829b-f97b525c7358\"}\t{\t  \"ok\": true,\t  \"phase\": \"IND-11B-wave3-workbooks\",\t  \"mode\": \"NONPRODUCTION_LOAD\",\t  \"environment\": \"development\",\t  \"migrationBatchId\": \"04cf2eae-6102-40e2-baa9-6b9572dfb776\",\t  \"dbBatchId\": \"8d248160-be3d-5266-829b-f97b525c7358\",\t  \"counts\": {\t    \"confinedSpaceRecords\": 26,\t    \"hotWorkRecords\": 25,\t    \"workingAtHeightsRecords\": 25,\t    \"electricalSafetyRecords\": 25,\t    \"cranesRiggingRecords\": 30,\t    \"machineSafetyRecords\": 35,\t    \"dotComplianceRecords\": 47,\t    \"forkliftRecords\": 40,\t    \"chemicalSafetyRecords\": 52,\t    \"warehouseSafetyRecords\": 51,\t    \"manufacturingSafetyRecords\": 41,\t    \"contractorSafetyRecords\": 30,\t    \"processSafetyRecords\": 35,\t    \"environmentalSafetyRecords\": 30,\t    \"workersCompCases\": 27,\t    \"oshaCases\": 1\t  },\t  \"errorCount\": 0,\t  \"errors\": []\t}"
+}

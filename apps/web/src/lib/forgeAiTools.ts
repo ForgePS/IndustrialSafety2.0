@@ -13,6 +13,11 @@ import { listRisks, loadRisk } from '@/lib/forgeRiskRegister'
 import { listJsas } from '@/lib/forgeJsa'
 import { searchForgeAiKnowledge } from '@/lib/forgeAiKnowledge'
 import { searchKnowledge } from '@/lib/forgeHelpdeskKnowledge'
+import { fenceUntrustedExcerpt } from '@/lib/forgeAiResponseCheck'
+import { recordForgeAiAudit } from '@/lib/forgeAiExecution'
+import { getScopedForgeAiWatchAlerts } from '@/lib/forgeAiWatchAccess'
+import { getScopedForgeAiRiskAssessments } from '@/lib/forgeAiRisk'
+import { getScopedForgeAiRecommendations } from '@/lib/forgeAiRecommendations'
 import {
   getForgeAiAssetAnalytics,
   getForgeAiExecutiveAnalytics,
@@ -488,6 +493,53 @@ const definitions: Record<string, any> = {
         limit: { type: ['integer','null'], minimum: 1, maximum: 8, description: 'Maximum articles to return, or null for the default.' }
       },
       required: ['query','limit'],
+      additionalProperties: false
+    }
+  },
+  search_watch_alerts: {
+    type: 'function',
+    name: 'search_watch_alerts',
+    description: 'List Forge AI Watch alerts the user may see (rule-based detections over Forge records), newest first. Use to explain what needs attention.',
+    strict: true,
+    parameters: {
+      type: 'object',
+      properties: {
+        status: { type: ['string','null'], enum: ['open','acknowledged','resolved', null], description: 'Alert status, or null for open and acknowledged.' },
+        severity: { type: ['string','null'], enum: ['critical','high','warning','info', null], description: 'Only this severity, or null for all.' },
+        limit: { type: ['integer','null'], minimum: 1, maximum: 50, description: 'Maximum alerts to return, or null for the default.' }
+      },
+      required: ['status','severity','limit'],
+      additionalProperties: false
+    }
+  },
+  get_risk_indicators: {
+    type: 'function',
+    name: 'get_risk_indicators',
+    description: 'Latest Forge facility and division risk indicators (0-100 weighted indicators over real records, not probabilities) with each contributing factor, its detail and the records behind it. Scopes without enough data have no score.',
+    strict: true,
+    parameters: {
+      type: 'object',
+      properties: {
+        scope_type: { type: ['string','null'], enum: ['location','division', null], description: 'Only facilities (location) or divisions, or null for both.' },
+        limit: { type: ['integer','null'], minimum: 1, maximum: 20, description: 'Maximum scopes to return, or null for the default.' }
+      },
+      required: ['scope_type','limit'],
+      additionalProperties: false
+    }
+  },
+  get_recommendations: {
+    type: 'function',
+    name: 'get_recommendations',
+    description: 'Forge AI recommendations: suggested next steps built from open AI Watch alerts and elevated risk indicator factors, each with its rationale, the records behind it, any proposed corrective action and its approval and verification status. Read-only: recommendations are accepted, approved and verified by people on the Recommendations page.',
+    strict: true,
+    parameters: {
+      type: 'object',
+      properties: {
+        status: { type: ['string','null'], enum: ['open','proposed','in_review','executed','verified','closed', null], description: 'open (default) for everything still in progress, closed for finished ones, or one status.' },
+        priority: { type: ['string','null'], enum: ['critical','high','medium','low', null], description: 'Only this priority, or null for all.' },
+        limit: { type: ['integer','null'], minimum: 1, maximum: 25, description: 'Maximum recommendations to return, or null for the default.' }
+      },
+      required: ['status','priority','limit'],
       additionalProperties: false
     }
   },
@@ -1433,7 +1485,7 @@ const executeToolValue = async ({
         includeRestricted
       })
 
-      return results.map((item: any) => ({
+      const fenced = results.map((item: any) => ({
         record_type: 'forge_knowledge',
         source_title: item.source_title,
         source_type: item.source_type,
@@ -1441,9 +1493,28 @@ const executeToolValue = async ({
         source_reference: item.source_reference,
         section_title: item.section_title,
         page_number: item.page_number,
-        excerpt: item.content,
-        similarity: Number(item.similarity.toFixed(4))
+        // Document text is untrusted: labelled as data and flagged when it reads like instructions.
+        content: fenceUntrustedExcerpt(String(item.content || '')),
+        relevance: item.relevance,
+        matched_by: item.matched_by
       }))
+
+      const flagged = fenced.filter(item => item.content.instruction_like)
+
+      if (flagged.length) {
+        await recordForgeAiAudit({
+          organizationId,
+          actorUserId: userId,
+          actorType: 'system',
+          eventType: 'knowledge.instruction_like_content',
+          resourceType: 'forge_ai_knowledge_source',
+          detail: {
+            sources: flagged.map(item => ({ title: item.source_title, section: item.section_title, patterns: item.content.injection_patterns }))
+          }
+        })
+      }
+
+      return fenced
     }
 
     case 'search_help_articles': {
@@ -1460,10 +1531,156 @@ const executeToolValue = async ({
         record_type: 'help_article',
         title: item.title,
         summary: item.summary,
-        excerpt: item.snippet.replace(/\[\[|\]\]/g, ''),
+        content: fenceUntrustedExcerpt(item.snippet.replace(/\[\[|\]\]/g, '')),
         url: '/help-desk/articles/' + item.slug,
         updated_at: item.updated_at
       }))
+    }
+
+    case 'search_watch_alerts': {
+      const alertPermission = getPermission(context, 'forge_ai.view_alerts')
+
+      if (!alertPermission) return { denied: true, reason: 'You do not have access to Forge AI Watch alerts.' }
+
+      const status = typeof args.status === 'string' ? args.status : null
+      const severity = typeof args.severity === 'string' ? args.severity : null
+      const alerts = await getScopedForgeAiWatchAlerts({
+        organizationId,
+        userId,
+        alertPermission,
+        permissionByKey: context.permissionByKey
+      })
+
+      return alerts
+        .filter((alert: any) => (status ? alert.status === status : alert.status === 'open' || alert.status === 'acknowledged'))
+        .filter((alert: any) => !severity || alert.severity === severity)
+        .slice(0, limitValue(args.limit, 20))
+        .map((alert: any) => ({
+          record_type: 'watch_alert',
+          rule: alert.forge_ai_watch_rules?.name_override || alert.forge_ai_watch_rules?.forge_ai_watch_rule_templates?.name || alert.rule_key || null,
+          category: alert.forge_ai_watch_rules?.forge_ai_watch_rule_templates?.category || null,
+          severity: alert.severity,
+          status: alert.status,
+          title: alert.title,
+          summary: alert.summary || alert.description || null,
+          target_reference: alert.target_reference || alert.record_reference || null,
+          first_detected_at: alert.first_detected_at || alert.created_at || null,
+          last_detected_at: alert.last_detected_at || null
+        }))
+    }
+
+    case 'get_risk_indicators': {
+      const riskPermission = getPermission(context, 'forge_ai.view_risk')
+
+      if (!riskPermission) return { denied: true, reason: 'You do not have access to Forge AI risk indicators.' }
+
+      const scopeType = typeof args.scope_type === 'string' ? args.scope_type : null
+      const assessments = await getScopedForgeAiRiskAssessments({
+        organizationId,
+        userId,
+        permission: riskPermission,
+        permissionByKey: context.permissionByKey
+      })
+      // Evidence carries typed reference fields so cited records link back to Forge.
+      const referenceField: Record<string, string> = {
+        incident: 'incident_number',
+        inspection: 'inspection_number',
+        task: 'task_number',
+        risk: 'risk_number',
+        observation: 'observation_number',
+        training_assignment: 'course_code'
+      }
+
+      return assessments
+        .filter((row: any) => !scopeType || row.scope_type === scopeType)
+        .slice(0, limitValue(args.limit, 10))
+        .map((row: any) => ({
+          record_type: 'risk_indicator',
+          scope_type: row.scope_type,
+          scope_name: row.scope_name,
+          score: row.score,
+          band: row.band,
+          note: row.band === 'insufficient_data' ? row.metadata?.reason || 'Not enough data to score.' : null,
+          model: row.model_key + ' v' + row.model_version,
+          period_days: Math.round((new Date(row.period_end).getTime() - new Date(row.period_start).getTime()) / 86_400_000),
+          computed_at: row.computed_at,
+          factors: (row.indicators || []).map((item: any) => ({
+            factor: item.label,
+            available: item.available,
+            value: item.raw_value,
+            weight: item.weight,
+            contribution: item.contribution,
+            detail: item.detail,
+            records: (item.evidence || []).slice(0, 10).map((entry: any) => ({
+              record_type: entry.type,
+              id: entry.id,
+              [referenceField[entry.type] || 'reference']: entry.reference
+            })),
+            records_hidden: item.hidden_evidence || 0
+          }))
+        }))
+    }
+
+    case 'get_recommendations': {
+      if (!getPermission(context, 'forge_ai.view_recommendations')) {
+        return { denied: true, reason: 'You do not have access to Forge AI recommendations.' }
+      }
+
+      const OPEN_STATUSES = ['proposed', 'in_review', 'approved', 'executing', 'executed']
+      const status = typeof args.status === 'string' ? args.status : 'open'
+      const priority = typeof args.priority === 'string' ? args.priority : null
+
+      const recommendations = await getScopedForgeAiRecommendations({
+        organizationId,
+        userId,
+        permissionByKey: context.permissionByKey
+      })
+
+      const referenceField: Record<string, string> = {
+        incident: 'incident_number',
+        inspection: 'inspection_number',
+        task: 'task_number',
+        risk: 'risk_number',
+        observation: 'observation_number',
+        asset: 'asset_number',
+        training_assignment: 'course_code'
+      }
+
+      const priorityRank: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 }
+
+      return recommendations
+        .filter((row: any) =>
+          status === 'open' ? OPEN_STATUSES.includes(row.status) : status === 'closed' ? !OPEN_STATUSES.includes(row.status) : row.status === status
+        )
+        .filter((row: any) => !priority || row.priority === priority)
+        .sort((a: any, b: any) => priorityRank[a.priority] - priorityRank[b.priority])
+        .slice(0, limitValue(args.limit, 10))
+        .map((row: any) => ({
+          record_type: 'recommendation',
+          title: row.title,
+          kind: row.kind,
+          priority: row.priority,
+          status: row.status,
+          rationale: row.rationale,
+          source: row.source_type === 'watch_alert' ? 'AI Watch alert' : 'Risk indicator factor',
+          proposed_action: row.proposed_action
+            ? { action: 'Create corrective action', title: row.proposed_action.payload?.title, severity: row.proposed_action.payload?.severity }
+            : null,
+          verification: row.verification_result
+            ? { outcome: row.verification_result.outcome, checks: (row.verification_result.checks || []).map((check: any) => check.detail) }
+            : null,
+          generated_at: row.generated_at,
+          records: (row.evidence || [])
+            .filter((entry: any) => entry.type !== 'watch_alert' && entry.type !== 'risk_assessment')
+            .slice(0, 10)
+            .map((entry: any) => ({
+              record_type: entry.type,
+              id: entry.id,
+              [referenceField[entry.type] || 'reference']: entry.reference
+            })),
+          records_hidden: row.hidden_evidence || 0,
+          path: '/ai/recommendations'
+        }))
     }
 
     case 'explain_access': {

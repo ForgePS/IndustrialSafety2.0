@@ -1,0 +1,28 @@
+[
+  {
+    "role": "Forge Creator (platform admin)",
+    "catalog": 200,
+    "draft": 201,
+    "catalogPass": true,
+    "draftPass": true
+  },
+  {
+    "role": "AI/no-config (unauthorized config)",
+    "catalog": 403,
+    "draft": 403,
+    "catalogPass": true,
+    "draftPass": true
+  },
+  {
+    "role": "No-access User",
+    "catalog": 401,
+    "draft": 401,
+    "catalogPass": true,
+    "draftPass": true
+  },
+  {
+    "role": "AI vs security namespace",
+    "status": 403,
+    "pass": true
+  }
+]

@@ -1,0 +1,30 @@
+{
+  "name": "@forge/tenant-admin",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3004",
+    "build": "next build",
+    "start": "next start --port 3004",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src --max-warnings=0",
+    "test": "vitest run --passWithNoTests",
+    "test:unit": "vitest run --passWithNoTests",
+    "clean": "rimraf .next"
+  },
+  "dependencies": {
+    "@forge/design-system": "workspace:*",
+    "@forge/import-center": "workspace:*",
+    "@forge/ui": "workspace:*",
+    "next": "^15.5.28",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "rimraf": "^6.1.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

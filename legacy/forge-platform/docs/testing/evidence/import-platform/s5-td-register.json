@@ -1,0 +1,15 @@
+{
+  "tag": "import-s5-20260729135433",
+  "api": {
+    "priorRevision": 37,
+    "arn": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-platform-api:38",
+    "revision": 38,
+    "image": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-platformapi:import-s5-20260729135433"
+  },
+  "worker": {
+    "priorRevision": 22,
+    "arn": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:23",
+    "revision": 23,
+    "image": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-workerservice:import-s5-20260729135433"
+  }
+}

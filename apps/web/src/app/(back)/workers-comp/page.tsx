@@ -3,24 +3,61 @@ import type { Metadata } from 'next'
 import { Badge } from '@repo/ui/components/ui/badge'
 import { Button } from '@repo/ui/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/ui/card'
+import { Input } from '@repo/ui/components/ui/input'
+import { Label } from '@repo/ui/components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@repo/ui/components/ui/table'
 import { createServiceRoleClient } from '@repo/supabase/server'
 
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import { getScopedWcCases, wcTodayIso } from '@/lib/forgeWorkersComp'
-import { WC_STAGE_LABELS, WC_WORK_STATUS_LABELS, buildWcNextActions, thursdayWeekOf } from '@/lib/forgeWorkersCompRules'
+import { WC_STAGES, WC_STAGE_LABELS, WC_WORK_STATUS_LABELS, buildWcNextActions, thursdayWeekOf } from '@/lib/forgeWorkersCompRules'
 import type { WcStage, WcWorkStatus } from '@/lib/forgeWorkersCompRules'
 
 export const metadata: Metadata = { title: 'Workers\' Compensation' }
 
-const WorkersCompPage = async () => {
+const selectClass = 'border-input bg-card text-textSecondary mt-2 h-[38px] w-full rounded-md border px-3'
+
+// List filters (1.0 workspace list). The default shows active and closed cases; archived cases have their own view.
+const STATUS_FILTERS = [
+  { value: '', label: 'Active and closed' },
+  { value: 'active', label: 'Active' },
+  { value: 'closed', label: 'Closed' },
+  { value: 'archived', label: 'Archived' }
+] as const
+
+const param = (value: string | string[] | undefined) => (typeof value === 'string' ? value.trim() : '')
+
+const WorkersCompPage = async ({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) => {
+  const params = await searchParams
+  const q = param(params.q).slice(0, 200)
+  const statusFilter = STATUS_FILTERS.some(item => item.value === param(params.status)) ? param(params.status) : ''
+  const stageFilter = (WC_STAGES as readonly string[]).includes(param(params.stage)) ? param(params.stage) : ''
+
   const context = await requireTenantPermission('workers_comp.view')
   const organizationId = context.activeOrganization.id
   const today = wcTodayIso()
   const weekOf = thursdayWeekOf(today)
 
-  const cases = await getScopedWcCases({ organizationId, userId: context.user.id, permission: context.permission })
+  const [cases, archived] = await Promise.all([
+    getScopedWcCases({ organizationId, userId: context.user.id, permission: context.permission }),
+    statusFilter === 'archived'
+      ? getScopedWcCases({ organizationId, userId: context.user.id, permission: context.permission, archivedOnly: true })
+      : Promise.resolve([])
+  ])
+
   const active = cases.filter((row: any) => row.status === 'active')
+  const needle = q.toLowerCase()
+
+  // Search covers case number, employee, claim number and carrier, as in 1.0.
+  const listed = (statusFilter === 'archived' ? archived : cases).filter((row: any) => {
+    if (statusFilter && row.status !== statusFilter) return false
+    if (stageFilter && row.stage !== stageFilter) return false
+    if (!needle) return true
+
+    return [row.case_number, row.employee_name, row.claim_number, row.forge_wc_carriers?.name].some(value => String(value || '').toLowerCase().includes(needle))
+  })
+
+  const filtered = Boolean(q || statusFilter || stageFilter)
 
   const supabase = createServiceRoleClient() as any
 
@@ -105,7 +142,37 @@ const WorkersCompPage = async () => {
       </Card>
 
       <Card className='min-w-0 [contain:inline-size]'>
-        <CardHeader><CardTitle>Cases</CardTitle></CardHeader>
+        <CardHeader className='flex flex-col gap-4'>
+          <div className='flex flex-wrap items-center justify-between gap-3'>
+            <CardTitle>{statusFilter === 'archived' ? 'Archived Cases' : 'Cases'}</CardTitle>
+            {statusFilter === 'archived'
+              ? <Button size='sm' variant='outline' asChild><Link href='/workers-comp'>Back to open cases</Link></Button>
+              : <Button size='sm' variant='outline' asChild><Link href='/workers-comp?status=archived' data-testid='wc-archived-link'>Archived</Link></Button>}
+          </div>
+          <form method='get' action='/workers-comp' className='grid grid-cols-1 gap-3 md:grid-cols-12' data-testid='wc-case-filters'>
+            <div className='md:col-span-5'>
+              <Label htmlFor='wc-filter-q'>Search</Label>
+              <Input id='wc-filter-q' name='q' className='mt-2' defaultValue={q} placeholder='Case, employee, claim number or carrier' />
+            </div>
+            <div className='md:col-span-3'>
+              <Label htmlFor='wc-filter-status'>Status</Label>
+              <select id='wc-filter-status' name='status' className={selectClass} defaultValue={statusFilter}>
+                {STATUS_FILTERS.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
+              </select>
+            </div>
+            <div className='md:col-span-2'>
+              <Label htmlFor='wc-filter-stage'>Stage</Label>
+              <select id='wc-filter-stage' name='stage' className={selectClass} defaultValue={stageFilter}>
+                <option value=''>All stages</option>
+                {WC_STAGES.map(stage => <option key={stage} value={stage}>{WC_STAGE_LABELS[stage]}</option>)}
+              </select>
+            </div>
+            <div className='flex items-end gap-2 md:col-span-2'>
+              <Button type='submit'>Filter</Button>
+              {filtered ? <Button variant='tonalDefault' asChild><Link href='/workers-comp'>Clear</Link></Button> : null}
+            </div>
+          </form>
+        </CardHeader>
         <Table>
           <TableHeader>
             <TableRow>
@@ -120,7 +187,7 @@ const WorkersCompPage = async () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {cases.length ? cases.map((row: any) => (
+            {listed.length ? listed.map((row: any) => (
               <TableRow key={row.id} data-testid={`wc-case-row-${row.case_number}`}>
                 <TableCell className='font-semibold'>{row.case_number}</TableCell>
                 <TableCell>{row.employee_name}</TableCell>
@@ -137,7 +204,7 @@ const WorkersCompPage = async () => {
                 </TableCell>
               </TableRow>
             )) : (
-              <TableRow><TableCell colSpan={8} className='py-10 text-center'>No workers&apos; comp cases.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className='py-10 text-center'>{filtered ? 'No cases match these filters.' : 'No workers\' comp cases.'}</TableCell></TableRow>
             )}
           </TableBody>
         </Table>

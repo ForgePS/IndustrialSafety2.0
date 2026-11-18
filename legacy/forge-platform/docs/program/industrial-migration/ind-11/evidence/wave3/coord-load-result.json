@@ -1,0 +1,16 @@
+{
+  "ok": true,
+  "at": "2026-08-05T11:46:42.631Z",
+  "wave": "3-coord",
+  "cluster": "forge-development-ecs-platform",
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/bffdc2d1bc4244738a9353bcec672216",
+  "exitCode": 0,
+  "payloadUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/wave3-coord/2026-08-05T11-45-24-813Z/payload.json",
+  "extractCounts": {
+    "taskRecords": 2,
+    "conversations": 2,
+    "messages": 7,
+    "emergencyResponseRecords": 30
+  },
+  "logExcerpt": "{\"dbUser\":\"forge_admin\",\"batchId\":\"10cd5680-cab3-5bec-ab53-6e8de65ed182\"}\t{\t  \"ok\": true,\t  \"phase\": \"IND-11B-wave3-coord\",\t  \"counts\": {\t    \"tasks\": 2,\t    \"threads\": 2,\t    \"messages\": 7,\t    \"emergency\": 30\t  },\t  \"errorCount\": 0,\t  \"errors\": [],\t  \"migrationBatchId\": \"e1f631e9-7cfc-483d-ace2-ab4a8fcc2b7e\",\t  \"dbBatchId\": \"10cd5680-cab3-5bec-ab53-6e8de65ed182\",\t  \"note\": \"sender/created_by are deterministic UUIDs from Firebase IDs (no Cognito import)\"\t}"
+}

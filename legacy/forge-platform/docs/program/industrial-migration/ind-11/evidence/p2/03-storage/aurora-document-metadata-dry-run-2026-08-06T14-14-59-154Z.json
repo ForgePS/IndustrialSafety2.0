@@ -1,0 +1,79 @@
+{
+  "ok": true,
+  "at": "2026-08-06T14:14:59.154Z",
+  "mode": "dry-run",
+  "cluster": "forge-development-ecs-platform",
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/977ffd51ef7747eea960e4b35ab6837e",
+  "exitCode": 0,
+  "mapUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p2-doc-meta/2026-08-06T14-13-44-934Z/s3-map-staging.json",
+  "loaderUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p2-doc-meta/2026-08-06T14-13-44-934Z/aurora-document-metadata-ecs-loader.mjs",
+  "result": {
+    "ok": true,
+    "phase": "PRODUCERS-P2-storage-aurora-metadata",
+    "mode": "dry-run",
+    "startedAt": "2026-08-06T14:14:27.343Z",
+    "finishedAt": "2026-08-06T14:14:27.403Z",
+    "tenantId": "0882c865-59c2-49a6-ab88-ce6ca89be30c",
+    "mapUri": "s3://forge-development-imports-511343547817-us-east-1/ind11b/p2-doc-meta/2026-08-06T14-13-44-934Z/s3-map-staging.json",
+    "mapCount": 9077,
+    "slice": {
+      "offset": 0,
+      "limit": null,
+      "planned": 9077
+    },
+    "before": {
+      "platform_documents": 0,
+      "platform_document_versions": 0
+    },
+    "sampleIdOverlapInFirst500": 0,
+    "sampleMappings": [
+      {
+        "sourcePath": "certificates/business-1782553339499/library/local-cert-lib-img-1782553896018-w206il/1782553896018-Producers_Logo.png",
+        "documentId": "c12f2fb5-5e59-55ce-b02b-be7bd669d603",
+        "versionId": "8901ddd6-9c69-58fa-aefb-d0f6668dcfab",
+        "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/c12f2fb5-5e59-55ce-b02b-be7bd669d603/8901ddd6-9c69-58fa-aefb-d0f6668dcfab/1782553896018-Producers_Logo.png",
+        "size": 1106901,
+        "contentType": "image/png",
+        "category": "certificates"
+      },
+      {
+        "sourcePath": "dot-compliance/business-1782553339499/drivers/driversApplicationCopy/1783950366452-26-06-02.pdf",
+        "documentId": "2f6194ee-979b-5968-916f-5877618761b0",
+        "versionId": "d0c96298-feaa-5ead-99a9-7bd938fddbcf",
+        "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/2f6194ee-979b-5968-916f-5877618761b0/d0c96298-feaa-5ead-99a9-7bd938fddbcf/1783950366452-26-06-02.pdf",
+        "size": 4463438,
+        "contentType": "application/pdf",
+        "category": "dot"
+      },
+      {
+        "sourcePath": "dot-compliance/business-1782553339499/drivers/driversApplicationCopy/1783956143029-26-06-22.pdf",
+        "documentId": "39913157-4cbe-5da1-8b0d-f0d50091fbfa",
+        "versionId": "110f4ca1-2e3d-5aeb-9124-0b49d2e14d6a",
+        "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/39913157-4cbe-5da1-8b0d-f0d50091fbfa/110f4ca1-2e3d-5aeb-9124-0b49d2e14d6a/1783956143029-26-06-22.pdf",
+        "size": 3766300,
+        "contentType": "application/pdf",
+        "category": "dot"
+      },
+      {
+        "sourcePath": "dot-compliance/business-1782553339499/drivers/driversLicenseCopy/1783950054916-EXP_29-12-22.pdf",
+        "documentId": "f09baddc-cf5b-5c78-9154-0c375e1f98d4",
+        "versionId": "dc698973-c04f-5a22-86f0-41ac824528cc",
+        "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/f09baddc-cf5b-5c78-9154-0c375e1f98d4/dc698973-c04f-5a22-86f0-41ac824528cc/1783950054916-EXP_29-12-22.pdf",
+        "size": 310428,
+        "contentType": "application/pdf",
+        "category": "dot"
+      },
+      {
+        "sourcePath": "dot-compliance/business-1782553339499/drivers/driversLicenseCopy/1783951184054-EXP_27-04-23.pdf",
+        "documentId": "97ad59e8-2bfd-507c-a4ae-d2b6edb7431d",
+        "versionId": "71c9e51f-5825-5f99-becd-d24d5a611d52",
+        "s3Key": "tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/97ad59e8-2bfd-507c-a4ae-d2b6edb7431d/71c9e51f-5825-5f99-becd-d24d5a611d52/1783951184054-EXP_27-04-23.pdf",
+        "size": 271985,
+        "contentType": "application/pdf",
+        "category": "dot"
+      }
+    ],
+    "note": "Dry-run only � no writes"
+  },
+  "logTail": "{\"dbUser\":\"forge_admin\",\"tenant\":{\"id\":\"0882c865-59c2-49a6-ab88-ce6ca89be30c\",\"tenant_key\":\"producers-rice-mill-staging\",\"slug\":\"producers-rice-mill-staging\"},\"mode\":\"dry-run\",\"planned\":9077}\n{\n  \"ok\": true,\n  \"phase\": \"PRODUCERS-P2-storage-aurora-metadata\",\n  \"mode\": \"dry-run\",\n  \"startedAt\": \"2026-08-06T14:14:27.343Z\",\n  \"finishedAt\": \"2026-08-06T14:14:27.403Z\",\n  \"tenantId\": \"0882c865-59c2-49a6-ab88-ce6ca89be30c\",\n  \"mapUri\": \"s3://forge-development-imports-511343547817-us-east-1/ind11b/p2-doc-meta/2026-08-06T14-13-44-934Z/s3-map-staging.json\",\n  \"mapCount\": 9077,\n  \"slice\": {\n    \"offset\": 0,\n    \"limit\": null,\n    \"planned\": 9077\n  },\n  \"before\": {\n    \"platform_documents\": 0,\n    \"platform_document_versions\": 0\n  },\n  \"sampleIdOverlapInFirst500\": 0,\n  \"sampleMappings\": [\n    {\n      \"sourcePath\": \"certificates/business-1782553339499/library/local-cert-lib-img-1782553896018-w206il/1782553896018-Producers_Logo.png\",\n      \"documentId\": \"c12f2fb5-5e59-55ce-b02b-be7bd669d603\",\n      \"versionId\": \"8901ddd6-9c69-58fa-aefb-d0f6668dcfab\",\n      \"s3Key\": \"tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/c12f2fb5-5e59-55ce-b02b-be7bd669d603/8901ddd6-9c69-58fa-aefb-d0f6668dcfab/1782553896018-Producers_Logo.png\",\n      \"size\": 1106901,\n      \"contentType\": \"image/png\",\n      \"category\": \"certificates\"\n    },\n    {\n      \"sourcePath\": \"dot-compliance/business-1782553339499/drivers/driversApplicationCopy/1783950366452-26-06-02.pdf\",\n      \"documentId\": \"2f6194ee-979b-5968-916f-5877618761b0\",\n      \"versionId\": \"d0c96298-feaa-5ead-99a9-7bd938fddbcf\",\n      \"s3Key\": \"tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/2f6194ee-979b-5968-916f-5877618761b0/d0c96298-feaa-5ead-99a9-7bd938fddbcf/1783950366452-26-06-02.pdf\",\n      \"size\": 4463438,\n      \"contentType\": \"application/pdf\",\n      \"category\": \"dot\"\n    },\n    {\n      \"sourcePath\": \"dot-compliance/business-1782553339499/drivers/driversApplicationCopy/1783956143029-26-06-22.pdf\",\n      \"documentId\": \"39913157-4cbe-5da1-8b0d-f0d50091fbfa\",\n      \"versionId\": \"110f4ca1-2e3d-5aeb-9124-0b49d2e14d6a\",\n      \"s3Key\": \"tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/39913157-4cbe-5da1-8b0d-f0d50091fbfa/110f4ca1-2e3d-5aeb-9124-0b49d2e14d6a/1783956143029-26-06-22.pdf\",\n      \"size\": 3766300,\n      \"contentType\": \"application/pdf\",\n      \"category\": \"dot\"\n    },\n    {\n      \"sourcePath\": \"dot-compliance/business-1782553339499/drivers/driversLicenseCopy/1783950054916-EXP_29-12-22.pdf\",\n      \"documentId\": \"f09baddc-cf5b-5c78-9154-0c375e1f98d4\",\n      \"versionId\": \"dc698973-c04f-5a22-86f0-41ac824528cc\",\n      \"s3Key\": \"tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/f09baddc-cf5b-5c78-9154-0c375e1f98d4/dc698973-c04f-5a22-86f0-41ac824528cc/1783950054916-EXP_29-12-22.pdf\",\n      \"size\": 310428,\n      \"contentType\": \"application/pdf\",\n      \"category\": \"dot\"\n    },\n    {\n      \"sourcePath\": \"dot-compliance/business-1782553339499/drivers/driversLicenseCopy/1783951184054-EXP_27-04-23.pdf\",\n      \"documentId\": \"97ad59e8-2bfd-507c-a4ae-d2b6edb7431d\",\n      \"versionId\": \"71c9e51f-5825-5f99-becd-d24d5a611d52\",\n      \"s3Key\": \"tenants/0882c865-59c2-49a6-ab88-ce6ca89be30c/documents/97ad59e8-2bfd-507c-a4ae-d2b6edb7431d/71c9e51f-5825-5f99-becd-d24d5a611d52/1783951184054-EXP_27-04-23.pdf\",\n      \"size\": 271985,\n      \"contentType\": \"application/pdf\",\n      \"category\": \"dot\"\n    }\n  ],\n  \"note\": \"Dry-run only � no writes\"\n}"
+}

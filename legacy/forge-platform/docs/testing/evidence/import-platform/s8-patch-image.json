@@ -1,0 +1,9 @@
+{
+  "tag": "import-s8-patch-20260730113557",
+  "api": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-platformapi:import-s8-patch-20260730113557",
+  "worker": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-workerservice:import-s8-patch-20260730113557",
+  "apiDigest": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-platformapi@sha256:03c9833a54eb368795b296f3cac2ed0be66195c9c12e79b3830285ac541f61a3",
+  "workerDigest": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-workerservice@sha256:cc4fa0c35ccdff05aed487b6b31a5b54b7411ced558335b18cf537bc47f93d3f",
+  "defects": ["DEF-S8-023", "DEF-S8-024"],
+  "builtAt": "2026-07-30T16:47:15.075Z"
+}

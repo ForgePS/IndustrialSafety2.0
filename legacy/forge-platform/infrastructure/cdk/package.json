@@ -1,0 +1,39 @@
+{
+  "name": "@forge/infrastructure-cdk",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "watch": "tsc -p tsconfig.json -w",
+    "clean": "rimraf dist cdk.out",
+    "lint": "eslint bin lib test --max-warnings=0",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "validate": "tsx bin/validate-config.ts",
+    "synth": "cdk synth",
+    "diff": "cdk diff --all",
+    "deploy": "tsx bin/deploy-guard.ts",
+    "deploy:unguarded": "cdk deploy --all --require-approval never",
+    "destroy": "tsx bin/destroy-guard.ts",
+    "nag": "tsx bin/run-nag.ts",
+    "bootstrap": "cdk bootstrap",
+    "infra:synth": "pnpm synth",
+    "cdk": "cdk"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.275.0",
+    "constructs": "^10.8.1",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "aws-cdk": "^2.1148.0",
+    "cdk-nag": "^2.35.100",
+    "rimraf": "^6.1.4",
+    "tsx": "^4.23.15",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

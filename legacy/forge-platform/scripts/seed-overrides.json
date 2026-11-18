@@ -1,0 +1,5 @@
+{
+  "containerOverrides": [
+    { "name": "platform-api", "command": ["node", "/app/packages/database/dist/seed.js"] }
+  ]
+}

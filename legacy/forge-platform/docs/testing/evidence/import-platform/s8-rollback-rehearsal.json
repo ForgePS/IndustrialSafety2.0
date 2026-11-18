@@ -1,0 +1,117 @@
+{
+  "defect": "DEF-S8-001",
+  "status": "VERIFIED",
+  "environment": "development",
+  "account": "511343547817",
+  "region": "us-east-1",
+  "cluster": "forge-development-ecs-platform",
+  "migration": "0027",
+  "startedAt": "2026-07-30T18:15:43.3188867Z",
+  "completedAt": "2026-07-30T18:22:22.7762124Z",
+  "baseline": {
+    "services": {
+      "api": {
+        "taskDefinitionArn": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-platform-api:42",
+        "desiredCount": 1,
+        "runningCount": 1,
+        "pendingCount": 0,
+        "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/aa63df292e194db3b5ea9a99e0c2b7f1",
+        "image": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-platformapi:import-s8-patch-20260730113557",
+        "imageDigest": "sha256:03c9833a54eb368795b296f3cac2ed0be66195c9c12e79b3830285ac541f61a3",
+        "healthStatus": "HEALTHY"
+      },
+      "worker": {
+        "taskDefinitionArn": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:26",
+        "desiredCount": 1,
+        "runningCount": 1,
+        "pendingCount": 0,
+        "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/d2da1fe3508a476795b98d1296590b18",
+        "image": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-workerservice:import-s8-patch-20260730113557",
+        "imageDigest": "sha256:cc4fa0c35ccdff05aed487b6b31a5b54b7411ced558335b18cf537bc47f93d3f",
+        "healthStatus": "UNKNOWN"
+      }
+    },
+    "secret": {
+      "name": "forge-development-secrets-database-app",
+      "lastChangedDate": "2026-07-26T15:30:16.387000-05:00"
+    },
+    "smoke": {
+      "healthStatus": 200,
+      "unauthenticatedJobsStatus": 401
+    }
+  },
+  "rollback": {
+    "requestedAt": "2026-07-30T18:15:50.8861252Z",
+    "stableAt": "2026-07-30T18:19:14.9342688Z",
+    "waiterResult": "SUCCESS",
+    "services": {
+      "api": {
+        "taskDefinitionArn": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-platform-api:40",
+        "desiredCount": 1,
+        "runningCount": 1,
+        "pendingCount": 0,
+        "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/9ace86866c2145d6989a27781ee2ffd5",
+        "image": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-platformapi:import-s8-20260729182259",
+        "imageDigest": "sha256:f86fef9e8be4969f88e72d201323f07286d504cb097f7b575e59ea309d77935b",
+        "healthStatus": "HEALTHY"
+      },
+      "worker": {
+        "taskDefinitionArn": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:25",
+        "desiredCount": 1,
+        "runningCount": 1,
+        "pendingCount": 0,
+        "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/010ad39e2ea1429e9bc8183b970169a0",
+        "image": "511343547817.dkr.ecr.us-east-1.amazonaws.com/forge-development-ecr-workerservice:import-s8-20260729182259",
+        "imageDigest": "sha256:e4472318107466d4ad4a40032d73a8aaa81b338fa8e262ad4b74e19578def557",
+        "healthStatus": "UNKNOWN"
+      }
+    },
+    "smoke": {
+      "healthStatus": 200,
+      "unauthenticatedJobsStatus": 401
+    }
+  },
+  "rollforward": {
+    "requestedAt": "2026-07-30T18:19:21.2355899Z",
+    "stableAt": "2026-07-30T18:22:14.4239159Z",
+    "waiterResult": "SUCCESS",
+    "services": {
+      "api": {
+        "taskDefinitionArn": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-platform-api:42",
+        "desiredCount": 1,
+        "runningCount": 1,
+        "pendingCount": 0,
+        "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/31a869f5da7f4ce0918b640a571dacec",
+        "imageDigest": "sha256:03c9833a54eb368795b296f3cac2ed0be66195c9c12e79b3830285ac541f61a3",
+        "healthStatus": "HEALTHY"
+      },
+      "worker": {
+        "taskDefinitionArn": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:26",
+        "desiredCount": 1,
+        "runningCount": 1,
+        "pendingCount": 0,
+        "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/fb61807bc6ee4f4a849936797a52e444",
+        "imageDigest": "sha256:cc4fa0c35ccdff05aed487b6b31a5b54b7411ced558335b18cf537bc47f93d3f",
+        "healthStatus": "UNKNOWN"
+      }
+    },
+    "smoke": {
+      "healthStatus": 200,
+      "unauthenticatedJobsStatus": 401
+    }
+  },
+  "finalVerification": {
+    "apiTaskDefinition": 42,
+    "workerTaskDefinition": 26,
+    "apiDesiredRunningPending": "1/1/0",
+    "workerDesiredRunningPending": "1/1/0",
+    "apiRolloutState": "COMPLETED",
+    "workerRolloutState": "COMPLETED",
+    "imageTag": "import-s8-patch-20260730113557",
+    "healthStatus": 200,
+    "unauthenticatedJobsStatus": 401,
+    "secretLastChangedDate": "2026-07-26T15:30:16.387000-05:00",
+    "secretChanged": false,
+    "migrationChanged": false
+  }
+}

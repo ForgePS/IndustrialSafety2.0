@@ -1,0 +1,13 @@
+{
+  "sprint": "S8",
+  "at": "2026-07-29T23:39:00.000Z",
+  "tag": "import-s8-20260729182259",
+  "apiTd": "forge-development-ecs-platform-api:40",
+  "workerTd": "forge-development-ecs-worker-service:25",
+  "health": 200,
+  "importsJobsUnauth": 401,
+  "appSecretLastChangedDate": "2026-07-26T15:30:16.387000-05:00",
+  "consoleInvalidation": "I8UZZFUXPH6FL4IJ8FUO0G9T2V",
+  "tenantAdminInvalidation": "IAH6SN8BJR1LDYH66PSIDNGEAC",
+  "rollout": "COMPLETED"
+}

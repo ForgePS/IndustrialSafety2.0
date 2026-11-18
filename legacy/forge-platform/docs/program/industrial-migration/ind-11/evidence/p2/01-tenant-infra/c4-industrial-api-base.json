@@ -1,0 +1,17 @@
+{
+  "ok": true,
+  "at": "2026-08-05T19:38:34.232Z",
+  "site": "https://producers-rice-mill.forgepublicsafety.com/",
+  "expectedApiBase": "https://api-dev.forgepublicsafety.com",
+  "acceptedApiBases": [
+    "https://api-dev.forgepublicsafety.com",
+    "https://d108fstxdv69bo.cloudfront.net"
+  ],
+  "chunksScanned": 13,
+  "apiishUrls": [
+    "http://localhost:4000",
+    "https://api-dev.forgepublicsafety.com",
+    "https://industrial-dev.forgepublicsafety.com"
+  ],
+  "note": "localhost:4000 may appear as a compile-time fallback string; runtime uses NEXT_PUBLIC_API_URL."
+}

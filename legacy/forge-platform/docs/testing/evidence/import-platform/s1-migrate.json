@@ -1,0 +1,26 @@
+{
+  "taskArn": "arn:aws:ecs:us-east-1:511343547817:task/forge-development-ecs-platform/5c11901ac2d34a41aef9dbc86cecb0cc",
+  "exitCode": 0,
+  "taskDefinition": "forge-development-ecs-platform-api:31",
+  "logMessages": [
+    "{",
+    "  severity_local: 'NOTICE',",
+    "  severity: 'NOTICE',",
+    "  code: '42P06',",
+    "  message: 'schema \"drizzle\" already exists, skipping',",
+    "  file: 'schemacmds.c',",
+    "  line: '131',",
+    "  routine: 'CreateSchemaCommand'",
+    "}",
+    "{",
+    "  severity_local: 'NOTICE',",
+    "  severity: 'NOTICE',",
+    "  code: '42P07',",
+    "  message: 'relation \"__drizzle_migrations\" already exists, skipping',",
+    "  file: 'parse_utilcmd.c',",
+    "  line: '213',",
+    "  routine: 'transformCreateStmt'",
+    "}",
+    "{\"status\":\"migrated\",\"databaseUrlHost\":\"forge-development-rds-aurora.cluster-c876w2qgijz1.us-east-1.rds.amazonaws.com:5432\"}"
+  ]
+}

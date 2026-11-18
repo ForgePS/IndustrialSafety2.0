@@ -1,0 +1,33 @@
+{
+  "meta": {
+    "generated_at": "2026-07-26T21:43:34.969Z",
+    "environment": "development",
+    "aws_account": "511343547817",
+    "aws_region": "us-east-1",
+    "tool_versions": {
+      "awsCli": "aws-cli/2.36.8 Python/3.14.6 Windows/11 exe/AMD64",
+      "node": "v20.20.2"
+    },
+    "control_id": "CC-CRY-01",
+    "risk_id": "R-002",
+    "title": "CloudTrail KMS key status",
+    "classification": "Confidential",
+    "source": "aws kms describe-key / get-key-rotation-status",
+    "review_status": "ACCEPTED",
+    "reviewed_by": "Jeremy Powell",
+    "reviewed_at": "2026-07-26"
+  },
+  "data": {
+    "keyId": "arn:aws:kms:us-east-1:511343547817:key/5efbe077-1ef5-4e55-aaba-7e6614f35c87",
+    "keyState": "Enabled",
+    "enabled": true,
+    "keyManager": "CUSTOMER",
+    "origin": "AWS_KMS",
+    "rotation": {
+      "KeyRotationEnabled": true,
+      "KeyId": "arn:aws:kms:us-east-1:511343547817:key/5efbe077-1ef5-4e55-aaba-7e6614f35c87",
+      "RotationPeriodInDays": 365,
+      "NextRotationDate": "2027-07-25T17:12:14.536000-05:00"
+    }
+  }
+}

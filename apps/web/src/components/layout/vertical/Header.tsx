@@ -7,7 +7,6 @@ import LayoutHeader from '@repo/ui/layouts/components/vertical/Header'
 import { Separator } from '@repo/ui/components/ui/separator'
 import { SidebarTrigger } from '@repo/ui/components/ui/sidebar'
 import { verticalLayoutClasses } from '@repo/ui/layouts/utils/layoutClasses'
-import { getAuthUser } from '@repo/supabase/serverHelpers'
 import type { SearchDataProps } from '@repo/ui/components/search'
 import { hasPermission } from '@repo/rbac/utils'
 import Search from '@repo/ui/components/search'
@@ -17,9 +16,12 @@ import type { SearchDataItem } from '@/assets/data/searchData'
 
 // Component Imports
 import LanguageDropdown from '@components/LanguageDropdown'
+import ModeDropdown from '@/components/layout/ModeDropdown'
 import UserDropdown from './UserDropdown'
 import TenantSwitcher from './TenantSwitcher'
+import ForgeAiGlobalAssistant from '@/components/forge-ai/ForgeAiGlobalAssistant'
 import { unreadCount } from '@/lib/forgeNotifications'
+import { currentUser } from '@/lib/platform/identity'
 
 // Data
 import { searchData } from '@/assets/data/searchData'
@@ -42,14 +44,14 @@ const transformSearchData = (data: SearchDataItem[]): SearchDataProps[] => {
 
 const Header = async ({
   organizations = [],
-  activeOrganizationId
+  activeOrganizationId,
+  forgeAi = null
 }: {
   organizations?: Array<{ id: string; name: string; slug: string; membershipRole: string }>
   activeOrganizationId?: string | null
+  forgeAi?: { assistantName: string; commandCenter: boolean } | null
 }) => {
-  const {
-    data: { user }
-  } = await getAuthUser()
+  const user = await currentUser()
 
   const unread = user ? await unreadCount(user.id) : 0
   const userRoles = user?.user_metadata.roles
@@ -72,6 +74,7 @@ const Header = async ({
           <Search data={transformSearchData(permissionFilteredData)} roles={roles} />
         </div>
         <div className='flex items-center gap-3 sm:gap-5'>
+          {forgeAi ? <ForgeAiGlobalAssistant assistantName={forgeAi.assistantName} commandCenter={forgeAi.commandCenter} /> : null}
           <Button variant='ghost' size='sm' asChild className='hidden sm:inline-flex'>
             <Link href='/help-desk'>
               <TbLifebuoy />
@@ -88,6 +91,7 @@ const Header = async ({
               ) : null}
             </Link>
           </Button>
+          <ModeDropdown />
           <LanguageDropdown />
           <UserDropdown user={user} roles={userRoles} />
         </div>

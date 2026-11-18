@@ -1,0 +1,10 @@
+{
+  "program": "FX-S0",
+  "radius": {
+    "small": "4px",
+    "medium": "8px",
+    "large": "12px",
+    "xl": "16px",
+    "round": "9999px"
+  }
+}

@@ -1,0 +1,18 @@
+# Keep text files LF in every checkout (Prettier enforces endOfLine: lf).
+* text=auto eol=lf
+
+# Binary assets
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.zip binary
+*.xlsx binary
+*.docx binary
+*.pptx binary

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { createServiceRoleClient } from '@repo/supabase/server'
 
+import { writeForgeAudit } from '@/lib/forgeAudit'
 import { getEffectiveForm } from '@/lib/forgeForms'
 import { personnelWriteErrorMessage, validatePersonnelStructure } from '@/lib/forgePersonnelStructure'
 import { personnelRecordWithinScope } from '@/lib/forgeScope'
@@ -352,4 +353,65 @@ export const archivePersonnel = async (personnelId: string) => {
 
   revalidatePath('/personnel')
   return { message: 'Personnel record archived.' }
+}
+
+// Puts an archived person back on the roster (1.0 "Restore to roster"). Same permission and scope as archiving.
+// Archiving forced is_dot_driver off and archived the DQF; that stays off until someone re-marks the person as a
+// DOT driver, which restores the DQF through the DOT sync trigger.
+export const restorePersonnel = async (personnelId: string) => {
+  const context = await requireTenantPermission('personnel.archive')
+  const organizationId = context.activeOrganization.id
+  const supabase = createServiceRoleClient() as any
+
+  const { data: before } = await supabase
+    .from('forge_personnel')
+    .select('*')
+    .eq('id', personnelId)
+    .eq('organization_id', organizationId)
+    .maybeSingle()
+
+  if (!before) return { error: 'Personnel record not found.' }
+  if (!before.archived_at) return { error: 'This personnel record is not archived.' }
+
+  const allowed = await personnelRecordWithinScope({
+    organizationId,
+    userId: context.user.id,
+    scope: context.permission.scope,
+    record: before
+  })
+
+  if (!allowed) return { error: 'This personnel record is outside your archive scope.' }
+
+  const now = new Date().toISOString()
+
+  const { data: after, error } = await supabase
+    .from('forge_personnel')
+    .update({
+      archived_at: null,
+      updated_at: now,
+      updated_by: context.user.id
+    })
+    .eq('id', personnelId)
+    .eq('organization_id', organizationId)
+    .not('archived_at', 'is', null)
+    .select('*')
+    .maybeSingle()
+
+  if (error) return { error: personnelWriteErrorMessage(error) }
+  if (!after) return { error: 'This personnel record is not archived.' }
+
+  await writeForgeAudit({
+    actorUserId: context.user.id,
+    organizationId,
+    action: 'personnel.restored',
+    entityType: 'personnel',
+    entityId: personnelId,
+    beforeValue: { archived_at: before.archived_at },
+    afterValue: { archived_at: null }
+  })
+
+  revalidatePath('/personnel')
+  revalidatePath(`/personnel/${personnelId}`)
+
+  return { message: 'Personnel record restored to the roster.' }
 }

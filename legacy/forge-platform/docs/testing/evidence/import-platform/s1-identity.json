@@ -1,0 +1,22 @@
+{
+  "Account": "511343547817",
+  "Arn": "arn:aws:sts::511343547817:assumed-role/AWSReservedSSO_ForgeDeployAdmin_4e3cbf93096d93f3/forge-admin",
+  "UserId": "AROAXODTTKWU2RWYUTZGU:forge-admin",
+  "region": "us-east-1",
+  "profile": "forge-dev",
+  "timestamp": "2026-07-28T16:54:05-05:00",
+  "preApplyApiTd": "forge-development-ecs-platform-api:30",
+  "workerTaskDefinition": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-worker-service:19",
+  "migrationSqlSha256": "28d25b49406b9c248cedb8ef9a6ed4e017cb218d5003b6ac2609a2dd5c2d2054",
+  "secret": {
+    "ARN": "arn:aws:secretsmanager:us-east-1:511343547817:secret:forge-development-secrets-database-app-SknUu5",
+    "Name": "forge-development-secrets-database-app",
+    "LastChangedDate": "2026-07-26T15:30:16.387000-05:00"
+  },
+  "secretPreLastChangedDate": "2026-07-26T15:30:16.387000-05:00",
+  "secretUnchanged": true,
+  "imageTag": "import-s1-live-20260728170110",
+  "imageDigest": "sha256:194364b67ae9f45af0e6c98fb9f822d0fd11c0a0b3c79c494f3639396b9eb781",
+  "registeredTaskDefinition": "forge-development-ecs-platform-api:31",
+  "serviceTaskDefinition": "arn:aws:ecs:us-east-1:511343547817:task-definition/forge-development-ecs-platform-api:32"
+}

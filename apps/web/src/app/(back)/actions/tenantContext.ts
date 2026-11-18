@@ -3,13 +3,11 @@
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@repo/supabase/server'
-import { getAuthUser } from '@repo/supabase/serverHelpers'
+import { currentUser } from '@/lib/platform/identity'
 import { ACTIVE_ORGANIZATION_COOKIE } from '@/lib/forgeTenantContext'
 
 export const setActiveOrganization = async (organizationId: string) => {
-  const {
-    data: { user }
-  } = await getAuthUser()
+  const user = await currentUser()
 
   if (!user) return { error: 'You must be signed in.' }
 

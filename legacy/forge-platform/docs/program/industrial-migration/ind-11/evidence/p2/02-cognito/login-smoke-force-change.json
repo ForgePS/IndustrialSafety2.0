@@ -1,0 +1,25 @@
+{
+  "ok": true,
+  "at": "2026-08-05T20:46:16.052Z",
+  "phase": "PRODUCERS-P2-H4-force-change",
+  "poolId": "us-east-1_VYjUFLXG4",
+  "clientId": "3rls9835j4qs3jmchb3uh7ketm",
+  "method": "AdminInitiateAuth ADMIN_USER_PASSWORD_AUTH + NEW_PASSWORD_REQUIRED",
+  "results": [
+    {
+      "email": "safetyadmin@producersrice.com",
+      "ok": true,
+      "alreadyConfirmed": false,
+      "challenge": "NEW_PASSWORD_REQUIRED",
+      "hasAccessToken": true
+    },
+    {
+      "email": "jlackie@producersrice.com",
+      "ok": true,
+      "alreadyConfirmed": false,
+      "challenge": "NEW_PASSWORD_REQUIRED",
+      "hasAccessToken": true
+    }
+  ],
+  "note": "Passwords never written to evidence; browser OAuth smoke follows separately."
+}

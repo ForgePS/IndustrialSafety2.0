@@ -1,0 +1,144 @@
+{
+  "ok": false,
+  "api": "https://d108fstxdv69bo.cloudfront.net",
+  "pass": 14,
+  "fail": 1,
+  "cases": [
+    {
+      "name": "viewer list jobs",
+      "permission": "import.view",
+      "expected": 200,
+      "actual": 200,
+      "code": null,
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "unauthorized list jobs",
+      "permission": "import.view",
+      "expected": [401, 403],
+      "actual": 403,
+      "code": "FORBIDDEN",
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "viewer upload denied",
+      "permission": "import.upload",
+      "expected": 403,
+      "actual": 403,
+      "code": "FORBIDDEN",
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "viewer mappings update denied",
+      "permission": "import.map",
+      "expected": 403,
+      "actual": 403,
+      "code": "FORBIDDEN",
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "viewer validation request denied",
+      "permission": "import.validate",
+      "expected": 403,
+      "actual": 403,
+      "code": "FORBIDDEN",
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "viewer preview request denied",
+      "permission": "import.preview",
+      "expected": 403,
+      "actual": 403,
+      "code": "FORBIDDEN",
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "viewer error retry denied",
+      "permission": "import.error.reprocess",
+      "expected": 403,
+      "actual": 403,
+      "code": "FORBIDDEN",
+      "pass": true,
+      "notes": "synthetic error id; permission denial must precede resource lookup"
+    },
+    {
+      "name": "operator approve denied",
+      "permission": "import.approve",
+      "expected": 403,
+      "actual": 403,
+      "code": "FORBIDDEN",
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "operator execute denied",
+      "permission": "import.execute",
+      "expected": 403,
+      "actual": 403,
+      "code": "FORBIDDEN",
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "viewer rollback denied",
+      "permission": "import.rollback",
+      "expected": 403,
+      "actual": 403,
+      "code": "FORBIDDEN",
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "tenant B cannot get tenant A job",
+      "permission": "tenant-scope",
+      "expected": 404,
+      "actual": 404,
+      "code": "IMPORT_JOB_NOT_FOUND",
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "viewer profile create denied",
+      "permission": "import.profile.manage",
+      "expected": 403,
+      "actual": 403,
+      "code": "FORBIDDEN",
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "operator profile create allowed",
+      "permission": "import.profile.manage",
+      "expected": [200, 201],
+      "actual": 201,
+      "code": null,
+      "pass": true,
+      "notes": ""
+    },
+    {
+      "name": "viewer template create denied",
+      "permission": "import.template.manage",
+      "expected": 403,
+      "actual": 404,
+      "code": "NOT_FOUND",
+      "pass": false,
+      "notes": "template mutation must be guarded by import.template.manage"
+    },
+    {
+      "name": "viewer privileged download denied",
+      "permission": "import.sensitive",
+      "expected": [403, 404, 409],
+      "actual": 403,
+      "code": "IMPORT_SENSITIVE_ACCESS_DENIED",
+      "pass": true,
+      "notes": "privileged=true requires import.sensitive"
+    }
+  ],
+  "completedAt": "2026-07-30T17:45:44.749Z"
+}
