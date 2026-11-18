@@ -7,7 +7,6 @@ import LayoutHeader from '@repo/ui/layouts/components/vertical/Header'
 import { Separator } from '@repo/ui/components/ui/separator'
 import { SidebarTrigger } from '@repo/ui/components/ui/sidebar'
 import { verticalLayoutClasses } from '@repo/ui/layouts/utils/layoutClasses'
-import { getAuthUser } from '@repo/supabase/serverHelpers'
 import type { SearchDataProps } from '@repo/ui/components/search'
 import { hasPermission } from '@repo/rbac/utils'
 import Search from '@repo/ui/components/search'
@@ -21,6 +20,7 @@ import UserDropdown from './UserDropdown'
 import TenantSwitcher from './TenantSwitcher'
 import ForgeAiGlobalAssistant from '@/components/forge-ai/ForgeAiGlobalAssistant'
 import { unreadCount } from '@/lib/forgeNotifications'
+import { currentUser } from '@/lib/platform/identity'
 
 // Data
 import { searchData } from '@/assets/data/searchData'
@@ -50,9 +50,7 @@ const Header = async ({
   activeOrganizationId?: string | null
   forgeAi?: { assistantName: string; commandCenter: boolean } | null
 }) => {
-  const {
-    data: { user }
-  } = await getAuthUser()
+  const user = await currentUser()
 
   const unread = user ? await unreadCount(user.id) : 0
   const userRoles = user?.user_metadata.roles

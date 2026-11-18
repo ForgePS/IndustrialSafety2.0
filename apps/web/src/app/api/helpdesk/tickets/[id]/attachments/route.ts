@@ -5,6 +5,7 @@ import { callHelpdeskRpc, getRequestMeta, isUuid } from '@/lib/forgeHelpdeskAcce
 import { HELPDESK_BUCKET, validateAttachment } from '@/lib/forgeHelpdeskAttachments'
 import { getHelpdeskSettings } from '@/lib/forgeHelpdeskData'
 import { isSameOrigin, jsonError, resolveTicketActor } from '@/lib/forgeHelpdeskHttp'
+import { storage } from '@/lib/platform/storage'
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!isSameOrigin(request)) return jsonError('Invalid request origin.', 403)
@@ -39,7 +40,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const attachmentId = crypto.randomUUID()
   const storagePath = `${actor.ticket.organization_id}/${actor.ticket.id}/${attachmentId}`
   const { value } = validated
-  const { error: uploadError } = await db.storage.from(HELPDESK_BUCKET).upload(storagePath, value.bytes, { contentType: value.mime, upsert: false })
+  const { error: uploadError } = await storage().upload(HELPDESK_BUCKET, storagePath, value.bytes, value.mime)
 
   if (uploadError) {
     console.error('[helpdesk] attachment upload', uploadError.message)
@@ -72,7 +73,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   })
 
   if (!result.ok) {
-    await db.storage.from(HELPDESK_BUCKET).remove([storagePath])
+    await storage().remove(HELPDESK_BUCKET, [storagePath])
 
     return jsonError(result.error || 'Unable to save the attachment.', 400)
   }

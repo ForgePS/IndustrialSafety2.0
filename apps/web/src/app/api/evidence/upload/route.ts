@@ -1,5 +1,5 @@
 import { createServiceRoleClient } from '@repo/supabase/server'
-import { getAuthUser } from '@repo/supabase/serverHelpers'
+import { currentUser } from '@/lib/platform/identity'
 
 import { NextResponse } from 'next/server'
 
@@ -13,6 +13,7 @@ import {
   requireForgePermissionForResource,
   requireForgeResourceManage
 } from '@/lib/forgeResourceRegistry'
+import { storage } from '@/lib/platform/storage'
 
 export async function POST(request: Request) {
   const origin = request.headers.get('origin')
@@ -36,9 +37,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'File is too large.' }, { status: 413 })
   }
 
-  const {
-    data: { user }
-  } = await getAuthUser()
+  const user = await currentUser()
 
   if (!user) return NextResponse.json({ error: 'Sign in required.' }, { status: 401 })
 
@@ -106,9 +105,7 @@ export async function POST(request: Request) {
   const storagePath = organizationId + '/' + resourceType + '/' + resourceId + '/' + evidenceId
   const supabase = createServiceRoleClient() as any
 
-  const { error: uploadError } = await supabase.storage
-    .from('forge-evidence')
-    .upload(storagePath, await file.arrayBuffer(), { contentType: file.type, upsert: false })
+  const { error: uploadError } = await storage().upload('forge-evidence', storagePath, await file.arrayBuffer(), file.type)
 
   if (uploadError) {
     return NextResponse.json({ error: 'Unable to upload evidence.' }, { status: 500 })
@@ -129,7 +126,7 @@ export async function POST(request: Request) {
   })
 
   if (created.error || !created.evidence) {
-    await supabase.storage.from('forge-evidence').remove([storagePath])
+    await storage().remove('forge-evidence', [storagePath])
     return NextResponse.json({ error: created.error || 'Unable to save evidence.' }, { status: 500 })
   }
 

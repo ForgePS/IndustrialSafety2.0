@@ -30,6 +30,7 @@ import {
   wcFormFileName
 } from '@/lib/forgeWcFormsRules'
 import type { WcFormKey } from '@/lib/forgeWcFormsRules'
+import { storage } from '@/lib/platform/storage'
 
 type Result = { error?: string; message?: string; id?: string }
 
@@ -209,8 +210,7 @@ export const signWcCaseForm = async ({
   if (!png) return { error: 'Draw a signature before signing.' }
 
   const signaturePath = `${organizationId}/${form.case_id}/${form.id}/signature-${randomUUID()}.png`
-  const storage = db().storage.from(WC_FORMS_BUCKET)
-  const { error: uploadError } = await storage.upload(signaturePath, png, { contentType: 'image/png', upsert: false })
+  const { error: uploadError } = await storage().upload(WC_FORMS_BUCKET, signaturePath, png, 'image/png')
 
   if (uploadError) return { error: 'Unable to save the signature.' }
 
@@ -226,7 +226,7 @@ export const signWcCaseForm = async ({
   })
 
   if (error) {
-    await storage.remove([signaturePath])
+    await storage().remove(WC_FORMS_BUCKET, [signaturePath])
 
     return { error: wcFormErrorMessage(error, 'Unable to sign the form.') }
   }

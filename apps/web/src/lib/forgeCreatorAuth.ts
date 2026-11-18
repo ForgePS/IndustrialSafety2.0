@@ -2,8 +2,9 @@
 import { redirect } from 'next/navigation'
 
 // Third-party Imports
-import { getAuthUser } from '@repo/supabase/serverHelpers'
 import { createServiceRoleClient } from '@repo/supabase/server'
+
+import { currentUser } from '@/lib/platform/identity'
 
 export type ForgePlatformRole =
   | 'forge_owner'
@@ -29,9 +30,7 @@ export const getForgePlatformRole = async (userId?: string | null): Promise<Forg
 }
 
 export const getForgePlatformAccess = async () => {
-  const {
-    data: { user }
-  } = await getAuthUser()
+  const user = await currentUser()
 
   const platformRole = await getForgePlatformRole(user?.id)
 

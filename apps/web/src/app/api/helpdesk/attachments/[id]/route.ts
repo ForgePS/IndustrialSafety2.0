@@ -4,6 +4,7 @@ import { createServiceRoleClient } from '@repo/supabase/server'
 import { isUuid } from '@/lib/forgeHelpdeskAccess'
 import { HELPDESK_BUCKET } from '@/lib/forgeHelpdeskAttachments'
 import { jsonError, resolveTicketActor } from '@/lib/forgeHelpdeskHttp'
+import { storage } from '@/lib/platform/storage'
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -26,11 +27,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
   const inline = new URL(request.url).searchParams.get('inline') === '1' && /^(image\/(png|jpeg|webp|gif)|application\/pdf|video\/(mp4|webm))$/.test(attachment.mime_type)
 
-  const { data, error } = await db.storage
-    .from(HELPDESK_BUCKET)
-    .createSignedUrl(attachment.storage_path, 60, inline ? undefined : { download: attachment.file_name })
+  const { url, error } = await storage().createSignedUrl(HELPDESK_BUCKET, attachment.storage_path, 60, inline ? {} : { downloadAs: attachment.file_name })
 
-  if (error || !data?.signedUrl) return jsonError('Unable to open the attachment.', 500)
+  if (error || !url) return jsonError('Unable to open the attachment.', 500)
 
-  return NextResponse.redirect(data.signedUrl, { headers: { 'Cache-Control': 'no-store' } })
+  return NextResponse.redirect(url, { headers: { 'Cache-Control': 'no-store' } })
 }

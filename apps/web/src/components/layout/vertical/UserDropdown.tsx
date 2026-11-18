@@ -26,11 +26,12 @@ import { deleteImpersonationCookies, deletePaymentCookies } from '@repo/auth/act
 import { useSettings } from '@repo/ui/hooks/useSettings'
 import { getInitials } from '@repo/ui/utils/getInitials'
 import Trans from '@repo/i18n/Trans'
-import type { User } from '@supabase/supabase-js'
 import type { Mode } from '@repo/ui/types'
 
+import type { PlatformUser } from '@/lib/platform/identityTypes'
+
 type Props = {
-  user: User | null
+  user: PlatformUser | null
   roles?: string[]
 }
 

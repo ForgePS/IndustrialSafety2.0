@@ -1,0 +1,4157 @@
+{
+  "product": "forge-industrial-safety-2.0",
+  "version": "2.0.0",
+  "basePath": "/v2",
+  "schemaVersion": "20261109140500",
+  "database": {
+    "schema": "forge2",
+    "ledger": "forge2.schema_migrations"
+  },
+  "modules": [
+    {
+      "key": "assets_equipment",
+      "name": "Assets & Equipment",
+      "category": "Operations",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "calendar",
+      "name": "Calendar",
+      "category": "Collaboration",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "corrective_actions",
+      "name": "Corrective Actions",
+      "category": "Risk & Prevention",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "customer_support",
+      "name": "Help Desk",
+      "category": "Administration",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": false,
+      "tenantConfigurable": false
+    },
+    {
+      "key": "dot",
+      "name": "DOT Compliance",
+      "category": "Compliance",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "emergency_alerts",
+      "name": "Emergency Alerts",
+      "category": "Safety",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "emergency_management",
+      "name": "Emergency Management",
+      "category": "Safety",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "fleet",
+      "name": "Fleet",
+      "category": "Operations",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "food_safety",
+      "name": "Food Safety",
+      "category": "Specialty",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "forge_ai",
+      "name": "Forge AI Assistant",
+      "category": "AI",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "forge_ai_command_center",
+      "name": "Forge AI Command Center",
+      "category": "AI",
+      "type": "feature",
+      "state": "beta",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "grain_sanitation",
+      "name": "Grain Sanitation",
+      "category": "Specialty",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "incidents",
+      "name": "Incidents",
+      "category": "Safety",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "inspections",
+      "name": "Inspections",
+      "category": "Safety",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "jsa_jha",
+      "name": "JSA / JHA",
+      "category": "People & Training",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "loto",
+      "name": "Lockout / Tagout",
+      "category": "Safety",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "messaging",
+      "name": "Messaging",
+      "category": "Collaboration",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "my_training",
+      "name": "My Training",
+      "category": "People",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "observations",
+      "name": "Observations",
+      "category": "Risk & Prevention",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "osha",
+      "name": "OSHA",
+      "category": "Compliance",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": false
+    },
+    {
+      "key": "personnel",
+      "name": "Personnel",
+      "category": "People",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "photo_markup",
+      "name": "Photo Markup",
+      "category": "Platform",
+      "type": "feature",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "platform.creator",
+      "name": "Forge Creator",
+      "category": "Platform",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": false,
+      "tenantConfigurable": false
+    },
+    {
+      "key": "print_manager",
+      "name": "Print Manager",
+      "category": "Platform",
+      "type": "feature",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "qr_management",
+      "name": "QR Management",
+      "category": "Operations",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "reminders",
+      "name": "Reminders",
+      "category": "Collaboration",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "reporting",
+      "name": "Reporting",
+      "category": "Analytics",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "risk_register",
+      "name": "Risk Register",
+      "category": "Risk & Prevention",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "safety_supplies",
+      "name": "Safety Supplies",
+      "category": "Operations",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "tasks",
+      "name": "Tasks",
+      "category": "Operations",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "training",
+      "name": "Training",
+      "category": "People",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "workers_comp",
+      "name": "Workers Compensation",
+      "category": "Safety",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "workflow_core",
+      "name": "Universal Workflow Core",
+      "category": "Platform",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    }
+  ],
+  "permissions": [
+    {
+      "key": "assets_equipment.assign",
+      "feature": "assets_equipment",
+      "group": "Assets & Equipment",
+      "action": "assign",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "assets_equipment.create",
+      "feature": "assets_equipment",
+      "group": "Assets & Equipment",
+      "action": "create",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "assets_equipment.edit",
+      "feature": "assets_equipment",
+      "group": "Assets & Equipment",
+      "action": "edit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "assets_equipment.maintenance",
+      "feature": "assets_equipment",
+      "group": "Assets & Equipment",
+      "action": "maintenance",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "assets_equipment.meter",
+      "feature": "assets_equipment",
+      "group": "Assets & Equipment",
+      "action": "meter",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "assets_equipment.retire",
+      "feature": "assets_equipment",
+      "group": "Assets & Equipment",
+      "action": "retire",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "assets_equipment.view",
+      "feature": "assets_equipment",
+      "group": "Assets & Equipment",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "corrective_actions.archive",
+      "feature": "corrective_actions",
+      "group": "Corrective Actions",
+      "action": "archive",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "corrective_actions.assign",
+      "feature": "corrective_actions",
+      "group": "Corrective Actions",
+      "action": "assign",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "location",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "corrective_actions.close",
+      "feature": "corrective_actions",
+      "group": "Corrective Actions",
+      "action": "close",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "corrective_actions.create",
+      "feature": "corrective_actions",
+      "group": "Corrective Actions",
+      "action": "create",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "corrective_actions.edit",
+      "feature": "corrective_actions",
+      "group": "Corrective Actions",
+      "action": "edit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "corrective_actions.submit",
+      "feature": "corrective_actions",
+      "group": "Corrective Actions",
+      "action": "submit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "corrective_actions.verify",
+      "feature": "corrective_actions",
+      "group": "Corrective Actions",
+      "action": "verify",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "location",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "corrective_actions.view",
+      "feature": "corrective_actions",
+      "group": "Corrective Actions",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "dot.approve",
+      "feature": "dot",
+      "group": "DOT",
+      "action": "approve",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "dot.edit",
+      "feature": "dot",
+      "group": "DOT",
+      "action": "edit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "dot.export",
+      "feature": "dot",
+      "group": "DOT",
+      "action": "export",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "dot.view",
+      "feature": "dot",
+      "group": "DOT",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "emergency_management.edit",
+      "feature": "emergency_management",
+      "group": "Emergency Management",
+      "action": "edit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "emergency_management.send_alerts",
+      "feature": "emergency_management",
+      "group": "Emergency Management",
+      "action": "send_alerts",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "emergency_management.view",
+      "feature": "emergency_management",
+      "group": "Emergency Management",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "fleet.create",
+      "feature": "fleet",
+      "group": "Fleet",
+      "action": "create",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "fleet.edit",
+      "feature": "fleet",
+      "group": "Fleet",
+      "action": "edit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "fleet.maintenance",
+      "feature": "fleet",
+      "group": "Fleet",
+      "action": "maintenance",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "fleet.retire",
+      "feature": "fleet",
+      "group": "Fleet",
+      "action": "retire",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "fleet.view",
+      "feature": "fleet",
+      "group": "Fleet",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "forge_ai.approve_actions",
+      "feature": "forge_ai",
+      "group": "Forge AI",
+      "action": "approve_actions",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "forge_ai.manage",
+      "feature": "forge_ai",
+      "group": "Forge AI",
+      "action": "manage",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "forge_ai.manage_knowledge",
+      "feature": "forge_ai",
+      "group": "Forge AI",
+      "action": "manage_knowledge",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "forge_ai.manage_watchers",
+      "feature": "forge_ai",
+      "group": "Forge AI",
+      "action": "manage_watchers",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "forge_ai.review_recommendations",
+      "feature": "forge_ai_command_center",
+      "group": "Forge AI",
+      "action": "review_recommendations",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "location",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "forge_ai.run_actions",
+      "feature": "forge_ai",
+      "group": "Forge AI",
+      "action": "run_actions",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "forge_ai.save_reports",
+      "feature": "forge_ai",
+      "group": "Forge AI",
+      "action": "save_reports",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "forge_ai.use",
+      "feature": "forge_ai",
+      "group": "Forge AI",
+      "action": "use",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "forge_ai.view_alerts",
+      "feature": "forge_ai",
+      "group": "Forge AI",
+      "action": "view_alerts",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "location",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "forge_ai.view_analytics",
+      "feature": "forge_ai",
+      "group": "Forge AI",
+      "action": "view_analytics",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "location",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "forge_ai.view_recommendations",
+      "feature": "forge_ai_command_center",
+      "group": "Forge AI",
+      "action": "view_recommendations",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "location",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "forge_ai.view_risk",
+      "feature": "forge_ai_command_center",
+      "group": "Forge AI",
+      "action": "view_risk",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "location",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "forge_ai.view_sensitive",
+      "feature": "forge_ai",
+      "group": "Forge AI",
+      "action": "view_sensitive",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "forge_ai.view_usage",
+      "feature": "forge_ai",
+      "group": "Forge AI",
+      "action": "view_usage",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.admin.announcements",
+      "feature": "customer_support",
+      "group": "Help Desk (Admin)",
+      "action": "admin_announcements",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.admin.categories",
+      "feature": "customer_support",
+      "group": "Help Desk (Admin)",
+      "action": "admin_categories",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.admin.incidents",
+      "feature": "customer_support",
+      "group": "Help Desk (Admin)",
+      "action": "admin_incidents",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.admin.manage",
+      "feature": "customer_support",
+      "group": "Help Desk (Admin)",
+      "action": "admin_manage",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.admin.sla",
+      "feature": "customer_support",
+      "group": "Help Desk (Admin)",
+      "action": "admin_sla",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.admin.status",
+      "feature": "customer_support",
+      "group": "Help Desk (Admin)",
+      "action": "admin_status",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.admin.tags",
+      "feature": "customer_support",
+      "group": "Help Desk (Admin)",
+      "action": "admin_tags",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.admin.templates",
+      "feature": "customer_support",
+      "group": "Help Desk (Admin)",
+      "action": "admin_templates",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.analytics.export",
+      "feature": "customer_support",
+      "group": "Help Desk (Analytics)",
+      "action": "analytics_export",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.analytics.view",
+      "feature": "customer_support",
+      "group": "Help Desk (Analytics)",
+      "action": "analytics_view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.knowledge.archive",
+      "feature": "customer_support",
+      "group": "Help Desk (Knowledge)",
+      "action": "knowledge_archive",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.knowledge.create",
+      "feature": "customer_support",
+      "group": "Help Desk (Knowledge)",
+      "action": "knowledge_create",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": false
+    },
+    {
+      "key": "helpdesk.knowledge.edit",
+      "feature": "customer_support",
+      "group": "Help Desk (Knowledge)",
+      "action": "knowledge_edit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": false
+    },
+    {
+      "key": "helpdesk.knowledge.publish",
+      "feature": "customer_support",
+      "group": "Help Desk (Knowledge)",
+      "action": "knowledge_publish",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.knowledge.review",
+      "feature": "customer_support",
+      "group": "Help Desk (Knowledge)",
+      "action": "knowledge_review",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": false
+    },
+    {
+      "key": "helpdesk.knowledge.view",
+      "feature": "customer_support",
+      "group": "Help Desk",
+      "action": "knowledge_view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "helpdesk.status.view",
+      "feature": "customer_support",
+      "group": "Help Desk",
+      "action": "status_view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "helpdesk.support.assign",
+      "feature": "customer_support",
+      "group": "Help Desk (Forge)",
+      "action": "support_assign",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.support.change_priority",
+      "feature": "customer_support",
+      "group": "Help Desk (Forge)",
+      "action": "support_change_priority",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.support.change_status",
+      "feature": "customer_support",
+      "group": "Help Desk (Forge)",
+      "action": "support_change_status",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.support.escalate",
+      "feature": "customer_support",
+      "group": "Help Desk (Forge)",
+      "action": "support_escalate",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.support.internal_note",
+      "feature": "customer_support",
+      "group": "Help Desk (Forge)",
+      "action": "support_internal_note",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.support.link_development",
+      "feature": "customer_support",
+      "group": "Help Desk (Forge)",
+      "action": "support_link_development",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.support.link_incident",
+      "feature": "customer_support",
+      "group": "Help Desk (Forge)",
+      "action": "support_link_incident",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.support.manage_watchers",
+      "feature": "customer_support",
+      "group": "Help Desk (Forge)",
+      "action": "support_manage_watchers",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.support.merge",
+      "feature": "customer_support",
+      "group": "Help Desk (Forge)",
+      "action": "support_merge",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.support.respond",
+      "feature": "customer_support",
+      "group": "Help Desk (Forge)",
+      "action": "support_respond",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.support.view",
+      "feature": "customer_support",
+      "group": "Help Desk (Forge)",
+      "action": "support_view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": false,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.ticket.close",
+      "feature": "customer_support",
+      "group": "Help Desk",
+      "action": "ticket_close",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "helpdesk.ticket.comment",
+      "feature": "customer_support",
+      "group": "Help Desk",
+      "action": "ticket_comment",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "helpdesk.ticket.create",
+      "feature": "customer_support",
+      "group": "Help Desk",
+      "action": "ticket_create",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "helpdesk.ticket.reopen",
+      "feature": "customer_support",
+      "group": "Help Desk",
+      "action": "ticket_reopen",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "helpdesk.ticket.view_location",
+      "feature": "customer_support",
+      "group": "Help Desk",
+      "action": "ticket_view_location",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "location",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "helpdesk.ticket.view_own",
+      "feature": "customer_support",
+      "group": "Help Desk",
+      "action": "ticket_view_own",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "helpdesk.ticket.view_tenant",
+      "feature": "customer_support",
+      "group": "Help Desk",
+      "action": "ticket_view_tenant",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "incidents.approve",
+      "feature": "incidents",
+      "group": "Incidents",
+      "action": "approve",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "incidents.close",
+      "feature": "incidents",
+      "group": "Incidents",
+      "action": "close",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "incidents.create",
+      "feature": "incidents",
+      "group": "Incidents",
+      "action": "create",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "incidents.delete",
+      "feature": "incidents",
+      "group": "Incidents",
+      "action": "delete",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "incidents.edit",
+      "feature": "incidents",
+      "group": "Incidents",
+      "action": "edit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "incidents.export",
+      "feature": "incidents",
+      "group": "Incidents",
+      "action": "export",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "incidents.investigate",
+      "feature": "incidents",
+      "group": "Incidents",
+      "action": "investigate",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "incidents.reopen",
+      "feature": "incidents",
+      "group": "Incidents",
+      "action": "reopen",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "incidents.submit",
+      "feature": "incidents",
+      "group": "Incidents",
+      "action": "submit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "incidents.view",
+      "feature": "incidents",
+      "group": "Incidents",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "incidents.view_restricted",
+      "feature": "incidents",
+      "group": "Incidents",
+      "action": "view_restricted",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "inspections.approve",
+      "feature": "inspections",
+      "group": "Inspections",
+      "action": "approve",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "inspections.assign",
+      "feature": "inspections",
+      "group": "Inspections",
+      "action": "assign",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "inspections.close",
+      "feature": "inspections",
+      "group": "Inspections",
+      "action": "close",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "inspections.close_findings",
+      "feature": "inspections",
+      "group": "Inspections",
+      "action": "close_findings",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "inspections.create",
+      "feature": "inspections",
+      "group": "Inspections",
+      "action": "create",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "inspections.delete",
+      "feature": "inspections",
+      "group": "Inspections",
+      "action": "delete",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "inspections.edit",
+      "feature": "inspections",
+      "group": "Inspections",
+      "action": "edit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "inspections.export",
+      "feature": "inspections",
+      "group": "Inspections",
+      "action": "export",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "inspections.manage_templates",
+      "feature": "inspections",
+      "group": "Inspections",
+      "action": "manage_templates",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "inspections.submit",
+      "feature": "inspections",
+      "group": "Inspections",
+      "action": "submit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "inspections.view",
+      "feature": "inspections",
+      "group": "Inspections",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "jsa_jha.acknowledge",
+      "feature": "jsa_jha",
+      "group": "JSA / JHA",
+      "action": "acknowledge",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "jsa_jha.approve",
+      "feature": "jsa_jha",
+      "group": "JSA / JHA",
+      "action": "approve",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "jsa_jha.archive",
+      "feature": "jsa_jha",
+      "group": "JSA / JHA",
+      "action": "archive",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "jsa_jha.assign",
+      "feature": "jsa_jha",
+      "group": "JSA / JHA",
+      "action": "assign",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "location",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "jsa_jha.close",
+      "feature": "jsa_jha",
+      "group": "JSA / JHA",
+      "action": "close",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "jsa_jha.create",
+      "feature": "jsa_jha",
+      "group": "JSA / JHA",
+      "action": "create",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "jsa_jha.edit",
+      "feature": "jsa_jha",
+      "group": "JSA / JHA",
+      "action": "edit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "jsa_jha.execute",
+      "feature": "jsa_jha",
+      "group": "JSA / JHA",
+      "action": "execute",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "jsa_jha.submit",
+      "feature": "jsa_jha",
+      "group": "JSA / JHA",
+      "action": "submit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "jsa_jha.view",
+      "feature": "jsa_jha",
+      "group": "JSA / JHA",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "loto.approve",
+      "feature": "loto",
+      "group": "Lockout / Tagout",
+      "action": "approve",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "loto.create",
+      "feature": "loto",
+      "group": "Lockout / Tagout",
+      "action": "create",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "loto.edit",
+      "feature": "loto",
+      "group": "Lockout / Tagout",
+      "action": "edit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "loto.execute",
+      "feature": "loto",
+      "group": "Lockout / Tagout",
+      "action": "execute",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "location",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "loto.retire",
+      "feature": "loto",
+      "group": "Lockout / Tagout",
+      "action": "retire",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "loto.review",
+      "feature": "loto",
+      "group": "Lockout / Tagout",
+      "action": "review",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "loto.view",
+      "feature": "loto",
+      "group": "Lockout / Tagout",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "location",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "my_training.view",
+      "feature": "my_training",
+      "group": "My Training",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "observations.archive",
+      "feature": "observations",
+      "group": "Observations",
+      "action": "archive",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "observations.assign",
+      "feature": "observations",
+      "group": "Observations",
+      "action": "assign",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "location",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "observations.close",
+      "feature": "observations",
+      "group": "Observations",
+      "action": "close",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "observations.create",
+      "feature": "observations",
+      "group": "Observations",
+      "action": "create",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "observations.edit",
+      "feature": "observations",
+      "group": "Observations",
+      "action": "edit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "observations.review",
+      "feature": "observations",
+      "group": "Observations",
+      "action": "review",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "location",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "observations.submit",
+      "feature": "observations",
+      "group": "Observations",
+      "action": "submit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "observations.view",
+      "feature": "observations",
+      "group": "Observations",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "observations.view_reporter_identity",
+      "feature": "observations",
+      "group": "Observations",
+      "action": "view_reporter_identity",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "osha.certify",
+      "feature": "osha",
+      "group": "OSHA",
+      "action": "certify",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "osha.edit",
+      "feature": "osha",
+      "group": "OSHA",
+      "action": "edit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "osha.export",
+      "feature": "osha",
+      "group": "OSHA",
+      "action": "export",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "osha.view",
+      "feature": "osha",
+      "group": "OSHA",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "personnel.archive",
+      "feature": "personnel",
+      "group": "Personnel",
+      "action": "archive",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "personnel.configure",
+      "feature": "personnel",
+      "group": "Personnel",
+      "action": "configure",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "personnel.create",
+      "feature": "personnel",
+      "group": "Personnel",
+      "action": "create",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "personnel.delete",
+      "feature": "personnel",
+      "group": "Personnel",
+      "action": "delete",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "personnel.edit",
+      "feature": "personnel",
+      "group": "Personnel",
+      "action": "edit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "personnel.edit_sensitive",
+      "feature": "personnel",
+      "group": "Personnel",
+      "action": "edit_sensitive",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "personnel.export",
+      "feature": "personnel",
+      "group": "Personnel",
+      "action": "export",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "personnel.manage_documents",
+      "feature": "personnel",
+      "group": "Personnel",
+      "action": "manage_documents",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "personnel.view",
+      "feature": "personnel",
+      "group": "Personnel",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "personnel.view_sensitive",
+      "feature": "personnel",
+      "group": "Personnel",
+      "action": "view_sensitive",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "qr_management.create",
+      "feature": "qr_management",
+      "group": "QR Management",
+      "action": "create",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "qr_management.delete",
+      "feature": "qr_management",
+      "group": "QR Management",
+      "action": "delete",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "qr_management.edit",
+      "feature": "qr_management",
+      "group": "QR Management",
+      "action": "edit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "qr_management.rotate_token",
+      "feature": "qr_management",
+      "group": "QR Management",
+      "action": "rotate_token",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "qr_management.view",
+      "feature": "qr_management",
+      "group": "QR Management",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "qr_management.view_scans",
+      "feature": "qr_management",
+      "group": "QR Management",
+      "action": "view_scans",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "records.acknowledgements.create",
+      "feature": "workflow_core",
+      "group": "Records",
+      "action": "create",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "records.acknowledgements.view",
+      "feature": "workflow_core",
+      "group": "Records",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "records.comments.create",
+      "feature": "workflow_core",
+      "group": "Records",
+      "action": "create",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "records.comments.manage",
+      "feature": "workflow_core",
+      "group": "Records",
+      "action": "manage",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "records.comments.view",
+      "feature": "workflow_core",
+      "group": "Records",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "records.evidence.manage",
+      "feature": "workflow_core",
+      "group": "Records",
+      "action": "manage",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "records.evidence.upload",
+      "feature": "workflow_core",
+      "group": "Records",
+      "action": "upload",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "records.evidence.view",
+      "feature": "workflow_core",
+      "group": "Records",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "records.links.manage",
+      "feature": "workflow_core",
+      "group": "Records",
+      "action": "manage",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "records.links.view",
+      "feature": "workflow_core",
+      "group": "Records",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "reporting.create",
+      "feature": "reporting",
+      "group": "Reporting",
+      "action": "create",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "reporting.export",
+      "feature": "reporting",
+      "group": "Reporting",
+      "action": "export",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "reporting.manage_dashboards",
+      "feature": "reporting",
+      "group": "Reporting",
+      "action": "manage_dashboards",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "reporting.view",
+      "feature": "reporting",
+      "group": "Reporting",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "risk_register.accept",
+      "feature": "risk_register",
+      "group": "Risk Register",
+      "action": "accept",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "risk_register.approve",
+      "feature": "risk_register",
+      "group": "Risk Register",
+      "action": "approve",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "risk_register.archive",
+      "feature": "risk_register",
+      "group": "Risk Register",
+      "action": "archive",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "risk_register.assess",
+      "feature": "risk_register",
+      "group": "Risk Register",
+      "action": "assess",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "location",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "risk_register.assign",
+      "feature": "risk_register",
+      "group": "Risk Register",
+      "action": "assign",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "location",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "risk_register.close",
+      "feature": "risk_register",
+      "group": "Risk Register",
+      "action": "close",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "risk_register.create",
+      "feature": "risk_register",
+      "group": "Risk Register",
+      "action": "create",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "risk_register.edit",
+      "feature": "risk_register",
+      "group": "Risk Register",
+      "action": "edit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "risk_register.review",
+      "feature": "risk_register",
+      "group": "Risk Register",
+      "action": "review",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "location",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "risk_register.treat",
+      "feature": "risk_register",
+      "group": "Risk Register",
+      "action": "treat",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "location",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "risk_register.view",
+      "feature": "risk_register",
+      "group": "Risk Register",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "tasks.archive",
+      "feature": "tasks",
+      "group": "Tasks",
+      "action": "archive",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "tasks.assign",
+      "feature": "tasks",
+      "group": "Tasks",
+      "action": "assign",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "location",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "tasks.complete",
+      "feature": "tasks",
+      "group": "Tasks",
+      "action": "complete",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "tasks.create",
+      "feature": "tasks",
+      "group": "Tasks",
+      "action": "create",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "tasks.edit",
+      "feature": "tasks",
+      "group": "Tasks",
+      "action": "edit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "tasks.view",
+      "feature": "tasks",
+      "group": "Tasks",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "tenant.forms.manage",
+      "feature": null,
+      "group": "Company Administration",
+      "action": "forms_manage",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "tenant.forms.view",
+      "feature": null,
+      "group": "Company Administration",
+      "action": "forms_view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "tenant.lookups.manage",
+      "feature": null,
+      "group": "Company Administration",
+      "action": "lookups_manage",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "tenant.navigation.manage",
+      "feature": null,
+      "group": "Company Administration",
+      "action": "navigation_manage",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "tenant.roles.manage",
+      "feature": null,
+      "group": "Company Administration",
+      "action": "roles_manage",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "tenant.roles.view",
+      "feature": null,
+      "group": "Company Administration",
+      "action": "roles_view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "tenant.settings.manage",
+      "feature": null,
+      "group": "Company Administration",
+      "action": "settings_manage",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "tenant.settings.view",
+      "feature": null,
+      "group": "Company Administration",
+      "action": "settings_view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "tenant.users.manage",
+      "feature": null,
+      "group": "Company Administration",
+      "action": "users_manage",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "tenant.users.view",
+      "feature": null,
+      "group": "Company Administration",
+      "action": "users_view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "training.approve",
+      "feature": "training",
+      "group": "Training",
+      "action": "approve",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "training.assign",
+      "feature": "training",
+      "group": "Training",
+      "action": "assign",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "training.create_course",
+      "feature": "training",
+      "group": "Training",
+      "action": "create_course",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "training.delete",
+      "feature": "training",
+      "group": "Training",
+      "action": "delete",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "training.export",
+      "feature": "training",
+      "group": "Training",
+      "action": "export",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "training.issue_certificate",
+      "feature": "training",
+      "group": "Training",
+      "action": "issue_certificate",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "training.manage_content",
+      "feature": "training",
+      "group": "Training",
+      "action": "manage_content",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "training.manage_groups",
+      "feature": "training",
+      "group": "Training",
+      "action": "manage_groups",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "training.manage_portal",
+      "feature": "training",
+      "group": "Training",
+      "action": "manage_portal",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "training.record_completion",
+      "feature": "training",
+      "group": "Training",
+      "action": "record_completion",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "training.view",
+      "feature": "training",
+      "group": "Training",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "workers_comp.configure",
+      "feature": "workers_comp",
+      "group": "Workers Compensation",
+      "action": "configure",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "workers_comp.create",
+      "feature": "workers_comp",
+      "group": "Workers Compensation",
+      "action": "create",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "workers_comp.edit",
+      "feature": "workers_comp",
+      "group": "Workers Compensation",
+      "action": "edit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "workers_comp.export",
+      "feature": "workers_comp",
+      "group": "Workers Compensation",
+      "action": "export",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "workers_comp.medical.manage",
+      "feature": "workers_comp",
+      "group": "Workers Compensation",
+      "action": "medical_manage",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "workers_comp.medical.view",
+      "feature": "workers_comp",
+      "group": "Workers Compensation",
+      "action": "medical_view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "workers_comp.view",
+      "feature": "workers_comp",
+      "group": "Workers Compensation",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "workflow.approve",
+      "feature": "workflow_core",
+      "group": "Workflow",
+      "action": "approve",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "workflow.configure",
+      "feature": "workflow_core",
+      "group": "Workflow",
+      "action": "configure",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "workflow.transition",
+      "feature": "workflow_core",
+      "group": "Workflow",
+      "action": "transition",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "workflow.view",
+      "feature": "workflow_core",
+      "group": "Workflow",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    }
+  ],
+  "navigation": [
+    {
+      "key": "nav.assets_equipment",
+      "parent": null,
+      "label": "Assets & Equipment",
+      "route": "/assets",
+      "feature": "assets_equipment",
+      "category": "Navigation",
+      "sortOrder": 170,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.calendar",
+      "parent": null,
+      "label": "Calendar",
+      "route": "/calendar",
+      "feature": "calendar",
+      "category": "Navigation",
+      "sortOrder": 215,
+      "enabled": true,
+      "routeLive": false
+    },
+    {
+      "key": "nav.company_forms",
+      "parent": null,
+      "label": "Form Designer",
+      "route": "/company/settings/forms",
+      "feature": null,
+      "category": "Administration",
+      "sortOrder": 910,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.company_lookups",
+      "parent": null,
+      "label": "Dropdown Manager",
+      "route": "/company/settings/lookups",
+      "feature": null,
+      "category": "Administration",
+      "sortOrder": 920,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.company_settings",
+      "parent": null,
+      "label": "Company Settings",
+      "route": "/company/settings",
+      "feature": null,
+      "category": "Administration",
+      "sortOrder": 900,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.corrective_actions",
+      "parent": null,
+      "label": "Corrective Actions",
+      "route": "/corrective-actions",
+      "feature": "corrective_actions",
+      "category": "Navigation",
+      "sortOrder": 135,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.customer_support",
+      "parent": null,
+      "label": "Help Desk",
+      "route": "/help-desk",
+      "feature": null,
+      "category": "Administration",
+      "sortOrder": 905,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.dot",
+      "parent": null,
+      "label": "DOT",
+      "route": "/dot",
+      "feature": "dot",
+      "category": "Navigation",
+      "sortOrder": 160,
+      "enabled": true,
+      "routeLive": false
+    },
+    {
+      "key": "nav.fleet",
+      "parent": null,
+      "label": "Fleet",
+      "route": "/fleet",
+      "feature": "fleet",
+      "category": "Navigation",
+      "sortOrder": 180,
+      "enabled": true,
+      "routeLive": false
+    },
+    {
+      "key": "nav.forge_ai",
+      "parent": null,
+      "label": "Forge AI",
+      "route": "/ai",
+      "feature": "forge_ai",
+      "category": "Navigation",
+      "sortOrder": 255,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.forge_ai_analytics",
+      "parent": null,
+      "label": "AI Analytics",
+      "route": "/ai/analytics",
+      "feature": "forge_ai",
+      "category": "Navigation",
+      "sortOrder": 257,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.forge_ai_watch",
+      "parent": null,
+      "label": "AI Watch",
+      "route": "/ai/watch",
+      "feature": "forge_ai",
+      "category": "Navigation",
+      "sortOrder": 256,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.incidents",
+      "parent": null,
+      "label": "Incidents",
+      "route": "/incidents",
+      "feature": "incidents",
+      "category": "Navigation",
+      "sortOrder": 120,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.inspections",
+      "parent": null,
+      "label": "Inspections",
+      "route": "/inspections",
+      "feature": "inspections",
+      "category": "Navigation",
+      "sortOrder": 130,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.jsa_jha",
+      "parent": null,
+      "label": "JSA / JHA",
+      "route": "/jsas",
+      "feature": "jsa_jha",
+      "category": "Navigation",
+      "sortOrder": 125,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.loto",
+      "parent": null,
+      "label": "Lockout / Tagout",
+      "route": "/loto",
+      "feature": "loto",
+      "category": "Navigation",
+      "sortOrder": 190,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.messaging",
+      "parent": null,
+      "label": "Messaging",
+      "route": "/messaging",
+      "feature": "messaging",
+      "category": "Navigation",
+      "sortOrder": 235,
+      "enabled": true,
+      "routeLive": false
+    },
+    {
+      "key": "nav.my_training",
+      "parent": null,
+      "label": "My Training",
+      "route": "/my-training",
+      "feature": "my_training",
+      "category": "Navigation",
+      "sortOrder": 115,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.observations",
+      "parent": null,
+      "label": "Observations",
+      "route": "/observations",
+      "feature": "observations",
+      "category": "Navigation",
+      "sortOrder": 131,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.osha",
+      "parent": null,
+      "label": "OSHA",
+      "route": "/osha",
+      "feature": "osha",
+      "category": "Navigation",
+      "sortOrder": 140,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.personnel",
+      "parent": null,
+      "label": "Personnel",
+      "route": "/personnel",
+      "feature": "personnel",
+      "category": "Navigation",
+      "sortOrder": 100,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.qr_management",
+      "parent": null,
+      "label": "QR Management",
+      "route": "/qr",
+      "feature": "qr_management",
+      "category": "Navigation",
+      "sortOrder": 245,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.reminders",
+      "parent": null,
+      "label": "Reminders",
+      "route": "/reminders",
+      "feature": "reminders",
+      "category": "Navigation",
+      "sortOrder": 225,
+      "enabled": true,
+      "routeLive": false
+    },
+    {
+      "key": "nav.reporting",
+      "parent": null,
+      "label": "Reporting",
+      "route": "/reporting",
+      "feature": "reporting",
+      "category": "Navigation",
+      "sortOrder": 260,
+      "enabled": true,
+      "routeLive": false
+    },
+    {
+      "key": "nav.risk_register",
+      "parent": null,
+      "label": "Risk Register",
+      "route": "/risk-register",
+      "feature": "risk_register",
+      "category": "Navigation",
+      "sortOrder": 132,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.tasks",
+      "parent": null,
+      "label": "Tasks",
+      "route": "/tasks",
+      "feature": "tasks",
+      "category": "Navigation",
+      "sortOrder": 205,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.training",
+      "parent": null,
+      "label": "Training",
+      "route": "/training",
+      "feature": "training",
+      "category": "Navigation",
+      "sortOrder": 110,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.workers_comp",
+      "parent": null,
+      "label": "Workers Comp",
+      "route": "/workers-comp",
+      "feature": "workers_comp",
+      "category": "Navigation",
+      "sortOrder": 150,
+      "enabled": true,
+      "routeLive": true
+    }
+  ],
+  "routes": {
+    "pages": [
+      "/",
+      "/[...not-found]",
+      "/admin/creator",
+      "/admin/creator/access",
+      "/admin/creator/audit",
+      "/admin/creator/billing",
+      "/admin/creator/configuration",
+      "/admin/creator/experience",
+      "/admin/creator/features",
+      "/admin/creator/lookups",
+      "/admin/creator/navigation",
+      "/admin/creator/permissions",
+      "/admin/creator/subscriptions",
+      "/admin/creator/support",
+      "/admin/creator/support/[id]",
+      "/admin/creator/support/settings",
+      "/admin/creator/tenants",
+      "/admin/creator/tenants/[id]",
+      "/admin/creator/tenants/[id]/access",
+      "/admin/creator/tenants/[id]/access/users",
+      "/admin/creator/tenants/[id]/access/users/[userId]",
+      "/admin/creator/tenants/[id]/ai",
+      "/admin/creator/tenants/[id]/edit",
+      "/admin/creator/tenants/[id]/experience",
+      "/admin/creator/tenants/[id]/features",
+      "/admin/creator/tenants/[id]/forms",
+      "/admin/creator/tenants/[id]/lookups",
+      "/admin/creator/tenants/create",
+      "/admin/creator/workflows",
+      "/ai",
+      "/ai/actions",
+      "/ai/analytics",
+      "/ai/command-center",
+      "/ai/knowledge",
+      "/ai/recommendations",
+      "/ai/risk",
+      "/ai/settings",
+      "/ai/usage",
+      "/ai/watch",
+      "/assets",
+      "/assets/[id]",
+      "/assets/[id]/maintenance/create",
+      "/assets/[id]/meter-readings/create",
+      "/assets/create",
+      "/auth/callback",
+      "/auth/confirm",
+      "/auth/error",
+      "/auth/forgot-password",
+      "/auth/login",
+      "/auth/magic-link",
+      "/auth/register",
+      "/auth/verify-email",
+      "/company/settings",
+      "/company/settings/forms",
+      "/company/settings/lookups",
+      "/corrective-actions",
+      "/corrective-actions/[id]",
+      "/corrective-actions/create",
+      "/dashboard",
+      "/help-desk",
+      "/help-desk/announcements",
+      "/help-desk/articles",
+      "/help-desk/articles/[slug]",
+      "/help-desk/ask",
+      "/help-desk/console",
+      "/help-desk/console/analytics",
+      "/help-desk/console/development",
+      "/help-desk/console/development/[id]",
+      "/help-desk/console/incidents",
+      "/help-desk/console/incidents/[id]",
+      "/help-desk/console/knowledge",
+      "/help-desk/console/knowledge/[id]",
+      "/help-desk/console/knowledge/new",
+      "/help-desk/console/settings",
+      "/help-desk/console/tenants",
+      "/help-desk/console/tickets/[id]",
+      "/help-desk/console/tickets/[id]/print",
+      "/help-desk/status",
+      "/help-desk/tickets",
+      "/help-desk/tickets/[id]",
+      "/help-desk/tickets/new",
+      "/incidents",
+      "/incidents/[id]",
+      "/incidents/create",
+      "/inspections",
+      "/inspections/[id]",
+      "/inspections/create",
+      "/inspections/templates",
+      "/jsas",
+      "/jsas/[id]",
+      "/jsas/[id]/executions/[executionId]",
+      "/jsas/[id]/revisions/[versionId]",
+      "/jsas/create",
+      "/loto",
+      "/loto/[id]",
+      "/loto/create",
+      "/my-profile",
+      "/my-training",
+      "/my-training/[assignmentId]",
+      "/not-authorized",
+      "/notifications",
+      "/observations",
+      "/observations/[id]",
+      "/observations/create",
+      "/osha",
+      "/osha/cases/[id]",
+      "/osha/cases/[id]/form-301",
+      "/osha/log",
+      "/osha/summary",
+      "/page-not-found",
+      "/personnel",
+      "/personnel/[id]",
+      "/personnel/create",
+      "/personnel/structure",
+      "/q/[token]",
+      "/q/unavailable",
+      "/qr",
+      "/qr/[id]",
+      "/qr/create",
+      "/reset-password",
+      "/risk-register",
+      "/risk-register/[id]",
+      "/risk-register/create",
+      "/risk-register/matrices",
+      "/support",
+      "/support/[id]",
+      "/tasks",
+      "/tasks/[id]",
+      "/tasks/create",
+      "/training",
+      "/training-portal/[token]",
+      "/training-portal/[token]/certificate/[completionId]",
+      "/training-portal/[token]/course/[assignmentId]",
+      "/training/assign",
+      "/training/certificates/[completionId]",
+      "/training/completions/create",
+      "/training/courses/[id]",
+      "/training/courses/[id]/content",
+      "/training/courses/[id]/paper",
+      "/training/courses/create",
+      "/training/groups",
+      "/training/matrix",
+      "/training/paper",
+      "/training/portal",
+      "/training/settings",
+      "/workers-comp",
+      "/workers-comp/[id]",
+      "/workers-comp/[id]/forms/[formId]",
+      "/workers-comp/[id]/print",
+      "/workers-comp/carriers",
+      "/workers-comp/create",
+      "/workers-comp/queues",
+      "/workers-comp/reports",
+      "/workers-comp/settings",
+      "/workers-comp/weekly"
+    ],
+    "api": [
+      "/api/evidence/[evidenceId]",
+      "/api/evidence/upload",
+      "/api/forge-ai/chat",
+      "/api/forge-ai/knowledge/upload",
+      "/api/forge-ai/watch/cron",
+      "/api/helpdesk/attachments/[id]",
+      "/api/helpdesk/cron",
+      "/api/helpdesk/export/analytics",
+      "/api/helpdesk/export/tickets",
+      "/api/helpdesk/knowledge/[id]/attachments",
+      "/api/helpdesk/knowledge/media/[id]",
+      "/api/helpdesk/status",
+      "/api/helpdesk/tickets/[id]/attachments",
+      "/api/osha/log",
+      "/api/support/[id]/attachments",
+      "/api/support/attachments/[attachmentId]",
+      "/api/training/materials",
+      "/api/training/matrix",
+      "/api/workers-comp/cron",
+      "/api/workers-comp/forms/[formId]/pdf",
+      "/api/workers-comp/forms/templates",
+      "/api/workers-comp/forms/templates/[templateId]",
+      "/api/workers-comp/reports/[key]",
+      "/api/workers-comp/weekly"
+    ]
+  },
+  "scheduledJobs": [
+    {
+      "key": "workers-comp",
+      "method": "POST",
+      "path": "/api/workers-comp/cron",
+      "secret": "FORGE_CRON_SECRET",
+      "schedule": "rate(1 hour)"
+    },
+    {
+      "key": "helpdesk",
+      "method": "POST",
+      "path": "/api/helpdesk/cron",
+      "secret": "HELPDESK_CRON_SECRET",
+      "schedule": "rate(5 minutes)"
+    },
+    {
+      "key": "forge-ai-watch",
+      "method": "POST",
+      "path": "/api/forge-ai/watch/cron",
+      "secret": "FORGE_AI_CRON_SECRET",
+      "schedule": "rate(1 day)"
+    }
+  ]
+}

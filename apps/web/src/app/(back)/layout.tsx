@@ -9,7 +9,7 @@ import type { Metadata } from 'next'
 // Third-party Imports
 import { SidebarProvider } from '@repo/ui/components/ui/sidebar'
 import VerticalLayout from '@repo/ui/layouts/VerticalLayout'
-import { getAuthUser } from '@repo/supabase/serverHelpers'
+import { currentUser } from '@/lib/platform/identity'
 
 // Component Imports
 import Sidebar from '@components/layout/vertical/Sidebar'
@@ -38,9 +38,7 @@ const AdminLayout = async ({ children }: { children: ReactNode }) => {
   const cookieStore = await cookies()
   const sidebarCookie = cookieStore.get('is-sidebar-open')
 
-  const {
-    data: { user }
-  } = await getAuthUser()
+  const user = await currentUser()
 
   if (!user) redirect('/auth/login')
 
