@@ -102,8 +102,8 @@ New feature registry keys (`forge_ai.command_center`, `forge_ai.risk_intelligenc
 |---|---|
 | 1 Foundation: provider interface, timeouts and retries, tool allowlisting and argument validation, structured output, prompt versions, agent runs, model registry, unified AI audit, retention, rollout flag | Done on `feat/forge-ai-command-center` |
 | 2 Orchestrator, 8 agents, knowledge engine | Done on `feat/forge-ai-agents` |
-| 3 Risk intelligence and proactive monitoring | Next |
-| 4 Recommendations and approvals | Pending |
+| 3 Risk intelligence and proactive monitoring | Done on `feat/forge-ai-risk-monitoring` |
+| 4 Recommendations and approvals | Next |
 | 5 Command Center UI, security suite, docs, completion report | Pending |
 
 Stage 1 tests: `tests/forge-ai-foundation.test.cjs` (19 unit tests), `tests/forge-ai-foundation-db.cjs` (21 database checks, including cross-tenant retention), `tests/forge-ai-pipeline.spec.cjs` (4 end-to-end checks through `/api/forge-ai/chat` with the guarded test provider). All three run in CI.
@@ -138,5 +138,64 @@ Stage 2 tests:
 | `tests/forge-ai-agents.test.cjs` | 19 unit tests: routing, allowlists, limits, prompt pins, answer checks, injection scanning, PDF and DOCX extraction, ranking |
 | `tests/forge-ai-agents-knowledge-db.cjs` | 12 database checks: search functions closed to clients, tenant isolation, restricted and draft filtering, lexical-only chunks, capability coverage |
 | `tests/forge-ai-agents.spec.cjs` | 8 end-to-end checks: routing and citations, allowlist refusal, unverified references and id redaction, text and PDF upload with versions, restricted filtering, injection flagging and audit, upload refusals and cross-tenant refusal, the workspace agent picker |
+
+All three run in CI.
+
+Stage 3 adds:
+
+- **Risk intelligence** (`src/lib/forgeAiRiskScore.ts`, `src/lib/forgeAiRisk.ts`, `/ai/risk`)
+  - Each facility (location) and division gets a 0-100 risk indicator from a versioned model (`forge_ai_risk_models`, platform default `facility_risk` v1).
+  - The indicator combines seven factors over the last 90 days:
+    - injury rate per 200,000 hours, from OSHA 300A hours;
+    - incident severity load;
+    - 30-day incident trend;
+    - open high or critical findings;
+    - overdue corrective actions;
+    - share of training assignments overdue;
+    - open high-band risks and observations.
+  - Each factor is stored with its detail and the records it came from (`forge_ai_risk_indicators`).
+  - A factor without data is left out and the rest are re-weighted. It is never counted as zero.
+  - A scope gets no score ("Not enough data") in two cases: it has fewer than 5 records, or less than 60% of the model's weight has data.
+  - The indicator ranks where attention is needed. It is labelled as an indicator, never as a probability.
+  - Viewers need `forge_ai.view_risk`. Location-scoped viewers see only their facilities, and evidence from modules they cannot open is hidden.
+- **Monitoring**
+  - Eight new Watch rules:
+    - serious or injury incident reported;
+    - recurring incident type at one location;
+    - emerging incident trend against the location's own baseline;
+    - failed inspection not closed;
+    - open high-risk observation;
+    - risk review overdue;
+    - training gap at a location;
+    - elevated facility risk indicator.
+  - Pattern alerts (recurring, trend, training gap) are shown only to people who can open every record behind them.
+- **Alert routing** (`forge_ai_alert_routes`, managed on `/ai/watch`)
+  - A route sends alerts at or above a severity, for one rule or all rules, to a tenant role or a person, in the app or by email.
+  - Delivery goes through the shared notification service.
+  - A recipient only receives alerts they could open in AI Watch.
+  - Each alert is notified once, and again only if it reopens.
+  - With no routes set up, company owners and administrators receive high and critical alerts in the app.
+- **Event-driven runs**
+  - Submitting an incident now publishes `incident.submitted` to the domain event outbox.
+  - The scheduler's events mode runs a cycle for each tenant with new events since its cursor (`forge_ai_watch_cursors`). It does not consume or mark events, so other outbox consumers are unaffected.
+
+### Scheduler
+
+`/api/forge-ai/watch/cron` requires `Authorization: Bearer $FORGE_AI_CRON_SECRET`. Without the secret set, it refuses every call. It has two modes:
+
+| Call | What it does | Suggested schedule |
+|---|---|---|
+| `POST /api/forge-ai/watch/cron` | Full cycle for every entitled tenant: risk indicators, then every Watch rule, then notifications | Daily |
+| `POST /api/forge-ai/watch/cron?mode=events` | A cycle only for tenants with new domain events | Every 5–15 minutes |
+
+No hosted scheduler is configured yet. Point a Vercel cron, GitHub Actions schedule or AWS EventBridge rule at these URLs once the 2.0 deployment exists.
+
+Stage 3 tests:
+
+| Suite | Coverage |
+|---|---|
+| `tests/forge-ai-risk-monitoring.test.cjs` | 14 unit tests: scoring, re-weighting, insufficient data, bands, evidence caps, injury rate and trend maths, recurring/trend/training-gap detection, routing thresholds, agent tool allowlist |
+| `tests/forge-ai-risk-monitoring-db.cjs` | 23 database checks: new tables closed to clients, model, rules, permission and capability registered, incident outbox trigger, route constraints |
+| `tests/forge-ai-risk-monitoring.spec.cjs` | 7 end-to-end checks covering: <ul><li>scheduler auth;</li><li>scoring on the seeded plant, including an empty site left unscored;</li><li>new-rule alerts and notification dedupe;</li><li>an event-driven run after an incident is submitted, with a route to a role that cannot see alerts receiving nothing;</li><li>the Risk Indicators page for permitted, unpermitted and other-tenant users;</li><li>the risk agent tool;</li><li>acknowledging an alert.</li></ul> |
 
 All three run in CI.

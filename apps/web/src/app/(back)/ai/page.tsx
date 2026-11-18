@@ -112,6 +112,9 @@ const ForgeAiPage = async ({
       canViewWatch={runtime.access.effective.some(
         permission => permission.permissionKey === 'forge_ai.view_alerts' && permission.allowed
       )}
+      canViewRisk={runtime.access.effective.some(
+        permission => permission.permissionKey === 'forge_ai.view_risk' && permission.allowed
+      )}
       canViewAnalytics={runtime.access.effective.some(
         permission => permission.permissionKey === 'forge_ai.view_analytics' && permission.allowed
       )}
