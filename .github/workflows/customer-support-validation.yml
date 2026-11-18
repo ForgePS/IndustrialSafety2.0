@@ -101,6 +101,9 @@ jobs:
       - name: Run Forge AI foundation database regression
         run: node apps/web/tests/forge-ai-foundation-db.cjs
 
+      - name: Run RPC execute hardening regression
+        run: node apps/web/tests/rpc-execute-hardening-db.cjs
+
       - name: Install Playwright Chromium
         run: |
           pnpm add -Dw @playwright/test@1.55.0 --lockfile=false
