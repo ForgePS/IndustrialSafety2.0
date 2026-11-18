@@ -2,6 +2,7 @@ import { createServiceRoleClient } from '@repo/supabase/server'
 
 import { getBodyMapCardData } from '@/lib/forgeBodyMap'
 import { getScopedCorrectiveActions } from '@/lib/forgeCorrectiveActions'
+import { pendingAcknowledgments } from '@/lib/forgeDocumentAccess'
 import { getScopedCompanyDrivers, getScopedDotRecords, getScopedDriverFiles } from '@/lib/forgeDot'
 import { buildDotAttentionCards, dotDueOverdueLabel } from '@/lib/forgeDotRules'
 import type { EffectivePermission } from '@/lib/forgeEffectiveAccess'
@@ -238,6 +239,13 @@ export const getDashboardData = async ({
     const compliant = dot.files.filter(file => !file.issues.some(issue => issue.kind !== 'expiring')).length
 
     dotCompliance = dot.files.length ? Math.round((compliant / dot.files.length) * 100) : null
+  }
+
+  // Port slice 12: published documents distributed to the viewer that they still need to acknowledge.
+  if (allowed(access, 'documents.view')) {
+    const toRead = await quietly('documents to read', async () => (await pendingAcknowledgments(organizationId, userId)).length)
+
+    if (toRead !== null) attention.push({ key: 'documents-to-read', label: 'Documents to read', count: toRead, href: '/documents/acknowledgments', tone: 'primary' })
   }
 
   if (oshaScope && incidents) {
