@@ -7,7 +7,12 @@ import { updateSession } from '@repo/supabase/middleware'
 // Config Imports
 import authConfig from '@configs/authConfig'
 
+import { updateCognitoSession } from '@/lib/platform/cognitoMiddleware'
+
 export async function middleware(request: NextRequest) {
+  // Inside 1.0, sign-in comes from 1.0's Cognito session (docs/INTEGRATION_2X_INTO_1X_PLAN.md).
+  if (process.env.FORGE_AUTH_PROVIDER === 'cognito') return await updateCognitoSession(request)
+
   return await updateSession(request, authConfig.providers.magicLink)
 }
 

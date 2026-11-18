@@ -21,12 +21,14 @@ import {
 } from '@repo/ui/components/ui/dropdown-menu'
 import { Button } from '@repo/ui/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui/components/ui/avatar'
-import { useSignOut } from '@repo/supabase/hooks'
+
 import { deleteImpersonationCookies, deletePaymentCookies } from '@repo/auth/action'
 import { useSettings } from '@repo/ui/hooks/useSettings'
 import { getInitials } from '@repo/ui/utils/getInitials'
 import Trans from '@repo/i18n/Trans'
 import type { Mode } from '@repo/ui/types'
+
+import { useSignOut } from '@/lib/platform/useSignOut'
 
 import type { PlatformUser } from '@/lib/platform/identityTypes'
 
