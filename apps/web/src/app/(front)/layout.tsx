@@ -23,17 +23,11 @@ export async function generateMetadata(): Promise<Metadata> {
         }
       : title,
     description: description,
-    keywords: [
-      'chatflow ai demo',
-      'nextjs saas starter kit demo',
-      'nextjs saas boilerplate demo',
-      'nextjs starter kit demo',
-      'nextjs boilerplate demo'
-    ],
+    keywords: ['industrial safety', 'EHS software', 'incident management', 'safety inspections', 'lockout tagout'],
     openGraph: {
       title: appName,
       description: description,
-      url: 'https://jetship-nextjs-saas-boilerplate-demo.vercel.app'
+      ...(process.env.NEXT_PUBLIC_APP_URL ? { url: process.env.NEXT_PUBLIC_APP_URL } : {})
     },
     twitter: {
       card: 'summary_large_image',

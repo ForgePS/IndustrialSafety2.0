@@ -9,8 +9,6 @@ import { checkRoutePermissions } from '@repo/rbac/utils'
 import type { JwtPayload } from 'jwt-decode'
 import type { User } from '@supabase/supabase-js'
 
-// Type Imports
-import type { SettingsConfiguration } from '@repo/supabase/settingsConfigurationTypes'
 
 type JWT = JwtPayload & {
   roles: string[]
@@ -80,88 +78,31 @@ export async function updateSession(request: NextRequest, isMagicLinkEnabled: bo
     }
   }
 
-  const url = request.nextUrl.clone()
+  const { pathname } = request.nextUrl
 
-  // Hide `blog` routes if the blog is disabled
-  if (url.pathname.startsWith('/blog')) {
-    const { data: settings_configuration } = await supabase
-      .from('settings_configuration')
-      .select('value')
-      .eq('key', 'general_settings')
-      .single()
-
-    const isBlogEnabled = (JSON.parse(settings_configuration?.value) as SettingsConfiguration['general_settings'])
-      .pages_components.blog_enabled
-
-    if (!isBlogEnabled) {
-      url.pathname = '/page-not-found' // Display 404 page
-
-      return NextResponse.rewrite(url)
-    }
-  }
-
-  // Cannot visit thank-you page if they are not logged in
-  if (url.pathname.startsWith('/thank-you') && !user) {
-    url.pathname = '/'
-
-    return NextResponse.redirect(url)
-  }
+  const redirectTo = (path: string) => NextResponse.redirect(new URL(path, request.url))
 
   if (user && currentUser) {
-    const { roles, permissions } = currentUser
-
-    // Role-based access control
-    if (url.pathname.startsWith('/dashboard') && roles?.includes('admin')) {
-      url.pathname = '/not-authorized'
-
-      return NextResponse.redirect(url)
-    }
+    const { permissions } = currentUser
 
     // Check permissions based on the route
-    if (!checkRoutePermissions(url.pathname, permissions || [])) {
-      url.pathname = '/not-authorized'
-
-      return NextResponse.redirect(url)
+    if (!checkRoutePermissions(pathname, permissions || [])) {
+      return redirectTo('/not-authorized')
     }
 
-    // User can only access the thank you page if they are logged in and have a successful payment
-    if (url.pathname.startsWith('/thank-you')) {
-      const { data: billingRecords } = await supabase.from('billing').select('status').eq('user_id', user.id)
-
-      const isPaymentSuccessful = billingRecords?.filter(record => record.status === 'success')[0]?.status === 'success'
-
-      // delete `checkoutData` cookie if the cookie exists
-      if (request.cookies.has('checkoutData') && isPaymentSuccessful) {
-        request.cookies.delete('checkoutData')
-        supabaseResponse.cookies.delete('checkoutData')
-      } else {
-        url.pathname = '/' // Redirect to the home page
-
-        return NextResponse.redirect(url)
-      }
+    // Signed-in users never see the sign-in pages; everyone lands on the dashboard.
+    if (pathname.startsWith('/auth')) {
+      return redirectTo('/dashboard')
     }
-
-    if (request.nextUrl.pathname.startsWith('/auth')) {
-      url.pathname = roles?.includes('admin') ? '/admin' : '/dashboard'
-
-      return NextResponse.redirect(url)
-    }
-  } else {
-    if (
-      request.nextUrl.pathname.startsWith('/admin') ||
-      request.nextUrl.pathname.startsWith('/dashboard') ||
-      request.nextUrl.pathname.startsWith('/billing') ||
-      request.nextUrl.pathname.startsWith('/my-profile') ||
-      request.nextUrl.pathname.startsWith('/reset-password') ||
-      (request.nextUrl.pathname.startsWith('/auth/magic-link') && !isMagicLinkEnabled)
-    ) {
-      // no user, potentially respond by redirecting the user to the login page
-      const url = request.nextUrl.clone()
-
-      url.pathname = '/auth/login'
-
-      return NextResponse.redirect(url)
-    }
+  } else if (
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/my-profile') ||
+    pathname.startsWith('/reset-password') ||
+    (pathname.startsWith('/auth/magic-link') && !isMagicLinkEnabled)
+  ) {
+    // Signed-out visitors to app pages go to sign-in.
+    return redirectTo('/auth/login')
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're

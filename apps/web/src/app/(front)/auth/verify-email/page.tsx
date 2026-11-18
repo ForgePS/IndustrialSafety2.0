@@ -6,7 +6,6 @@ import type { Metadata } from 'next'
 import { TbChevronLeft } from 'react-icons/tb'
 import LeftSection from '@repo/ui/auth/LeftSection'
 import { Button } from '@repo/ui/components/ui/button'
-import { createServiceRoleClient } from '@repo/supabase/server'
 import Trans from '@repo/i18n/Trans'
 
 // Component Imports
@@ -14,35 +13,22 @@ import Logo from '@components/layout/front/Logo'
 import ResendVerifyEmailButton from './ResendVerifyEmailButton'
 
 export const metadata: Metadata = {
-  title: { absolute: 'Verify Email' },
-  alternates: {
-    canonical: 'https://jetship-nextjs-saas-boilerplate-demo.vercel.app/auth/verify-email'
-  }
+  title: { absolute: 'Verify Email' }
 }
 
 const VerifyEmail = async (props: { searchParams: Promise<Record<string, string>> }) => {
   // Vars
   const searchParams = await props.searchParams
-  const supabase = createServiceRoleClient()
-
-  const {
-    data: { users },
-    error
-  } = await supabase.auth.admin.listUsers()
-
-  if (error) {
-    throw error.message
-  }
 
   return (
     <div className='min-bs-screen flex'>
       <LeftSection />
       <div className='bg-card min-bs-screen relative basis-full lg:basis-2/5 xl:basis-1/3'>
         <div className='pbs-8 is-full absolute'>
-          <Link href='/' className='is-10/12 md:is-1/2 lg:is-4/5 mli-auto flex items-center gap-2'>
+          <Link href='/auth/login' className='is-10/12 md:is-1/2 lg:is-4/5 mli-auto flex items-center gap-2'>
             <TbChevronLeft className='is-[22px] bs-[22px] text-textSecondary' />
             <span className='text-textSecondary'>
-              <Trans i18nKey='auth:backToWebsite' />
+              <Trans i18nKey='auth:backToLoginButton' />
             </span>
           </Link>
         </div>
@@ -61,7 +47,7 @@ const VerifyEmail = async (props: { searchParams: Promise<Record<string, string>
               <p className='text-textSecondary'>
                 <Trans i18nKey='auth:verifyEmailNotReceived' />
               </p>
-              <ResendVerifyEmailButton searchParams={searchParams} users={users} />
+              <ResendVerifyEmailButton searchParams={searchParams} />
               <Button variant='ghostPrimary' asChild>
                 <Link href='/auth/login' className='flex items-center gap-x-2'>
                   <TbChevronLeft className='is-[22px] bs-[22px]' />

@@ -3,10 +3,8 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 // Third-party Imports
-import { TbChevronLeft } from 'react-icons/tb'
 import LeftSection from '@repo/ui/auth/LeftSection'
 import OauthProviders from '@repo/ui/providers/OauthProviders'
-import { createServiceRoleClient } from '@repo/supabase/server'
 import Trans from '@repo/i18n/Trans'
 import { cn } from '@repo/ui/lib/utils'
 
@@ -19,10 +17,7 @@ import authConfig from '@configs/authConfig'
 import appConfig from '@configs/appConfig'
 
 export const metadata: Metadata = {
-  title: { absolute: 'Login' },
-  alternates: {
-    canonical: 'https://jetship-nextjs-saas-boilerplate-demo.vercel.app/auth/login'
-  }
+  title: { absolute: 'Login' }
 }
 
 const Login = async () => {
@@ -31,24 +26,10 @@ const Login = async () => {
   const renderPassword = authConfig.providers.password
   const renderOAuth = authConfig.providers.oAuth.length > 0
 
-  const supabase = createServiceRoleClient()
-
-  const {
-    data: { users }
-  } = await supabase.auth.admin.listUsers()
-
   return (
     <div className='min-bs-screen flex'>
       <LeftSection />
       <div className='bg-card min-bs-screen relative basis-full lg:basis-2/5 xl:basis-1/3'>
-        <div className='pbs-8 is-full absolute'>
-          <Link href='/' className='is-10/12 md:is-1/2 lg:is-4/5 mli-auto flex items-center gap-2'>
-            <TbChevronLeft className='is-[22px] bs-[22px] text-textSecondary' />
-            <span className='text-textSecondary'>
-              <Trans i18nKey='auth:backToWebsite' />
-            </span>
-          </Link>
-        </div>
         <div className='plb-[7rem] bs-full flex grow flex-col items-center justify-center'>
           <div className='is-10/12 md:is-1/2 lg:is-4/5 mli-auto flex flex-col gap-6'>
             <Logo />
@@ -71,7 +52,7 @@ const Login = async () => {
               </p>
             )}
             <div className='flex flex-col gap-4'>
-              {renderPassword && <PasswordSignInForm users={users} />}
+              {renderPassword && <PasswordSignInForm />}
               {!renderPassword && !renderMagicLink ? null : (
                 <p
                   className={cn('flex flex-wrap items-center justify-center gap-1 text-base', {

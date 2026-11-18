@@ -7,13 +7,12 @@ import { useTransition } from 'react'
 import { Button } from '@repo/ui/components/ui/button'
 import Trans from '@repo/i18n/Trans'
 import { useTranslation } from 'react-i18next'
-import type { User } from '@supabase/supabase-js'
 import { toast } from '@repo/ui/utils/toast'
 
 // Server Action Imports
 import { verifyEmail } from '../actions'
 
-const ResendVerifyEmailButton = ({ searchParams, users }: { searchParams: Record<string, string>; users: User[] }) => {
+const ResendVerifyEmailButton = ({ searchParams }: { searchParams: Record<string, string> }) => {
   // States
   const [pending, startTransition] = useTransition()
 
@@ -33,24 +32,8 @@ const ResendVerifyEmailButton = ({ searchParams, users }: { searchParams: Record
           return
         }
 
-        // Check if user already exists with the email address
-        const existingUserData = users.find(user => user.email === email)
-
-        // If user not found, show alert that says user doesn't exist
-        if (!existingUserData) {
-          toast('error', t('auth:verifyEmailToastUserNotFound', { email }))
-
-          return
-        }
-
-        // If user's email is already verified, show alert that says email is already verified
-        if (existingUserData.email_confirmed_at) {
-          toast('error', t('auth:verifyEmailToastEmailVerified'))
-
-          return
-        }
-
-        // Send verification email
+        // Send verification email. The response is the same whether or not the address is registered
+        // or already verified, so this page never reveals which email addresses have accounts.
         const { error } = await verifyEmail(email, `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`)
 
         if (error) {

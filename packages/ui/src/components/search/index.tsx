@@ -13,9 +13,7 @@ import {
   TbArrowDown,
   TbCornerDownLeft,
   TbDashboard,
-  TbUser,
-  TbFileText,
-  TbHome
+  TbUser
 } from 'react-icons/tb'
 import * as Icons from 'react-icons/tb'
 import Trans from '@repo/i18n/Trans'
@@ -56,11 +54,11 @@ const DynamicIcon = (icon: keyof typeof Icons) => {
   return <IconComponent className='me-2' />
 }
 
-const Search = ({ data, roles }: { data: SearchDataProps[]; roles: string[] }) => {
+// `roles` is still passed by callers but no longer changes the results.
+const Search = ({ data }: { data: SearchDataProps[]; roles: string[] }) => {
   // States
   const [isOpen, setIsOpen] = useState(false)
   const [searchValue, setSearchValue] = useState('')
-  const isAdmin = roles?.includes('admin')
 
   // Hooks
   const { t } = useTranslation()
@@ -71,11 +69,9 @@ const Search = ({ data, roles }: { data: SearchDataProps[]; roles: string[] }) =
     .map(item => {
       // Handle dynamic URLs (like Dashboard and My Profile)
       if (item.dynamicUrl && item.baseUrl !== undefined) {
-        const prefix = isAdmin ? '/admin' : '/dashboard'
-
         return {
           ...item,
-          url: `${prefix}${item.baseUrl}`
+          url: `/dashboard${item.baseUrl}`
         }
       }
 
@@ -84,15 +80,8 @@ const Search = ({ data, roles }: { data: SearchDataProps[]; roles: string[] }) =
     })
     .filter(item => {
       // For items without permissions, show based on route type
-      if (!item.permission) {
-        if (item.url?.startsWith('/admin') && !isAdmin) return false
-        if (item.url?.startsWith('/dashboard') && isAdmin) return false
-
-        return true
-      }
-
-      // For items with permissions, they're already filtered by getSearchData
-      return true
+      // Items with permissions are already filtered by getSearchData
+      return Boolean(item.url)
     })
 
   // To Open the menu when the button is clicked
@@ -170,45 +159,16 @@ const Search = ({ data, roles }: { data: SearchDataProps[]; roles: string[] }) =
             </>
           ) : (
             <>
-              {isAdmin ? (
-                <CommandGroup heading={<Trans i18nKey='packages-ui:searchAdminDashboard' />}>
-                  <CommandItem onSelect={() => handleSelect('/admin')}>
-                    <TbDashboard className='me-2' />
-                    <Trans i18nKey='packages-ui:searchDashboard' />
-                  </CommandItem>
-                  <CommandItem onSelect={() => handleSelect('/my-profile')}>
-                    <TbUser className='me-2' />
-                    <Trans i18nKey='packages-ui:searchMyProfile' />
-                  </CommandItem>
-                  <CommandItem onSelect={() => handleSelect('/billing')}>
-                    <TbFileText className='me-2' />
-                    <Trans i18nKey='packages-ui:searchBilling' />
-                  </CommandItem>
-                  <CommandItem onSelect={() => handleSelect('/', true)}>
-                    <TbHome className='me-2' />
-                    <Trans i18nKey='packages-ui:searchLandingPage' />
-                  </CommandItem>
-                </CommandGroup>
-              ) : (
-                <CommandGroup heading={<Trans i18nKey='packages-ui:searchUserDashboard' />}>
-                  <CommandItem onSelect={() => handleSelect('/dashboard')}>
-                    <TbDashboard className='me-2' />
-                    <Trans i18nKey='packages-ui:searchDashboard' />
-                  </CommandItem>
-                  <CommandItem onSelect={() => handleSelect('/my-profile')}>
-                    <TbUser className='me-2' />
-                    <Trans i18nKey='packages-ui:searchMyProfile' />
-                  </CommandItem>
-                  <CommandItem onSelect={() => handleSelect('/billing')}>
-                    <TbFileText className='me-2' />
-                    <Trans i18nKey='packages-ui:searchBilling' />
-                  </CommandItem>
-                  <CommandItem onSelect={() => handleSelect('/', true)}>
-                    <TbHome className='me-2' />
-                    <Trans i18nKey='packages-ui:searchLandingPage' />
-                  </CommandItem>
-                </CommandGroup>
-              )}
+              <CommandGroup heading={<Trans i18nKey='packages-ui:searchUserDashboard' />}>
+                <CommandItem onSelect={() => handleSelect('/dashboard')}>
+                  <TbDashboard className='me-2' />
+                  <Trans i18nKey='packages-ui:searchDashboard' />
+                </CommandItem>
+                <CommandItem onSelect={() => handleSelect('/my-profile')}>
+                  <TbUser className='me-2' />
+                  <Trans i18nKey='packages-ui:searchMyProfile' />
+                </CommandItem>
+              </CommandGroup>
             </>
           )}
         </CommandList>

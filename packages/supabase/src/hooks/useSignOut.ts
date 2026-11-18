@@ -29,7 +29,7 @@ export const useSignOut = () => {
       cookieValue && deleteCookie('checkoutData')
 
       // Redirect based on current path
-      const shouldRedirectToLogin = ['/admin', '/dashboard', '/my-profile', '/billing', '/reset-password'].some(path =>
+      const shouldRedirectToLogin = ['/admin', '/dashboard', '/my-profile', '/reset-password'].some(path =>
         pathname.includes(path)
       )
 

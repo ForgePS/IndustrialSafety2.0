@@ -20,7 +20,8 @@ type I18nServerInstance = {
 
 const createInstanceFunction = async (): Promise<I18nServerInstance> => {
   const cookieStore = await cookies()
-  const cookie = cookieStore.get(process.env.NEXT_PUBLIC_I18N_COOKIE_NAME!)?.value
+  const cookieName = process.env.NEXT_PUBLIC_I18N_COOKIE_NAME || 'lang'
+  const cookie = cookieStore.get(cookieName)?.value
 
   let selectedLanguage: string | undefined
 
