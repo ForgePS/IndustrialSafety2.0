@@ -2,7 +2,7 @@
   "product": "forge-industrial-safety-2.0",
   "version": "2.0.0",
   "basePath": "/v2",
-  "schemaVersion": "20261119120000",
+  "schemaVersion": "20261119140000",
   "database": {
     "schema": "forge2",
     "ledger": "forge2.schema_migrations"
@@ -726,6 +726,70 @@
       "sensitive": false
     },
     {
+      "key": "emergency_alerts.manage_templates",
+      "feature": "emergency_alerts",
+      "group": "Emergency Alerts",
+      "action": "manage_templates",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "emergency_alerts.run_drills",
+      "feature": "emergency_alerts",
+      "group": "Emergency Alerts",
+      "action": "send_drills",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "emergency_alerts.send",
+      "feature": "emergency_alerts",
+      "group": "Emergency Alerts",
+      "action": "send_alerts",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "emergency_alerts.view",
+      "feature": "emergency_alerts",
+      "group": "Emergency Alerts",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
       "key": "emergency_management.edit",
       "feature": "emergency_management",
       "group": "Emergency Management",
@@ -754,7 +818,7 @@
         "organization"
       ],
       "defaultScope": "organization",
-      "tenantAssignable": true,
+      "tenantAssignable": false,
       "sensitive": true
     },
     {
@@ -4139,6 +4203,28 @@
       "routeLive": true
     },
     {
+      "key": "nav.emergency_alerts",
+      "parent": null,
+      "label": "Emergency Alerts",
+      "route": "/emergency/alerts",
+      "feature": "emergency_alerts",
+      "category": "Emergency Management",
+      "sortOrder": 200,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.emergency_plans",
+      "parent": null,
+      "label": "Emergency Plans",
+      "route": "/emergency",
+      "feature": "emergency_management",
+      "category": "Emergency Management",
+      "sortOrder": 210,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
       "key": "nav.fleet",
       "parent": null,
       "label": "Fleet",
@@ -4458,6 +4544,14 @@
       "/dot/records/new",
       "/dot/reports",
       "/dot/settings",
+      "/emergency",
+      "/emergency/[id]",
+      "/emergency/[id]/edit",
+      "/emergency/alerts",
+      "/emergency/alerts/[id]",
+      "/emergency/alerts/new",
+      "/emergency/alerts/templates",
+      "/emergency/new",
       "/fleet",
       "/fleet/drivers",
       "/fleet/dvirs",
