@@ -2,7 +2,7 @@
   "product": "forge-industrial-safety-2.0",
   "version": "2.0.0",
   "basePath": "/v2",
-  "schemaVersion": "20261119140000",
+  "schemaVersion": "20261119160000",
   "database": {
     "schema": "forge2",
     "ledger": "forge2.schema_migrations"
@@ -21,6 +21,15 @@
       "key": "calendar",
       "name": "Calendar",
       "category": "Collaboration",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "contractor_safety",
+      "name": "Contractor Safety",
+      "category": "Compliance",
       "type": "module",
       "state": "enabled",
       "requiresEntitlement": true,
@@ -425,6 +434,86 @@
       "key": "assets_equipment.view",
       "feature": "assets_equipment",
       "group": "Assets & Equipment",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "contractor_safety.approve",
+      "feature": "contractor_safety",
+      "group": "Contractor Safety",
+      "action": "approve",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "contractor_safety.manage",
+      "feature": "contractor_safety",
+      "group": "Contractor Safety",
+      "action": "manage",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "contractor_safety.settings",
+      "feature": "contractor_safety",
+      "group": "Contractor Safety",
+      "action": "settings",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "contractor_safety.sign_in",
+      "feature": "contractor_safety",
+      "group": "Contractor Safety",
+      "action": "sign_in",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "contractor_safety.view",
+      "feature": "contractor_safety",
+      "group": "Contractor Safety",
       "action": "view",
       "scopes": [
         "own",
@@ -4159,6 +4248,17 @@
       "routeLive": true
     },
     {
+      "key": "nav.contractor_safety",
+      "parent": null,
+      "label": "Contractor Safety",
+      "route": "/contractors",
+      "feature": "contractor_safety",
+      "category": "Compliance Programs",
+      "sortOrder": 165,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
       "key": "nav.corrective_actions",
       "parent": null,
       "label": "Corrective Actions",
@@ -4514,6 +4614,16 @@
       "/company/settings",
       "/company/settings/forms",
       "/company/settings/lookups",
+      "/contractors",
+      "/contractors/[id]",
+      "/contractors/[id]/documents",
+      "/contractors/[id]/documents/[documentId]",
+      "/contractors/[id]/edit",
+      "/contractors/new",
+      "/contractors/on-site",
+      "/contractors/settings",
+      "/contractors/workers/[id]",
+      "/contractors/workers/new",
       "/corrective-actions",
       "/corrective-actions/[id]",
       "/corrective-actions/create",

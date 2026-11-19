@@ -7,7 +7,7 @@ import { createServiceRoleClient } from '@repo/supabase/server'
  *
  * Buckets are logical names. On Supabase they are Storage buckets; on S3 they become key prefixes.
  */
-export type StorageBucket = 'forge-documents' | 'forge-dot' | 'forge-evidence' | 'forge-fleet' | 'forge-loto' | 'forge-support' | 'forge-training' | 'forge-wc-forms'
+export type StorageBucket = 'forge-contractors' | 'forge-documents' | 'forge-dot' | 'forge-evidence' | 'forge-fleet' | 'forge-loto' | 'forge-support' | 'forge-training' | 'forge-wc-forms'
 
 export type StorageError = { message: string }
 
