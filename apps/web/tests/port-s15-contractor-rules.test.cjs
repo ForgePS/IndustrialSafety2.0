@@ -99,6 +99,27 @@ test('companyStanding: approval and required documents', () => {
   const lapsed = rules.companyStanding({ status: 'approved', documents: [{ id: 'x', doc_type: 'general_liability', expires_on: '2026-11-01' }, { id: 'y', doc_type: 'workers_comp', expires_on: null }], settings: SETTINGS, today: TODAY })
 
   assert.deepEqual(lapsed.problems.map(p => p.code), ['expired_general_liability'])
+
+  // A renewal that hasn't started yet doesn't cover today: the expired policy still decides.
+  const renewal = rules.companyStanding({
+    status: 'approved',
+    documents: [
+      { id: 'old', doc_type: 'general_liability', effective_on: '2025-11-01', expires_on: '2026-11-01' },
+      { id: 'new', doc_type: 'general_liability', effective_on: '2026-12-01', expires_on: '2027-12-01' },
+      { id: 'wc', doc_type: 'workers_comp', effective_on: '2026-12-01', expires_on: '2027-12-01' }
+    ],
+    settings: SETTINGS,
+    today: TODAY
+  })
+
+  assert.equal(renewal.cleared, false)
+  assert.deepEqual(renewal.problems.map(p => p.code), ['expired_general_liability', 'not_effective_workers_comp'])
+  assert.equal(renewal.problems[1].message, "Workers' comp insurance not in effect until 2026-12-01")
+  assert.equal(
+    rules.companyStanding({ status: 'approved', documents: [{ id: 'a', doc_type: 'general_liability', effective_on: TODAY, expires_on: '2027-12-01' }, { id: 'b', doc_type: 'workers_comp', expires_on: '2027-12-01' }], settings: SETTINGS, today: TODAY }).cleared,
+    true,
+    'in effect from today counts'
+  )
   assert.equal(rules.companyStanding({ status: 'suspended', documents: [], settings: { ...SETTINGS, requiredDocuments: [] }, today: TODAY }).problems[0].message, 'Company is suspended')
 })
 

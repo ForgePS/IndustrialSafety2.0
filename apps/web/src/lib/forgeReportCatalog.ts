@@ -173,7 +173,7 @@ export const REPORTS: ReportDefinition[] = [
               case_outcome: row.date_of_death ? 'Death' : humanizeKey(row.case_outcome),
               days_away: Number(row.days_away) || 0,
               restricted_days: Number(row.restricted_days) || 0,
-              injury_or_illness: humanizeKey(row.injury_or_illness),
+              injury_or_illness: humanizeKey(row.case_type),
               location: lookupName(row.locations),
               status: humanizeKey(row.status)
             }
@@ -469,10 +469,10 @@ export const REPORTS: ReportDefinition[] = [
     ],
     dateLabel: 'Started',
     defaultPreset: '90d',
-    statuses: labels(['in_progress', 'completed']),
+    statuses: labels(['in_progress', 'verified', 'completed', 'canceled']),
     groupable: ['status', 'procedure', 'asset', 'location'],
     load: async ({ organizationId, userId, permission }) => {
-      const rows = await getScopedLockouts({ organizationId, userId, permission, view: 'history' })
+      const rows = await getScopedLockouts({ organizationId, userId, permission, view: 'all' })
 
       return rows.map((row: any): ReportRecord => {
         const locks = (row.forge_loto_application_locks || []) as any[]

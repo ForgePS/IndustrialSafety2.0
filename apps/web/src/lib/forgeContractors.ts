@@ -3,6 +3,7 @@ import { createServiceRoleClient } from '@repo/supabase/server'
 import type { ContractorSettings, DocumentType, Standing } from '@/lib/forgeContractorRules'
 import { companyStanding, DEFAULT_SETTINGS, workerStanding } from '@/lib/forgeContractorRules'
 import type { EffectivePermission } from '@/lib/forgeEffectiveAccess'
+import { fetchAllRows, inChunks } from '@/lib/forgeFetchAll'
 import { getTenantScopeAssignments } from '@/lib/forgeScope'
 
 /**
@@ -77,19 +78,23 @@ export const workerName = (worker: { first_name: string; last_name: string }) =>
 export const listCompanies = async ({ organizationId, rights, includeArchived = false }: { organizationId: string; rights: Rights; includeArchived?: boolean }) => {
   if (!rights.view) return []
 
-  const supabase = db()
-  let query = supabase.from('forge_contractor_companies').select(COMPANY_COLUMNS).eq('organization_id', organizationId).order('name')
+  // Every row, paged past the API's 1,000-row cap: a missing document would wrongly show a company as not cleared.
+  const [companies, documents, workers, settings] = await Promise.all([
+    fetchAllRows(() => {
+      const query = db().from('forge_contractor_companies').select(COMPANY_COLUMNS).eq('organization_id', organizationId).order('name').order('id')
 
-  if (!includeArchived) query = query.is('archived_at', null)
-
-  const [{ data: companies, error }, { data: documents }, { data: workers }, settings] = await Promise.all([
-    query,
-    supabase.from('forge_contractor_documents').select('id, company_id, doc_type, expires_on, archived_at').eq('organization_id', organizationId).is('archived_at', null),
-    supabase.from('forge_contractor_workers').select('id, company_id').eq('organization_id', organizationId).is('archived_at', null).eq('active', true),
+      return includeArchived ? query : query.is('archived_at', null)
+    }, 'Unable to load contractors'),
+    fetchAllRows(
+      () => db().from('forge_contractor_documents').select('id, company_id, doc_type, effective_on, expires_on, archived_at').eq('organization_id', organizationId).is('archived_at', null).order('id'),
+      'Unable to load contractor documents'
+    ),
+    fetchAllRows(
+      () => db().from('forge_contractor_workers').select('id, company_id').eq('organization_id', organizationId).is('archived_at', null).eq('active', true).order('id'),
+      'Unable to load contractor workers'
+    ),
     loadSettings(organizationId)
   ])
-
-  if (error) throw new Error('Unable to load contractors: ' + error.message)
 
   const today = todayIso()
 
@@ -183,18 +188,19 @@ export const signInCandidates = async ({ organizationId, rights }: { organizatio
 
   if (!ids.length) return []
 
-  const { data } = await db()
-    .from('forge_contractor_workers')
-    .select('id, company_id, first_name, last_name, badge_number')
-    .in('company_id', ids)
-    .is('archived_at', null)
-    .eq('active', true)
-    .order('last_name')
-    .limit(5000)
+  const pages = await Promise.all(
+    inChunks(ids).map(chunk =>
+      fetchAllRows(
+        () => db().from('forge_contractor_workers').select('id, company_id, first_name, last_name, badge_number').in('company_id', chunk).is('archived_at', null).eq('active', true).order('id'),
+        'Unable to load contractor workers'
+      )
+    )
+  )
 
+  const data = pages.flat().sort((a: any, b: any) => a.last_name.localeCompare(b.last_name) || a.first_name.localeCompare(b.first_name))
   const names = new Map(companies.map((company: any) => [company.id, company.name]))
 
-  return (data || []).map((worker: any) => ({ id: worker.id, name: workerName(worker), badge: worker.badge_number, company: names.get(worker.company_id) || '' }))
+  return data.map((worker: any) => ({ id: worker.id, name: workerName(worker), badge: worker.badge_number, company: names.get(worker.company_id) || '' }))
 }
 
 /** Who is signed in now, at the locations the person can see (null = all). */

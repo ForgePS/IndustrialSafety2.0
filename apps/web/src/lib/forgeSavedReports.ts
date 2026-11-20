@@ -1,6 +1,7 @@
 import { createServiceRoleClient } from '@repo/supabase/server'
 
 import { isTenantFeatureAvailable } from '@/lib/forgeFeatureAvailability'
+import { fetchAllRows, inChunks } from '@/lib/forgeFetchAll'
 import { getReportDefinition } from '@/lib/forgeReportCatalog'
 import { can, reportAccessFor, runReport, todayIso, type ReportAccess } from '@/lib/forgeReportRun'
 import { describeSchedule, nextScheduleRun, type ScheduleTiming } from '@/lib/forgeReportRules'
@@ -55,9 +56,10 @@ const userNames = async (userIds: string[]) => {
 
   if (!ids.length) return new Map<string, string>()
 
-  const { data } = await db().from('users').select('user_id, name, email').in('user_id', ids)
+  // In chunks: one big .in() list would be a very long URL and is capped at 1,000 rows.
+  const pages = await Promise.all(inChunks(ids).map(chunk => db().from('users').select('user_id, name, email').in('user_id', chunk)))
 
-  return new Map<string, string>((data || []).map((row: any) => [row.user_id, row.name || row.email || 'Unknown']))
+  return new Map<string, string>(pages.flatMap(({ data }: any) => (data || []).map((row: any) => [row.user_id, row.name || row.email || 'Unknown'] as [string, string])))
 }
 
 /** Saved reports this person can open: their own, plus shared ones whose report they can run. */
@@ -115,10 +117,14 @@ export const loadSchedule = async (organizationId: string, savedReportId: string
   return { ...data, recipients: (data.forge_report_schedule_recipients || []).map((row: any) => row.user_id) } as ReportSchedule
 }
 
-/** Active company members, for the recipient picker. */
+/** Active company members (all of them, past the API row cap), for the recipient picker and alert audiences. */
 export const companyMembers = async (organizationId: string) => {
-  const { data } = await db().from('organization_memberships').select('user_id').eq('organization_id', organizationId).eq('is_active', true)
-  const ids: string[] = (data || []).map((row: any) => row.user_id as string)
+  const data = await fetchAllRows(
+    () => db().from('organization_memberships').select('user_id').eq('organization_id', organizationId).eq('is_active', true).order('user_id'),
+    'Unable to load company members'
+  )
+
+  const ids: string[] = data.map((row: any) => row.user_id as string)
   const names = await userNames(ids)
 
   return ids.map(id => ({ id, name: names.get(id) || 'Unknown' })).sort((a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name))

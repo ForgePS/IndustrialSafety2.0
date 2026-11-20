@@ -5,6 +5,7 @@ import type { EffectivePermission } from '@/lib/forgeEffectiveAccess'
 import { getEffectiveTenantAccess } from '@/lib/forgeEffectiveAccess'
 import type { Audience, AudiencePerson, NoticeKind, Recipient, ResponseStatus } from '@/lib/forgeEmergencyRules'
 import { alertNotice, resolveAudience } from '@/lib/forgeEmergencyRules'
+import { fetchAllRows } from '@/lib/forgeFetchAll'
 import { companyMembers } from '@/lib/forgeSavedReports'
 import { getTenantScopeAssignments } from '@/lib/forgeScope'
 import { getTenantContext } from '@/lib/forgeTenantContext'
@@ -123,15 +124,20 @@ export const companyDepartments = async (organizationId: string) => {
   return (data || []) as { id: string; name: string; location_id: string | null }[]
 }
 
+/** Every personnel record in the company, paged past the API's 1,000-row cap so no one is silently left out. */
 export const activePersonnel = async (organizationId: string): Promise<AudiencePerson[]> => {
-  const { data } = await db()
-    .from('forge_personnel')
-    .select('id, first_name, last_name, preferred_name, auth_user_id, location_id, department_id, employment_status, archived_at')
-    .eq('organization_id', organizationId)
-    .order('last_name')
-    .limit(10000)
+  const data = await fetchAllRows(
+    () =>
+      db()
+        .from('forge_personnel')
+        .select('id, first_name, last_name, preferred_name, auth_user_id, location_id, department_id, employment_status, archived_at')
+        .eq('organization_id', organizationId)
+        .order('last_name')
+        .order('id'),
+    'Unable to load personnel'
+  )
 
-  return (data || []).map(
+  return data.map(
     (row: any): AudiencePerson => ({
       id: row.id,
       name: personName(row),
@@ -239,16 +245,23 @@ export const alertUpdates = async (alertId: string) => {
   return data || []
 }
 
+/** Everyone an alert went to (up to MAX_RECIPIENTS, paged past the API row cap): the roll call and who gets updates. */
 export const alertRecipients = async (alertId: string): Promise<Recipient[]> => {
-  const { data } = await db().from('forge_emergency_alert_recipients').select('user_id, personnel_id, name, location_id, department_id').eq('alert_id', alertId).order('name').limit(10000)
+  const data = await fetchAllRows(
+    () => db().from('forge_emergency_alert_recipients').select('user_id, personnel_id, name, location_id, department_id').eq('alert_id', alertId).order('name').order('user_id'),
+    'Unable to load alert recipients'
+  )
 
-  return (data || []).map((row: any) => ({ userId: row.user_id, personnelId: row.personnel_id, name: row.name, locationId: row.location_id, departmentId: row.department_id }))
+  return data.map((row: any) => ({ userId: row.user_id, personnelId: row.personnel_id, name: row.name, locationId: row.location_id, departmentId: row.department_id }))
 }
 
 export const alertResponses = async (alertId: string) => {
-  const { data } = await db().from('forge_emergency_alert_responses').select('user_id, status, note, responded_at').eq('alert_id', alertId).limit(10000)
+  const data = await fetchAllRows(
+    () => db().from('forge_emergency_alert_responses').select('user_id, status, note, responded_at').eq('alert_id', alertId).order('user_id'),
+    'Unable to load alert responses'
+  )
 
-  return (data || []).map((row: any) => ({ userId: row.user_id as string, status: row.status as ResponseStatus, note: row.note as string | null, respondedAt: row.responded_at as string }))
+  return data.map((row: any) => ({ userId: row.user_id as string, status: row.status as ResponseStatus, note: row.note as string | null, respondedAt: row.responded_at as string }))
 }
 
 export const myResponse = async (alertId: string, userId: string) => {

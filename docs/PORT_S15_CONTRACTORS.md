@@ -17,7 +17,7 @@ The 2.0 menu: Compliance Programs → **Contractor Safety** (`/contractors`).
   - A file (PDF, JPEG, PNG or WebP, up to 12 MB) is optional. The type is checked from the file's first bytes. Files are stored privately in `forge-contractors` and opened through a five-minute signed link.
   - Removing a document keeps it in the history ("Show removed").
 - **Cleared to work** is computed from the record, never stored:
-  - A **company** is cleared when it's approved and has every required document (set in Settings; general liability and workers' comp by default) on file and not expired. The newest certificate of each type counts. Documents expiring within the warning window (30 days by default) and expired optional documents are warnings.
+  - A **company** is cleared when it's approved and has every required document (set in Settings; general liability and workers' comp by default) on file, in effect and not expired. The newest certificate of each type that is already in effect counts; a renewal with a future effective date doesn't count until that date ("not in effect until …"). Documents expiring within the warning window (30 days by default) and expired optional documents are warnings.
   - A **worker** is cleared when they're active, their company is cleared, their site orientation is done and not expired (12 months by default), and no **required** qualification has expired. Optional qualifications that lapse are warnings.
   - Pages show the reasons: for example, "Company: General liability insurance missing" or "Site orientation not done".
 - **Workers** (`/contractors/workers/new?company=…`, `/contractors/workers/[id]`):

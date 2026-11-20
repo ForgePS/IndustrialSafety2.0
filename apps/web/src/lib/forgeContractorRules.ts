@@ -274,14 +274,15 @@ export const expiryState = (expiresOn: string | null, today: string, warningDays
   return expiresOn <= addDays(today, warningDays) ? 'expiring' : 'current'
 }
 
-export type StandingDocument = { id: string; doc_type: string; expires_on: string | null; archived_at?: string | null }
+export type StandingDocument = { id: string; doc_type: string; effective_on?: string | null; expires_on: string | null; archived_at?: string | null }
 export type Problem = { code: string; message: string }
 
 export type Standing = { cleared: boolean; problems: Problem[]; warnings: Problem[] }
 
 /**
- * A company is cleared when it is approved and every required document type has a current (not archived,
- * not expired) document. Documents expiring within the warning window are warnings.
+ * A company is cleared when it is approved and every required document type has a current document: not
+ * archived, already in effect, and not expired. Documents expiring within the warning window are warnings. A
+ * renewal that hasn't started yet doesn't count until its effective date.
  */
 export const companyStanding = ({
   status,
@@ -309,8 +310,17 @@ export const companyStanding = ({
       continue
     }
 
-    // The best one counts: no expiry beats any date, later beats earlier.
-    const best = ofType.reduce((a, b) => (!a.expires_on ? a : !b.expires_on ? b : a.expires_on >= b.expires_on ? a : b))
+    const inForce = ofType.filter(doc => !doc.effective_on || doc.effective_on <= today)
+
+    if (!inForce.length) {
+      const starts = ofType.map(doc => doc.effective_on as string).sort()[0]
+
+      problems.push({ code: 'not_effective_' + type, message: `${documentTypeLabel(type)} not in effect until ${starts}` })
+      continue
+    }
+
+    // The best one in force counts: no expiry beats any date, later beats earlier.
+    const best = inForce.reduce((a, b) => (!a.expires_on ? a : !b.expires_on ? b : a.expires_on >= b.expires_on ? a : b))
     const state = expiryState(best.expires_on, today, settings.warningDays)
 
     if (state === 'expired') problems.push({ code: 'expired_' + type, message: `${documentTypeLabel(type)} expired ${best.expires_on}` })
