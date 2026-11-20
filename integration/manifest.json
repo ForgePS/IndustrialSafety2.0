@@ -2,7 +2,7 @@
   "product": "forge-industrial-safety-2.0",
   "version": "2.0.0",
   "basePath": "/v2",
-  "schemaVersion": "20261119160000",
+  "schemaVersion": "20261120100000",
   "database": {
     "schema": "forge2",
     "ledger": "forge2.schema_migrations"
@@ -247,6 +247,15 @@
       "name": "Print Manager",
       "category": "Platform",
       "type": "feature",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "process_safety",
+      "name": "Process Safety",
+      "category": "Compliance",
+      "type": "module",
       "state": "enabled",
       "requiresEntitlement": true,
       "tenantConfigurable": true
@@ -2991,6 +3000,70 @@
       "sensitive": true
     },
     {
+      "key": "process_safety.approve",
+      "feature": "process_safety",
+      "group": "Process Safety",
+      "action": "approve",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "process_safety.manage",
+      "feature": "process_safety",
+      "group": "Process Safety",
+      "action": "manage",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "process_safety.pssr",
+      "feature": "process_safety",
+      "group": "Process Safety",
+      "action": "pssr",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "process_safety.view",
+      "feature": "process_safety",
+      "group": "Process Safety",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
       "key": "qr_management.create",
       "feature": "qr_management",
       "group": "QR Management",
@@ -4479,6 +4552,17 @@
       "routeLive": true
     },
     {
+      "key": "nav.process_safety",
+      "parent": null,
+      "label": "Process Safety",
+      "route": "/process-safety",
+      "feature": "process_safety",
+      "category": "Compliance Programs",
+      "sortOrder": 170,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
       "key": "nav.qr_management",
       "parent": null,
       "label": "QR Management",
@@ -4761,6 +4845,14 @@
       "/personnel/[id]",
       "/personnel/create",
       "/personnel/structure",
+      "/process-safety",
+      "/process-safety/changes/[id]",
+      "/process-safety/changes/[id]/edit",
+      "/process-safety/changes/new",
+      "/process-safety/pha",
+      "/process-safety/pha/[id]",
+      "/process-safety/pha/[id]/edit",
+      "/process-safety/pha/new",
       "/q/[token]",
       "/q/[token]/loto",
       "/q/unavailable",
