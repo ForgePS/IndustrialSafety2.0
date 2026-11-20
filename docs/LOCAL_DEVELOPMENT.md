@@ -94,6 +94,39 @@ Use the Studio URL reported by the Supabase CLI. The Forge Industrial Safety 2.0
 http://127.0.0.1:35423
 ```
 
+Port 54323 on this machine may belong to another local Supabase project. Check that you are in the Forge Industrial Safety 2.0 Studio before running SQL.
+
+## File uploads fail with "database error, code: 42P10"
+
+If every file upload fails (any bucket) and the storage container's log shows `there is no unique or exclusion constraint matching the ON CONFLICT specification`, three indexes on `storage.objects` were created without `COLLATE "C"`. The storage service's own migrations use `CREATE ... IF NOT EXISTS`, so they skip indexes that already exist under the same name. This can come back after a database reset.
+
+Check:
+
+```powershell
+docker exec supabase_db_forge-industrial-safety-2-0 psql -U postgres -tAc "select indexname, indexdef from pg_indexes where schemaname='storage' and indexname in ('idx_objects_current_version','idx_objects_null_version','objects_bucket_id_name_version_key')"
+```
+
+If those definitions don't include `COLLATE "C"`, rebuild them. The table belongs to `supabase_storage_admin`, so Studio's SQL editor (which runs as `postgres`) can't change them. Connect inside the container over `127.0.0.1`, which needs no password there:
+
+```powershell
+docker exec -it supabase_db_forge-industrial-safety-2-0 psql -h 127.0.0.1 -U supabase_storage_admin -d postgres
+```
+
+Then run (these match the storage service's tenant migrations 0065-0067):
+
+```sql
+begin;
+drop index storage.idx_objects_current_version;
+create unique index idx_objects_current_version on storage.objects (bucket_id, name collate "C") where archived_at is null;
+drop index storage.idx_objects_null_version;
+create unique index idx_objects_null_version on storage.objects (bucket_id, name collate "C") where not is_versioned;
+drop index storage.objects_bucket_id_name_version_key;
+create unique index objects_bucket_id_name_version_key on storage.objects (bucket_id, name collate "C", version) nulls not distinct;
+commit;
+```
+
+You should see `COMMIT`. Type `\q` to leave. The storage service doesn't need a restart.
+
 ## Current 2.0 foundation
 
 The 2.0 database foundation contains:

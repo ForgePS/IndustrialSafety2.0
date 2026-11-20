@@ -2,6 +2,7 @@ import { createServiceRoleClient } from '@repo/supabase/server'
 
 import type { EffectivePermission } from '@/lib/forgeEffectiveAccess'
 import { assetWithinScope, getScopedAssets } from '@/lib/forgeAssets'
+import { fetchAllRows } from '@/lib/forgeFetchAll'
 import { lockHolderFromKey, lockHolderKey, searchTermForIlike, type LockoutSearch } from '@/lib/forgeLotoList'
 import { getScopedPersonnel } from '@/lib/forgePersonnel'
 import { storage } from '@/lib/platform/storage'
@@ -253,7 +254,7 @@ export const getLotoSettings = async (organizationId: string): Promise<LotoSetti
 const LOCKOUT_SELECT =
   '*, forge_loto_procedures(id, procedure_number, title, status, revision_number), forge_assets(id, asset_number, name, location_id, division_id, custodian_user_id, locations(name, code)), forge_loto_application_locks(id, personnel_id, holder_name, lock_tag_id, applied_at, applied_by, removed_at, removed_by, removal_note)'
 
-/** Lockouts on assets the user can see. `open` = issued or verified. */
+/** Lockouts on assets the user can see. `open` = issued or verified; `history` = the last 200 completed or canceled; `all` = every lockout (reports). */
 export const getScopedLockouts = async ({
   organizationId,
   userId,
@@ -264,7 +265,7 @@ export const getScopedLockouts = async ({
   organizationId: string
   userId: string
   permission: EffectivePermission
-  view: 'open' | 'history'
+  view: 'open' | 'history' | 'all'
   search?: LockoutSearch
 }) => {
   const assets = await getScopedAssets({ organizationId, userId, permission, includeRetired: true })
@@ -275,14 +276,10 @@ export const getScopedLockouts = async ({
 
   const supabase = createServiceRoleClient() as any
 
-  let query = supabase
-    .from('forge_loto_applications')
-    .select(LOCKOUT_SELECT)
-    .eq('organization_id', organizationId)
-    .in('asset_id', assetIds)
-    .order('started_at', { ascending: false })
+  // Filters are kept as steps so the query can be rebuilt for each page (`all` pages through everything).
+  const filters: ((query: any) => any)[] = []
 
-  if (search?.procedure) query = query.eq('procedure_id', search.procedure)
+  if (search?.procedure) filters.push(query => query.eq('procedure_id', search.procedure))
 
   // Lock holder: lockouts where that person (or typed name) held a lock at any point.
   const holder = search?.holder ? lockHolderFromKey(search.holder) : null
@@ -299,7 +296,7 @@ export const getScopedLockouts = async ({
     const ids = Array.from(new Set((lockRows || []).map((row: any) => row.application_id as string)))
 
     if (!ids.length) return []
-    query = query.in('id', ids)
+    filters.push(query => query.in('id', ids))
   }
 
   // Text: lockout number, work, equipment, procedure, holder name or lock / tag ID.
@@ -338,11 +335,25 @@ export const getScopedLockouts = async ({
     if (procedureRows?.length) clauses.push(`procedure_id.in.(${procedureRows.map((row: any) => row.id).join(',')})`)
     if (matchingAssets.length) clauses.push(`asset_id.in.(${matchingAssets.join(',')})`)
 
-    query = query.or(clauses.join(','))
+    filters.push(query => query.or(clauses.join(',')))
   }
 
-  query = view === 'open' ? query.in('status', ['in_progress', 'verified']) : query.in('status', ['completed', 'canceled']).limit(200)
+  const build = () =>
+    filters.reduce(
+      (query, apply) => apply(query),
+      supabase
+        .from('forge_loto_applications')
+        .select(LOCKOUT_SELECT)
+        .eq('organization_id', organizationId)
+        .in('asset_id', assetIds)
+        .order('started_at', { ascending: false })
+        .order('id')
+    )
 
+  // `all` (reports): every status, paged past the API's 1,000-row cap.
+  if (view === 'all') return fetchAllRows(build, 'Unable to load lockouts')
+
+  const query = view === 'open' ? build().in('status', ['in_progress', 'verified']) : build().in('status', ['completed', 'canceled']).limit(200)
   const { data, error } = await query
 
   if (error) throw new Error('Unable to load lockouts: ' + error.message)
