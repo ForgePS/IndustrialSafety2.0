@@ -3,6 +3,7 @@ name: Forge module validation
 on:
   pull_request:
     branches:
+      - main
       - forge-creator-2.0
 
 permissions:
@@ -45,7 +46,7 @@ jobs:
         run: node scripts/portability/check-portability.cjs
       - run: node scripts/portability/translate-migrations.cjs --check
       - run: node --test scripts/portability/sql.test.cjs
-      - run: node --experimental-strip-types --test apps/web/tests/forge-ai-foundation.test.cjs apps/web/tests/forge-ai-agents.test.cjs apps/web/tests/forge-ai-risk-monitoring.test.cjs apps/web/tests/forge-ai-recommendations.test.cjs apps/web/tests/forge-ai-command-center.test.cjs apps/web/tests/platform-cognito.test.cjs apps/web/tests/navigation-groups.test.cjs
+      - run: node --experimental-strip-types --test apps/web/tests/forge-ai-foundation.test.cjs apps/web/tests/forge-ai-agents.test.cjs apps/web/tests/forge-ai-risk-monitoring.test.cjs apps/web/tests/forge-ai-recommendations.test.cjs apps/web/tests/forge-ai-command-center.test.cjs apps/web/tests/platform-cognito.test.cjs apps/web/tests/navigation-groups.test.cjs apps/web/tests/waypoint-rules.test.cjs
       - run: pnpm --filter forge-industrial-safety-2.0-web type-check
       - run: pnpm --filter forge-industrial-safety-2.0-web build
 
@@ -124,6 +125,9 @@ jobs:
       - name: Run Forge AI security database regression
         run: node apps/web/tests/forge-ai-security-db.cjs
 
+      - name: Run Waypoint areas database regression
+        run: node apps/web/tests/waypoint-db.cjs
+
       - name: Install Playwright Chromium
         run: |
           pnpm add -Dw @playwright/test@1.55.0 --lockfile=false
@@ -194,6 +198,11 @@ jobs:
         env:
           SMOKE_BASE_URL: http://127.0.0.1:3000
         run: pnpm exec playwright test apps/web/tests/incident-equipment-smoke.spec.cjs --reporter=line --workers=1
+
+      - name: Run Waypoint Area Card browser regression
+        env:
+          SMOKE_BASE_URL: http://127.0.0.1:3000
+        run: pnpm exec playwright test apps/web/tests/waypoint.spec.cjs --reporter=line --workers=1
 
       - name: Run Forge AI pipeline regression
         env:

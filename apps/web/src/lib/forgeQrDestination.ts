@@ -23,7 +23,8 @@ export const QR_TARGET_TYPE_LABELS: Record<ScanTargetType, string> = {
   asset: 'Asset / equipment',
   location: 'Location',
   form: 'Form',
-  vehicle: 'Fleet vehicle'
+  vehicle: 'Fleet vehicle',
+  area: 'Area (Waypoint)'
 }
 
 /** Actions an asset QR can open straight away; location, form and vehicle QRs always open the scan menu. */
@@ -79,6 +80,8 @@ export const scanRecordHref = (recordType: string | null | undefined, recordId: 
     case 'form':
     case 'form_template':
       return '/forms/fill/' + recordId
+    case 'area':
+      return '/waypoint/' + recordId
     case 'location':
       return null
     default:
@@ -89,6 +92,7 @@ export const scanRecordHref = (recordType: string | null | undefined, recordId: 
 export const SCAN_RECORD_TYPE_LABELS: Record<string, string> = {
   asset: 'Asset',
   vehicle: 'Vehicle',
+  area: 'Area',
   fleet_dvir: 'DVIR',
   inspection: 'Inspection',
   corrective_action: 'Corrective Action',

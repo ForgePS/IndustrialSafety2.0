@@ -30,6 +30,7 @@ This document is the working implementation ledger for Forge Industrial Safety 2
 | Inspections | Built foundation | Templates, inspections, checklist records, findings |
 | Assets & Equipment | Built foundation | Asset identity, assignment, maintenance, meters, retirement, related incident history |
 | QR Management | Built foundation | Managed QR tokens, scan resolver/history, asset destinations |
+| Forge Waypoint (Areas) | Built (phase 0) | Areas with PPE, hazards, entry rules and emergency info; equipment placement; Area Card QRs with a "Before you enter" brief and live status light (lockouts, out of service, open issues). See `docs/WAYPOINT.md` |
 | Lockout / Tagout | Built foundation | Equipment procedures, energy sources, ordered steps, approvals, revisions, reviews, field-use history |
 | Tasks | Built foundation | Tasks/corrective actions, assignment, due dates, completion, comments, activity |
 | Customer Support | Built foundation | Tenant tickets, Forge triage, internal notes/attachments, SLA settings, smoke + CI (merged PR #4) |

@@ -60,6 +60,7 @@ export type ScanTarget =
       divisionId: string | null
     }
   | { type: 'location'; id: string; name: string; locationId: string; divisionId: null }
+  | { type: 'area'; id: string; name: string; code: string | null; locationId: string; locationName: string | null; divisionId: string | null }
   | {
       type: 'vehicle'
       id: string
@@ -142,6 +143,28 @@ export const loadScanTarget = async (qr: ScanQr): Promise<ScanTarget | null> => 
     const { data } = await supabase.from('locations').select('id, name').eq('organization_id', qr.organizationId).eq('id', qr.targetId).maybeSingle()
 
     return data ? { type: 'location', id: data.id, name: data.name, locationId: data.id, divisionId: null } : null
+  }
+
+  if (qr.targetType === 'area') {
+    // Waypoint Area Card. An archived area stops resolving, like a removed vehicle.
+    const { data } = await supabase
+      .from('forge_areas')
+      .select('id, name, code, location_id, archived_at, locations(name, division_id)')
+      .eq('organization_id', qr.organizationId)
+      .eq('id', qr.targetId)
+      .maybeSingle()
+
+    return data && !data.archived_at
+      ? {
+          type: 'area',
+          id: data.id,
+          name: data.name,
+          code: data.code,
+          locationId: data.location_id,
+          locationName: data.locations?.name || null,
+          divisionId: data.locations?.division_id || null
+        }
+      : null
   }
 
   if (qr.targetType === 'vehicle') {

@@ -27,7 +27,7 @@ const ScanIssuesPage = async () => {
   let query = supabase
     .from('forge_qr_issue_reports')
     .select(
-      'id, created_at, qr_code_id, target_type, target_id, asset_id, location_id, title, priority, category, immediate_hazard, marked_out_of_service, anonymous, reporter_name, photos, corrective_action_id, forge_qr_codes(qr_number, name), locations(name)'
+      'id, created_at, qr_code_id, target_type, target_id, asset_id, location_id, title, priority, category, immediate_hazard, marked_out_of_service, anonymous, reporter_name, photos, corrective_action_id, forge_qr_codes(qr_number, name), locations(name), forge_areas(name)'
     )
     .eq('organization_id', organizationId)
     .order('created_at', { ascending: false })
@@ -82,7 +82,9 @@ const ScanIssuesPage = async () => {
             : 'Asset (removed)'
           : row.target_type === 'location'
             ? row.locations?.name || 'Location'
-            : formById.get(row.target_id)?.title || 'Form'
+            : row.target_type === 'area'
+              ? [row.forge_areas?.name || 'Area', row.locations?.name].filter(Boolean).join(' · ')
+              : formById.get(row.target_id)?.title || 'Form'
 
       const photos = await Promise.all(
         (Array.isArray(row.photos) ? row.photos : []).slice(0, 3).map(async (photo: any) => {

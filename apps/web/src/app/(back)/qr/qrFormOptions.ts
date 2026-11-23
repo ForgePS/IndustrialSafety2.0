@@ -8,6 +8,7 @@ import { getQrConfigOptions, getScopedLocationIds } from '@/lib/forgeQr'
 export type QrFormOptions = {
   locations: Array<{ id: string; label: string }>
   vehicles: Array<{ id: string; label: string }>
+  areas: Array<{ id: string; label: string }>
   forms: Array<{ id: string; label: string }>
   inspectionTemplates: Array<{ id: string; label: string }>
 }
@@ -56,5 +57,18 @@ export const loadQrFormOptions = async ({
 
   const vehicles = (vehicleRows || []).map((item: any) => ({ id: item.id as string, label: (item.vehicle_number + ' · ' + vehicleDisplayName(item)) as string }))
 
-  return { locations, vehicles, forms: config.forms, inspectionTemplates: config.inspectionTemplates }
+  // Waypoint areas (not archived) at the locations in scope.
+  let areas: Array<{ id: string; label: string }> = []
+
+  if (locationIds === null || locationIds.length) {
+    let areaQuery = supabase.from('forge_areas').select('id, name, code, locations(name)').eq('organization_id', organizationId).is('archived_at', null).order('name')
+
+    if (locationIds) areaQuery = areaQuery.in('location_id', locationIds)
+
+    const { data: areaRows } = await areaQuery
+
+    areas = (areaRows || []).map((item: any) => ({ id: item.id as string, label: [item.name, item.locations?.name].filter(Boolean).join(' · ') as string }))
+  }
+
+  return { locations, vehicles, areas, forms: config.forms, inspectionTemplates: config.inspectionTemplates }
 }

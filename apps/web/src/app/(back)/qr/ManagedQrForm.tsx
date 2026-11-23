@@ -72,6 +72,7 @@ const ManagedQrForm = ({
   assets,
   locations = [],
   vehicles = [],
+  areas = [],
   forms = [],
   inspectionTemplates = [],
   initialSettings,
@@ -85,6 +86,9 @@ const ManagedQrForm = ({
 
   /** Fleet vehicles in scope (not removed). */
   vehicles?: QrOption[]
+
+  /** Waypoint areas in scope (not archived): targets for Area Card QRs. */
+  areas?: QrOption[]
 
   /** Published forms: targets for form QRs and the linked-forms list. */
   forms?: QrOption[]
@@ -102,6 +106,7 @@ const ManagedQrForm = ({
     asset: String(initialValues.asset_id ?? ''),
     location: initialSettings?.targetType === 'location' ? initialSettings.targetId : '',
     vehicle: initialSettings?.targetType === 'vehicle' ? initialSettings.targetId : '',
+    area: initialSettings?.targetType === 'area' ? initialSettings.targetId : '',
     form: initialSettings?.targetType === 'form' ? initialSettings.targetId : ''
   }))
 
@@ -154,7 +159,8 @@ const ManagedQrForm = ({
     const value = values[field.key]
 
     if (field.key === 'asset_id' || field.fieldType === 'asset') {
-      const options = targetType === 'asset' ? assets : targetType === 'location' ? locations : targetType === 'vehicle' ? vehicles : forms
+      const options =
+        targetType === 'asset' ? assets : targetType === 'location' ? locations : targetType === 'vehicle' ? vehicles : targetType === 'area' ? areas : forms
 
       const placeholder =
         targetType === 'asset'
@@ -163,7 +169,9 @@ const ManagedQrForm = ({
             ? 'Select location...'
             : targetType === 'vehicle'
               ? 'Select vehicle...'
-              : 'Select published form...'
+              : targetType === 'area'
+                ? 'Select area...'
+                : 'Select published form...'
 
       return (
         <div className='flex flex-col gap-2 sm:flex-row'>
@@ -296,7 +304,7 @@ const ManagedQrForm = ({
                 <div className='mt-2'>{renderField(field)}</div>
                 {field.key === 'asset_id' ? (
                   <p className='text-textSecondary mt-1 text-xs'>
-                    An asset, a fleet vehicle, a location or a published form. Vehicle, location and form QR codes open the scan menu.
+                    An asset, a fleet vehicle, a location, a Waypoint area or a published form. Vehicle, location, area and form QR codes open the scan menu.
                   </p>
                 ) : field.helpText ? <p className='text-textSecondary mt-1 text-xs'>{field.helpText}</p> : null}
               </div>

@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 
 import ScanMenu from '@/components/scan/ScanMenu'
 import ScanPageShell from '@/components/scan/ScanPageShell'
+import AreaBriefing from '@/components/waypoint/AreaBriefing'
+import { loadArea, loadAreaBriefing } from '@/lib/forgeWaypoint'
 import { optionalUserId } from '@/lib/platform/identity'
 import { allowsEmployeeIdentification, scanMenuForViewer } from '@/lib/forgeScanRules'
 
@@ -29,9 +31,17 @@ const ScanMenuPage = async ({ params, searchParams }: { params: Promise<{ token:
   const menu = scanMenuForViewer(actions, viewer, qr.accessMode, qr.config)
   const otherCompanyUser = anonymous && Boolean(await optionalUserId())
 
+  // Waypoint Area Card: the "Before you enter" brief comes before the menu. Equipment details need an
+  // employee number or a sign-in. The status light, PPE, hazards and emergency info are for anyone at the door,
+  // unless the QR is set to signed-in users only.
+  const showBriefing = target.type === 'area' && (!anonymous || qr.accessMode !== 'signed_in')
+  const area = showBriefing ? await loadArea(qr.organizationId, target.id) : null
+  const briefing = area ? await loadAreaBriefing(qr.organizationId, area, { detailed: !anonymous }) : null
+
   return (
     <ScanPageShell qr={qr} target={target} viewer={viewer}>
       {qr.description ? <p className='text-textSecondary text-sm'>{qr.description}</p> : null}
+      {briefing ? <AreaBriefing {...briefing} /> : null}
       <ScanMenu
         token={qr.token}
         actions={menu}

@@ -11,7 +11,7 @@
  * - user: signed in and a member of the QR's company, with their effective permissions
  */
 
-export const SCAN_TARGET_TYPES = ['asset', 'location', 'form', 'vehicle'] as const
+export const SCAN_TARGET_TYPES = ['asset', 'location', 'form', 'vehicle', 'area'] as const
 export type ScanTargetType = (typeof SCAN_TARGET_TYPES)[number]
 
 export const SCAN_ACCESS_MODES = ['signed_in', 'employee_number', 'public_report'] as const
