@@ -890,7 +890,7 @@ set assignment_id = '65000000-0000-4000-8000-000000410013',
     approval_status = 'approved',
     approved_by = '20000000-0000-4000-8000-000000000001',
     approved_at = now() - interval '13 days 20 hours',
-    -- certificate_number stays as issued in seed.sql: certificate numbers cannot be changed (forge_training_completions_guard).
+    -- certificate_number stays: forge_training_completions_guard (20261116120000) refuses to change it.
     expires_at = (((now() - interval '14 days') at time zone 'UTC')::date + interval '12 months')::date,
     notes = null,
     created_at = now() - interval '14 days',
