@@ -2,7 +2,7 @@
   "product": "forge-industrial-safety-2.0",
   "version": "2.0.0",
   "basePath": "/v2",
-  "schemaVersion": "20261119160000",
+  "schemaVersion": "20261120140000",
   "database": {
     "schema": "forge2",
     "ledger": "forge2.schema_migrations"
@@ -84,6 +84,15 @@
       "key": "emergency_management",
       "name": "Emergency Management",
       "category": "Safety",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "environmental",
+      "name": "Environmental Safety",
+      "category": "Compliance",
       "type": "module",
       "state": "enabled",
       "requiresEntitlement": true,
@@ -247,6 +256,15 @@
       "name": "Print Manager",
       "category": "Platform",
       "type": "feature",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "process_safety",
+      "name": "Process Safety",
+      "category": "Compliance",
+      "type": "module",
       "state": "enabled",
       "requiresEntitlement": true,
       "tenantConfigurable": true
@@ -914,6 +932,54 @@
       "key": "emergency_management.view",
       "feature": "emergency_management",
       "group": "Emergency Management",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "environmental.manage",
+      "feature": "environmental",
+      "group": "Environmental Safety",
+      "action": "manage",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "environmental.report",
+      "feature": "environmental",
+      "group": "Environmental Safety",
+      "action": "report",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "environmental.view",
+      "feature": "environmental",
+      "group": "Environmental Safety",
       "action": "view",
       "scopes": [
         "own",
@@ -2991,6 +3057,70 @@
       "sensitive": true
     },
     {
+      "key": "process_safety.approve",
+      "feature": "process_safety",
+      "group": "Process Safety",
+      "action": "approve",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "process_safety.manage",
+      "feature": "process_safety",
+      "group": "Process Safety",
+      "action": "manage",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "process_safety.pssr",
+      "feature": "process_safety",
+      "group": "Process Safety",
+      "action": "pssr",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "process_safety.view",
+      "feature": "process_safety",
+      "group": "Process Safety",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
       "key": "qr_management.create",
       "feature": "qr_management",
       "group": "QR Management",
@@ -4325,6 +4455,17 @@
       "routeLive": true
     },
     {
+      "key": "nav.environmental",
+      "parent": null,
+      "label": "Environmental Safety",
+      "route": "/environmental",
+      "feature": "environmental",
+      "category": "Compliance Programs",
+      "sortOrder": 180,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
       "key": "nav.fleet",
       "parent": null,
       "label": "Fleet",
@@ -4475,6 +4616,17 @@
       "feature": "personnel",
       "category": "People & Training",
       "sortOrder": 100,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.process_safety",
+      "parent": null,
+      "label": "Process Safety",
+      "route": "/process-safety",
+      "feature": "process_safety",
+      "category": "Compliance Programs",
+      "sortOrder": 170,
       "enabled": true,
       "routeLive": true
     },
@@ -4662,6 +4814,22 @@
       "/emergency/alerts/new",
       "/emergency/alerts/templates",
       "/emergency/new",
+      "/environmental",
+      "/environmental/events",
+      "/environmental/events/[id]",
+      "/environmental/events/[id]/edit",
+      "/environmental/events/new",
+      "/environmental/obligations",
+      "/environmental/obligations/[id]",
+      "/environmental/obligations/[id]/edit",
+      "/environmental/obligations/new",
+      "/environmental/permits",
+      "/environmental/permits/[id]",
+      "/environmental/permits/[id]/edit",
+      "/environmental/permits/new",
+      "/environmental/waste",
+      "/environmental/waste/[id]/edit",
+      "/environmental/waste/new",
       "/fleet",
       "/fleet/drivers",
       "/fleet/dvirs",
@@ -4761,6 +4929,14 @@
       "/personnel/[id]",
       "/personnel/create",
       "/personnel/structure",
+      "/process-safety",
+      "/process-safety/changes/[id]",
+      "/process-safety/changes/[id]/edit",
+      "/process-safety/changes/new",
+      "/process-safety/pha",
+      "/process-safety/pha/[id]",
+      "/process-safety/pha/[id]/edit",
+      "/process-safety/pha/new",
       "/q/[token]",
       "/q/[token]/loto",
       "/q/unavailable",

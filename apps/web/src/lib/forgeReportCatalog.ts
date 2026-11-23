@@ -3,6 +3,7 @@ import { getScopedAssets } from '@/lib/forgeAssets'
 import { capaReportFacts } from '@/lib/forgeCapaReportRules'
 import { getScopedCorrectiveActions } from '@/lib/forgeCorrectiveActions'
 import { getScopedDriverFiles } from '@/lib/forgeDot'
+import { getScopedEnvEvents } from '@/lib/forgeEnvironmental'
 import { getScopedIncidents } from '@/lib/forgeIncidents'
 import { getScopedInspections } from '@/lib/forgeInspections'
 import { getScopedLockouts, getScopedLotoProcedures } from '@/lib/forgeLoto'
@@ -658,6 +659,58 @@ export const REPORTS: ReportDefinition[] = [
             }
           }
         })
+    }
+  },
+  {
+    key: 'environmental.events',
+    name: 'Environmental events',
+    description: 'Spills, releases, exceedances, complaints and notices of violation, with quantities and whether the agency was told.',
+    module: 'Environmental Safety',
+    permission: 'environmental.view',
+    columns: [
+      { key: 'event_number', label: 'Event', type: 'text' },
+      { key: 'occurred_at', label: 'Occurred', type: 'datetime' },
+      { key: 'event_type', label: 'Type', type: 'text' },
+      { key: 'location', label: 'Location', type: 'text' },
+      { key: 'substance', label: 'Substance', type: 'text' },
+      { key: 'quantity', label: 'Quantity', type: 'number' },
+      { key: 'unit', label: 'Unit', type: 'text' },
+      { key: 'media', label: 'Where it went', type: 'text' },
+      { key: 'reportable', label: 'Reportable', type: 'boolean' },
+      { key: 'agency', label: 'Agency told', type: 'text' },
+      { key: 'agency_notified_at', label: 'Agency told at', type: 'datetime' },
+      { key: 'status', label: 'Status', type: 'text' },
+      { key: 'closed_at', label: 'Closed', type: 'date' }
+    ],
+    dateLabel: 'Occurred',
+    defaultPreset: '12m',
+    statuses: labels(['open', 'closed']),
+    groupable: ['event_type', 'location', 'status', 'reportable'],
+    load: async ({ organizationId, userId, permission }) => {
+      const rows = await getScopedEnvEvents({ organizationId, userId, permission })
+
+      return rows.map(
+        (row: any): ReportRecord => ({
+          day: isoDay(row.occurred_at),
+          locationId: row.location_id,
+          status: row.status,
+          cells: {
+            event_number: row.event_number,
+            occurred_at: row.occurred_at,
+            event_type: humanizeKey(row.event_type),
+            location: lookupName(row.locations),
+            substance: row.substance,
+            quantity: row.quantity === null ? null : Number(row.quantity),
+            unit: row.unit,
+            media: (row.media || []).map(humanizeKey).join(', ') || null,
+            reportable: Boolean(row.reportable),
+            agency: row.agency_name,
+            agency_notified_at: row.agency_notified_at,
+            status: humanizeKey(row.status),
+            closed_at: row.closed_at
+          }
+        })
+      )
     }
   }
 ]
