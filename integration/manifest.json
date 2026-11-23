@@ -2,7 +2,7 @@
   "product": "forge-industrial-safety-2.0",
   "version": "2.0.0",
   "basePath": "/v2",
-  "schemaVersion": "20261120100000",
+  "schemaVersion": "20261120140000",
   "database": {
     "schema": "forge2",
     "ledger": "forge2.schema_migrations"
@@ -84,6 +84,15 @@
       "key": "emergency_management",
       "name": "Emergency Management",
       "category": "Safety",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "environmental",
+      "name": "Environmental Safety",
+      "category": "Compliance",
       "type": "module",
       "state": "enabled",
       "requiresEntitlement": true,
@@ -923,6 +932,54 @@
       "key": "emergency_management.view",
       "feature": "emergency_management",
       "group": "Emergency Management",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "environmental.manage",
+      "feature": "environmental",
+      "group": "Environmental Safety",
+      "action": "manage",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "environmental.report",
+      "feature": "environmental",
+      "group": "Environmental Safety",
+      "action": "report",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "environmental.view",
+      "feature": "environmental",
+      "group": "Environmental Safety",
       "action": "view",
       "scopes": [
         "own",
@@ -4398,6 +4455,17 @@
       "routeLive": true
     },
     {
+      "key": "nav.environmental",
+      "parent": null,
+      "label": "Environmental Safety",
+      "route": "/environmental",
+      "feature": "environmental",
+      "category": "Compliance Programs",
+      "sortOrder": 180,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
       "key": "nav.fleet",
       "parent": null,
       "label": "Fleet",
@@ -4746,6 +4814,22 @@
       "/emergency/alerts/new",
       "/emergency/alerts/templates",
       "/emergency/new",
+      "/environmental",
+      "/environmental/events",
+      "/environmental/events/[id]",
+      "/environmental/events/[id]/edit",
+      "/environmental/events/new",
+      "/environmental/obligations",
+      "/environmental/obligations/[id]",
+      "/environmental/obligations/[id]/edit",
+      "/environmental/obligations/new",
+      "/environmental/permits",
+      "/environmental/permits/[id]",
+      "/environmental/permits/[id]/edit",
+      "/environmental/permits/new",
+      "/environmental/waste",
+      "/environmental/waste/[id]/edit",
+      "/environmental/waste/new",
       "/fleet",
       "/fleet/drivers",
       "/fleet/dvirs",
