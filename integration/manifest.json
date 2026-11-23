@@ -2,7 +2,7 @@
   "product": "forge-industrial-safety-2.0",
   "version": "2.0.0",
   "basePath": "/v2",
-  "schemaVersion": "20261115160000",
+  "schemaVersion": "20261119160000",
   "database": {
     "schema": "forge2",
     "ledger": "forge2.schema_migrations"
@@ -27,6 +27,15 @@
       "tenantConfigurable": true
     },
     {
+      "key": "contractor_safety",
+      "name": "Contractor Safety",
+      "category": "Compliance",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
       "key": "corrective_actions",
       "name": "Corrective Actions",
       "category": "Risk & Prevention",
@@ -43,6 +52,15 @@
       "state": "enabled",
       "requiresEntitlement": false,
       "tenantConfigurable": false
+    },
+    {
+      "key": "document_control",
+      "name": "Document Control",
+      "category": "Compliance",
+      "type": "module",
+      "state": "enabled",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
     },
     {
       "key": "dot",
@@ -104,6 +122,15 @@
       "category": "AI",
       "type": "feature",
       "state": "beta",
+      "requiresEntitlement": true,
+      "tenantConfigurable": true
+    },
+    {
+      "key": "forms",
+      "name": "Forms",
+      "category": "Risk & Prevention",
+      "type": "module",
+      "state": "enabled",
       "requiresEntitlement": true,
       "tenantConfigurable": true
     },
@@ -420,6 +447,86 @@
       "sensitive": false
     },
     {
+      "key": "contractor_safety.approve",
+      "feature": "contractor_safety",
+      "group": "Contractor Safety",
+      "action": "approve",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "contractor_safety.manage",
+      "feature": "contractor_safety",
+      "group": "Contractor Safety",
+      "action": "manage",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "contractor_safety.settings",
+      "feature": "contractor_safety",
+      "group": "Contractor Safety",
+      "action": "settings",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "contractor_safety.sign_in",
+      "feature": "contractor_safety",
+      "group": "Contractor Safety",
+      "action": "sign_in",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "contractor_safety.view",
+      "feature": "contractor_safety",
+      "group": "Contractor Safety",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
       "key": "corrective_actions.archive",
       "feature": "corrective_actions",
       "group": "Corrective Actions",
@@ -548,6 +655,86 @@
       "sensitive": false
     },
     {
+      "key": "documents.approve",
+      "feature": "document_control",
+      "group": "Document Control",
+      "action": "approve",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "documents.manage",
+      "feature": "document_control",
+      "group": "Document Control",
+      "action": "edit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "documents.settings",
+      "feature": "document_control",
+      "group": "Document Control",
+      "action": "configure",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "documents.view",
+      "feature": "document_control",
+      "group": "Document Control",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "documents.view_acknowledgments",
+      "feature": "document_control",
+      "group": "Document Control",
+      "action": "export",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
       "key": "dot.approve",
       "feature": "dot",
       "group": "DOT",
@@ -596,9 +783,89 @@
       "sensitive": true
     },
     {
+      "key": "dot.settings",
+      "feature": "dot",
+      "group": "DOT",
+      "action": "configure",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
       "key": "dot.view",
       "feature": "dot",
       "group": "DOT",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "emergency_alerts.manage_templates",
+      "feature": "emergency_alerts",
+      "group": "Emergency Alerts",
+      "action": "manage_templates",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "emergency_alerts.run_drills",
+      "feature": "emergency_alerts",
+      "group": "Emergency Alerts",
+      "action": "send_drills",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "emergency_alerts.send",
+      "feature": "emergency_alerts",
+      "group": "Emergency Alerts",
+      "action": "send_alerts",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "emergency_alerts.view",
+      "feature": "emergency_alerts",
+      "group": "Emergency Alerts",
       "action": "view",
       "scopes": [
         "own",
@@ -640,7 +907,7 @@
         "organization"
       ],
       "defaultScope": "organization",
-      "tenantAssignable": true,
+      "tenantAssignable": false,
       "sensitive": true
     },
     {
@@ -676,10 +943,58 @@
       "sensitive": false
     },
     {
+      "key": "fleet.dvir",
+      "feature": "fleet",
+      "group": "Fleet",
+      "action": "create",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "fleet.dvir_certify",
+      "feature": "fleet",
+      "group": "Fleet",
+      "action": "approve",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
       "key": "fleet.edit",
       "feature": "fleet",
       "group": "Fleet",
       "action": "edit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "fleet.export",
+      "feature": "fleet",
+      "group": "Fleet",
+      "action": "export",
       "scopes": [
         "own",
         "assigned",
@@ -712,6 +1027,22 @@
       "feature": "fleet",
       "group": "Fleet",
       "action": "retire",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "fleet.settings",
+      "feature": "fleet",
+      "group": "Fleet",
+      "action": "configure",
       "scopes": [
         "own",
         "assigned",
@@ -962,6 +1293,118 @@
       "defaultScope": "organization",
       "tenantAssignable": true,
       "sensitive": true
+    },
+    {
+      "key": "forms.archive",
+      "feature": "forms",
+      "group": "Forms",
+      "action": "archive",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "forms.edit",
+      "feature": "forms",
+      "group": "Forms",
+      "action": "edit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "location",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "forms.export",
+      "feature": "forms",
+      "group": "Forms",
+      "action": "export",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "forms.manage",
+      "feature": "forms",
+      "group": "Forms",
+      "action": "configure",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "forms.sign_director",
+      "feature": "forms",
+      "group": "Forms",
+      "action": "approve",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
+      "key": "forms.submit",
+      "feature": "forms",
+      "group": "Forms",
+      "action": "create",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "forms.view",
+      "feature": "forms",
+      "group": "Forms",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "own",
+      "tenantAssignable": true,
+      "sensitive": false
     },
     {
       "key": "helpdesk.admin.announcements",
@@ -2132,6 +2575,22 @@
       "sensitive": true
     },
     {
+      "key": "loto.settings",
+      "feature": "loto",
+      "group": "Lockout / Tagout",
+      "action": "configure",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
       "key": "loto.view",
       "feature": "loto",
       "group": "Lockout / Tagout",
@@ -2596,6 +3055,22 @@
       "sensitive": true
     },
     {
+      "key": "qr_management.service_status",
+      "feature": "qr_management",
+      "group": "Scan",
+      "action": "edit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "location",
+      "tenantAssignable": true,
+      "sensitive": true
+    },
+    {
       "key": "qr_management.view",
       "feature": "qr_management",
       "group": "QR Management",
@@ -2608,6 +3083,22 @@
         "organization"
       ],
       "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "qr_management.view_issues",
+      "feature": "qr_management",
+      "group": "Scan",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "location",
       "tenantAssignable": true,
       "sensitive": false
     },
@@ -2817,13 +3308,45 @@
       ],
       "defaultScope": "organization",
       "tenantAssignable": true,
-      "sensitive": true
+      "sensitive": false
     },
     {
       "key": "reporting.manage_dashboards",
       "feature": "reporting",
       "group": "Reporting",
       "action": "manage_dashboards",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "reporting.schedule",
+      "feature": "reporting",
+      "group": "Reporting",
+      "action": "edit",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
+      "key": "reporting.share",
+      "feature": "reporting",
+      "group": "Reporting",
+      "action": "edit",
       "scopes": [
         "own",
         "assigned",
@@ -2850,6 +3373,22 @@
       "defaultScope": "organization",
       "tenantAssignable": true,
       "sensitive": false
+    },
+    {
+      "key": "reporting.view_sensitive",
+      "feature": "reporting",
+      "group": "Reporting",
+      "action": "view",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": true
     },
     {
       "key": "risk_register.accept",
@@ -3444,6 +3983,22 @@
       "sensitive": false
     },
     {
+      "key": "training.reports",
+      "feature": "training",
+      "group": "Training",
+      "action": "reports",
+      "scopes": [
+        "own",
+        "assigned",
+        "location",
+        "division",
+        "organization"
+      ],
+      "defaultScope": "organization",
+      "tenantAssignable": true,
+      "sensitive": false
+    },
+    {
       "key": "training.view",
       "feature": "training",
       "group": "Training",
@@ -3693,6 +4248,17 @@
       "routeLive": true
     },
     {
+      "key": "nav.contractor_safety",
+      "parent": null,
+      "label": "Contractor Safety",
+      "route": "/contractors",
+      "feature": "contractor_safety",
+      "category": "Compliance Programs",
+      "sortOrder": 165,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
       "key": "nav.corrective_actions",
       "parent": null,
       "label": "Corrective Actions",
@@ -3715,6 +4281,17 @@
       "routeLive": true
     },
     {
+      "key": "nav.document_control",
+      "parent": null,
+      "label": "Document Control",
+      "route": "/documents",
+      "feature": "document_control",
+      "category": "System Tools",
+      "sortOrder": 242,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
       "key": "nav.dot",
       "parent": null,
       "label": "DOT",
@@ -3723,7 +4300,29 @@
       "category": "Compliance Programs",
       "sortOrder": 160,
       "enabled": true,
-      "routeLive": false
+      "routeLive": true
+    },
+    {
+      "key": "nav.emergency_alerts",
+      "parent": null,
+      "label": "Emergency Alerts",
+      "route": "/emergency/alerts",
+      "feature": "emergency_alerts",
+      "category": "Emergency Management",
+      "sortOrder": 200,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.emergency_plans",
+      "parent": null,
+      "label": "Emergency Plans",
+      "route": "/emergency",
+      "feature": "emergency_management",
+      "category": "Emergency Management",
+      "sortOrder": 210,
+      "enabled": true,
+      "routeLive": true
     },
     {
       "key": "nav.fleet",
@@ -3734,7 +4333,7 @@
       "category": "Equipment & Operations",
       "sortOrder": 180,
       "enabled": true,
-      "routeLive": false
+      "routeLive": true
     },
     {
       "key": "nav.forge_ai",
@@ -3766,6 +4365,17 @@
       "feature": "forge_ai",
       "category": "Forge AI",
       "sortOrder": 256,
+      "enabled": true,
+      "routeLive": true
+    },
+    {
+      "key": "nav.forms",
+      "parent": null,
+      "label": "Forms",
+      "route": "/forms",
+      "feature": "forms",
+      "category": "Risk & Prevention",
+      "sortOrder": 118,
       "enabled": true,
       "routeLive": true
     },
@@ -3899,7 +4509,7 @@
       "category": "System Tools",
       "sortOrder": 260,
       "enabled": true,
-      "routeLive": false
+      "routeLive": true
     },
     {
       "key": "nav.risk_register",
@@ -4000,13 +4610,97 @@
       "/auth/magic-link",
       "/auth/register",
       "/auth/verify-email",
+      "/closeout/[token]",
       "/company/settings",
       "/company/settings/forms",
       "/company/settings/lookups",
+      "/contractors",
+      "/contractors/[id]",
+      "/contractors/[id]/documents",
+      "/contractors/[id]/documents/[documentId]",
+      "/contractors/[id]/edit",
+      "/contractors/new",
+      "/contractors/on-site",
+      "/contractors/settings",
+      "/contractors/workers/[id]",
+      "/contractors/workers/new",
       "/corrective-actions",
       "/corrective-actions/[id]",
       "/corrective-actions/create",
+      "/corrective-actions/reports",
+      "/corrective-actions/reports/export",
       "/dashboard",
+      "/documents",
+      "/documents/[id]",
+      "/documents/[id]/acknowledgments.csv",
+      "/documents/[id]/edit",
+      "/documents/[id]/versions",
+      "/documents/[id]/versions/[versionId]",
+      "/documents/[id]/versions/[versionId]/file",
+      "/documents/acknowledgments",
+      "/documents/approvals",
+      "/documents/archived",
+      "/documents/new",
+      "/documents/reviews",
+      "/documents/settings",
+      "/dot",
+      "/dot/company-drivers",
+      "/dot/company-drivers/[id]",
+      "/dot/drivers",
+      "/dot/drivers/[id]",
+      "/dot/drivers/new",
+      "/dot/records",
+      "/dot/records/[id]",
+      "/dot/records/new",
+      "/dot/reports",
+      "/dot/settings",
+      "/emergency",
+      "/emergency/[id]",
+      "/emergency/[id]/edit",
+      "/emergency/alerts",
+      "/emergency/alerts/[id]",
+      "/emergency/alerts/new",
+      "/emergency/alerts/templates",
+      "/emergency/new",
+      "/fleet",
+      "/fleet/drivers",
+      "/fleet/dvirs",
+      "/fleet/dvirs/[id]",
+      "/fleet/dvirs/[id]/print",
+      "/fleet/dvirs/new",
+      "/fleet/dvirs/print",
+      "/fleet/import",
+      "/fleet/import/run",
+      "/fleet/import/template",
+      "/fleet/maintenance",
+      "/fleet/maintenance/[id]",
+      "/fleet/maintenance/new",
+      "/fleet/removed",
+      "/fleet/renewals",
+      "/fleet/reports",
+      "/fleet/reports/inventory",
+      "/fleet/reports/removed",
+      "/fleet/settings",
+      "/fleet/vehicles",
+      "/fleet/vehicles/[id]",
+      "/fleet/vehicles/[id]/documents",
+      "/fleet/vehicles/[id]/documents/[documentId]",
+      "/fleet/vehicles/[id]/edit",
+      "/fleet/vehicles/new",
+      "/forms",
+      "/forms/fill/[templateId]",
+      "/forms/import",
+      "/forms/import/run",
+      "/forms/submissions",
+      "/forms/submissions/[id]",
+      "/forms/submissions/[id]/edit",
+      "/forms/submissions/[id]/print",
+      "/forms/submissions/photos",
+      "/forms/submissions/photos/[photoId]",
+      "/forms/templates/[id]",
+      "/forms/templates/[id]/print",
+      "/forms/templates/import",
+      "/forms/templates/new",
       "/help-desk",
       "/help-desk/announcements",
       "/help-desk/articles",
@@ -4031,6 +4725,7 @@
       "/help-desk/tickets/new",
       "/incidents",
       "/incidents/[id]",
+      "/incidents/[id]/rca/print",
       "/incidents/create",
       "/inspections",
       "/inspections/[id]",
@@ -4042,8 +4737,12 @@
       "/jsas/[id]/revisions/[versionId]",
       "/jsas/create",
       "/loto",
+      "/loto-print",
       "/loto/[id]",
       "/loto/create",
+      "/loto/lockouts",
+      "/loto/lockouts/[id]",
+      "/loto/settings",
       "/my-profile",
       "/my-training",
       "/my-training/[assignmentId]",
@@ -4063,15 +4762,31 @@
       "/personnel/create",
       "/personnel/structure",
       "/q/[token]",
+      "/q/[token]/loto",
       "/q/unavailable",
       "/qr",
       "/qr/[id]",
       "/qr/create",
+      "/qr/issues",
+      "/reporting",
+      "/reporting/[key]",
+      "/reporting/[key]/export",
+      "/reporting/history",
+      "/reporting/saved",
+      "/reporting/saved/[id]",
       "/reset-password",
       "/risk-register",
       "/risk-register/[id]",
       "/risk-register/create",
       "/risk-register/matrices",
+      "/scan",
+      "/scan/[token]",
+      "/scan/[token]/dvir/[trip]",
+      "/scan/[token]/history",
+      "/scan/[token]/inspect/[frequency]",
+      "/scan/[token]/report",
+      "/scan/[token]/report/photos",
+      "/sign/[token]",
       "/support",
       "/support/[id]",
       "/tasks",
@@ -4089,9 +4804,15 @@
       "/training/courses/[id]/paper",
       "/training/courses/create",
       "/training/groups",
+      "/training/library",
       "/training/matrix",
+      "/training/notices",
       "/training/paper",
       "/training/portal",
+      "/training/reports",
+      "/training/reports/activity",
+      "/training/reports/overdue",
+      "/training/reports/qc",
       "/training/settings",
       "/workers-comp",
       "/workers-comp/[id]",
@@ -4105,11 +4826,19 @@
       "/workers-comp/weekly"
     ],
     "api": [
+      "/api/closeout/[token]",
+      "/api/corrective-actions/cron",
+      "/api/documents/cron",
+      "/api/dot/compliance-report",
+      "/api/dot/files",
+      "/api/dot/files/[id]",
       "/api/evidence/[evidenceId]",
       "/api/evidence/upload",
+      "/api/fleet/cron",
       "/api/forge-ai/chat",
       "/api/forge-ai/knowledge/upload",
       "/api/forge-ai/watch/cron",
+      "/api/forms/sign/[token]",
       "/api/helpdesk/attachments/[id]",
       "/api/helpdesk/cron",
       "/api/helpdesk/export/analytics",
@@ -4118,11 +4847,17 @@
       "/api/helpdesk/knowledge/media/[id]",
       "/api/helpdesk/status",
       "/api/helpdesk/tickets/[id]/attachments",
+      "/api/loto/photos",
       "/api/osha/log",
+      "/api/reporting/cron",
       "/api/support/[id]/attachments",
       "/api/support/attachments/[attachmentId]",
+      "/api/training/completion-files/[id]",
+      "/api/training/completions/[id]/files",
+      "/api/training/cron",
       "/api/training/materials",
       "/api/training/matrix",
+      "/api/training/reports/[kind]",
       "/api/workers-comp/cron",
       "/api/workers-comp/forms/[formId]/pdf",
       "/api/workers-comp/forms/templates",
@@ -4152,6 +4887,13 @@
       "path": "/api/forge-ai/watch/cron",
       "secret": "FORGE_AI_CRON_SECRET",
       "schedule": "rate(1 day)"
+    },
+    {
+      "key": "corrective-actions",
+      "method": "POST",
+      "path": "/api/corrective-actions/cron",
+      "secret": "FORGE_CRON_SECRET",
+      "schedule": "rate(1 hour)"
     }
   ]
 }
