@@ -3,6 +3,7 @@ name: Forge module validation
 on:
   pull_request:
     branches:
+      - main
       - forge-creator-2.0
 
 permissions:
