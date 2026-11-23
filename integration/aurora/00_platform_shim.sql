@@ -43,7 +43,13 @@ grant forge2_anon, forge2_authenticated, forge2_service to forge2_authenticator;
 
 -- The administrator running this file is not a true superuser on Aurora (rds_superuser) or
 -- Supabase, so it must be a member of forge2_migrator to hand ownership to it.
-grant forge2_migrator to current_user;
+-- The role is named, not written as CURRENT_USER: supautils on older Supabase Postgres images
+-- (15.8.1.x, used in CI) crashes the server on GRANT ... TO CURRENT_USER.
+do $$
+begin
+  execute format('grant forge2_migrator to %I', current_user);
+end
+$$;
 
 alter schema forge2 owner to forge2_migrator;
 alter schema forge2_auth owner to forge2_migrator;
