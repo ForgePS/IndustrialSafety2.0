@@ -13,6 +13,8 @@ import { getScopedLockouts, getScopedLotoProcedures } from '@/lib/forgeLoto'
 import { lotoReviewOverdue } from '@/lib/forgeLotoRules'
 import { listObservations } from '@/lib/forgeObservations'
 import { getScopedOshaCases } from '@/lib/forgeOsha'
+import { covers, listPermits, permitRights } from '@/lib/forgePermitAccess'
+import { OPEN_STATUSES } from '@/lib/forgePermitRules'
 import { getScopedTasks } from '@/lib/forgeTasks'
 import { getTrainingOverview } from '@/lib/forgeTraining'
 import { trainingTodayIso } from '@/lib/forgeTrainingLms'
@@ -246,6 +248,27 @@ export const getDashboardData = async ({
     const toRead = await quietly('documents to read', async () => (await pendingAcknowledgments(organizationId, userId)).length)
 
     if (toRead !== null) attention.push({ key: 'documents-to-read', label: 'Documents to read', count: toRead, href: '/documents/acknowledgments', tone: 'primary' })
+  }
+
+  // Port slice 18: permits waiting for the viewer's approval, and open permits past their end time at the
+  // locations they approve for.
+  if (allowed(access, 'permits.approve')) {
+    const permits = await quietly('permits', async () => {
+      const rights = await permitRights(organizationId, userId, access)
+      const rows = await listPermits({ organizationId, rights, open: true })
+      const now = Date.now()
+      const approvable = rows.filter((row: any) => covers(rights.approve, row.location_id))
+
+      return {
+        waiting: approvable.filter((row: any) => row.status === 'requested' && row.requested_by !== userId).length,
+        expired: approvable.filter((row: any) => OPEN_STATUSES.includes(row.status) && new Date(row.valid_until).getTime() <= now).length
+      }
+    })
+
+    if (permits) {
+      attention.push({ key: 'permits-waiting', label: 'Permits waiting for your approval', count: permits.waiting, href: '/permits', tone: 'warning' })
+      attention.push({ key: 'permits-expired', label: 'Open permits past their end time', count: permits.expired, href: '/permits', tone: 'danger' })
+    }
   }
 
   if (oshaScope && incidents) {
