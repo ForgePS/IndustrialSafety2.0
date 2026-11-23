@@ -160,7 +160,7 @@ export const loadMoc = async ({ organizationId, rights, id }: { organizationId: 
       .order('created_at'),
     supabase.from('forge_moc_documents').select('id, document_id, created_at, forge_documents(id, document_number, name, status, archived_at)').eq('moc_id', moc.id).order('created_at'),
     supabase.from('forge_psm_activity').select('id, activity_type, message, actor_user_id, created_at').eq('moc_id', moc.id).order('created_at', { ascending: false }).limit(200),
-    supabase.from('forge_pha_studies').select('id, pha_number, title, status').eq('moc_id', moc.id).is('archived_at', null).order('pha_number')
+    supabase.from('forge_pha_studies').select('id, pha_number, title, status, location_id').eq('moc_id', moc.id).is('archived_at', null).order('pha_number')
   ])
 
   const live = ((actions || []) as any[]).filter(action => !action.removed_at)
@@ -177,7 +177,8 @@ export const loadMoc = async ({ organizationId, rights, id }: { organizationId: 
     actions: (actions || []) as any[],
     documents: (documents || []) as any[],
     activity: (activity || []) as any[],
-    phas: (phas || []) as any[],
+    // A linked study at another location is only shown to people who can view that location.
+    phas: ((phas || []) as any[]).filter(pha => covers(rights.view, pha.location_id)),
     blockers,
     canManage: covers(rights.manage, moc.location_id),
     canApprove: Boolean(myApproval) && covers(rights.approve, moc.location_id),
@@ -280,10 +281,11 @@ export const loadPha = async ({ organizationId, rights, id }: { organizationId: 
       .eq('pha_id', pha.id)
       .order('created_at'),
     supabase.from('forge_psm_activity').select('id, activity_type, message, actor_user_id, created_at').eq('pha_id', pha.id).order('created_at', { ascending: false }).limit(200),
-    pha.moc_id ? supabase.from('forge_moc_changes').select('id, moc_number, title').eq('id', pha.moc_id).maybeSingle() : Promise.resolve({ data: null })
+    pha.moc_id ? supabase.from('forge_moc_changes').select('id, moc_number, title, location_id').eq('id', pha.moc_id).maybeSingle() : Promise.resolve({ data: null })
   ])
 
-  return { pha, actions: (actions || []) as any[], activity: (activity || []) as any[], moc, canManage: covers(rights.manage, pha.location_id) }
+  // Likewise a linked change at another location.
+  return { pha, actions: (actions || []) as any[], activity: (activity || []) as any[], moc: moc && covers(rights.view, (moc as any).location_id) ? moc : null, canManage: covers(rights.manage, pha.location_id) }
 }
 
 // ---------------------------------------------------------------------------
