@@ -14,6 +14,7 @@ import { allowedQrDefaultActions, qrConfigReferences } from '@/lib/forgeQrDestin
 import { SCAN_FREQUENCY_LABELS, SCAN_TARGET_TYPES, parseQrActionConfig, parseScanAccessMode, SCAN_ACCESS_MODES } from '@/lib/forgeScanRules'
 import type { QrActionConfig, ScanFrequency } from '@/lib/forgeScanRules'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
+import { writeAreaActivity } from '@/lib/forgeWaypoint'
 
 export type QrFormValues = Record<string, string | boolean | null>
 
@@ -122,11 +123,39 @@ const validateTarget = async ({
 
   if (!targetId) {
     return {
-      error: targetType === 'asset' ? 'Linked Asset is required.' : targetType === 'location' ? 'Choose a location.' : targetType === 'vehicle' ? 'Choose a vehicle.' : 'Choose a form.'
+      error:
+        targetType === 'asset'
+          ? 'Linked Asset is required.'
+          : targetType === 'location'
+            ? 'Choose a location.'
+            : targetType === 'vehicle'
+              ? 'Choose a vehicle.'
+              : targetType === 'area'
+                ? 'Choose an area.'
+                : 'Choose a form.'
     }
   }
 
   const unchanged = current?.target_type === targetType && current?.target_id === targetId
+
+  if (targetType === 'area') {
+    // Waypoint Area Card: the area must be active and its location inside the user's QR Management scope.
+    const { data: area } = await supabase
+      .from('forge_areas')
+      .select('id, name, location_id, archived_at, locations(name)')
+      .eq('organization_id', organizationId)
+      .eq('id', targetId)
+      .maybeSingle()
+
+    if (!area) return { error: 'Area was not found.' }
+    if (area.archived_at) return { error: 'This area is archived.' }
+
+    if (!(await locationWithinScope({ organizationId, userId, scope, locationId: area.location_id }))) {
+      return { error: 'This area is outside your QR Management scope.' }
+    }
+
+    return { target: { type: 'area', id: area.id, label: [area.name, area.locations?.name].filter(Boolean).join(' · ') } }
+  }
 
   if (targetType === 'asset') {
     const { data: asset } = await supabase
@@ -279,7 +308,7 @@ const parseDefaultAction = (values: QrFormValues, targetType: string) => {
   const defaultAction = cleanText(values.default_action) || 'scan_menu'
 
   if (!allowedQrDefaultActions(targetType).includes(defaultAction)) {
-    return { error: targetType === 'asset' ? 'Invalid QR Default Action.' : 'Location, form and vehicle QR codes always open the scan menu.' }
+    return { error: targetType === 'asset' ? 'Invalid QR Default Action.' : 'Location, area, form and vehicle QR codes always open the scan menu.' }
   }
 
   return { defaultAction }
@@ -372,6 +401,18 @@ export const createManagedQrCode = async (values: QrFormValues, settings?: Parti
       target_label: target.target.label
     }
   })
+
+  if (target.target.type === 'area') {
+    await writeAreaActivity({
+      organizationId,
+      areaId: target.target.id,
+      actorUserId: context.user.id,
+      type: 'qr_created',
+      message: `Area Card QR ${qrCode.qr_number} created.`,
+      metadata: { qr_code_id: qrCode.id }
+    })
+    revalidatePath('/waypoint/' + target.target.id)
+  }
 
   revalidatePath('/qr')
 

@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: 'Create Managed QR Code' }
 const CreateQrCodePage = async ({
   searchParams
 }: {
-  searchParams: Promise<{ asset?: string; location?: string; form?: string; vehicle?: string }>
+  searchParams: Promise<{ asset?: string; location?: string; form?: string; vehicle?: string; area?: string }>
 }) => {
   const context = await requireTenantPermission('qr_management.create')
   const organizationId = context.activeOrganization.id
@@ -37,11 +37,13 @@ const CreateQrCodePage = async ({
   const selectedLocation = query.location && options.locations.some(item => item.id === query.location) ? query.location : ''
   const selectedForm = query.form && options.forms.some(item => item.id === query.form) ? query.form : ''
   const selectedVehicle = query.vehicle && options.vehicles.some(item => item.id === query.vehicle) ? query.vehicle : ''
+  const selectedArea = query.area ? options.areas.find(item => item.id === query.area) : undefined
 
   const initialValues: QrFormValues = {
     asset_id: selectedAsset,
     default_action: 'scan_menu',
-    status: 'active'
+    status: 'active',
+    ...(selectedArea ? { name: 'Area Card · ' + selectedArea.label.split(' · ')[0] } : {})
   }
 
   return (
@@ -56,9 +58,11 @@ const CreateQrCodePage = async ({
         form={form}
         initialValues={initialValues}
         initialSettings={{
-          targetType: selectedVehicle ? 'vehicle' : selectedLocation ? 'location' : selectedForm ? 'form' : 'asset',
-          targetId: selectedVehicle || selectedLocation || selectedForm || selectedAsset,
-          accessMode: 'signed_in',
+          targetType: selectedArea ? 'area' : selectedVehicle ? 'vehicle' : selectedLocation ? 'location' : selectedForm ? 'form' : 'asset',
+          targetId: selectedArea?.id || selectedVehicle || selectedLocation || selectedForm || selectedAsset,
+
+          // An Area Card hangs at the entrance for anyone walking in, so default to employee-number access.
+          accessMode: selectedArea ? 'employee_number' : 'signed_in',
           actionConfig: {}
         }}
         assets={assets.map((asset: any) => ({
@@ -67,6 +71,7 @@ const CreateQrCodePage = async ({
         }))}
         locations={options.locations}
         vehicles={options.vehicles}
+        areas={options.areas}
         forms={options.forms}
         inspectionTemplates={options.inspectionTemplates}
       />

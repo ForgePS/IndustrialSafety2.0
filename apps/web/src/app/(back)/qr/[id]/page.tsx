@@ -164,6 +164,10 @@ const QrCodeDetailPage = async ({ params }: { params: Promise<{ id: string }> })
     ? [...options.vehicles, { id: target.id, label: (target.detail ? target.detail + ' · ' : '') + target.name + ' (removed)' }]
     : options.vehicles
 
+  const areaOptions = target?.type === 'area' && !options.areas.some(item => item.id === target.id)
+    ? [...options.areas, { id: target.id, label: target.name + (target.detail ? ' · ' + target.detail : '') }]
+    : options.areas
+
   const formOptions = target?.type === 'form' && !options.forms.some(item => item.id === target.id)
     ? [...options.forms, { id: target.id, label: target.name + ' (not published)' }]
     : options.forms
@@ -301,6 +305,7 @@ const QrCodeDetailPage = async ({ params }: { params: Promise<{ id: string }> })
         }))}
         locations={locationOptions}
         vehicles={vehicleOptions}
+        areas={areaOptions}
         forms={formOptions}
         inspectionTemplates={options.inspectionTemplates}
       />

@@ -53,7 +53,9 @@ const ScanPageShell = ({
               ? [target.type === 'vehicle' ? 'Vehicle ' + target.number : target.number, target.locationName].filter(Boolean).join(' · ')
               : target.type === 'location'
                 ? 'Location'
-                : 'Form'}
+                : target.type === 'area'
+                  ? ['Area', target.code, target.locationName].filter(Boolean).join(' · ')
+                  : 'Form'}
             {' · '}
             {qr.qrNumber}
           </p>

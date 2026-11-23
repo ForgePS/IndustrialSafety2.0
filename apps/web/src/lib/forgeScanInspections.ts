@@ -88,6 +88,7 @@ export const scanInspectionPlace = (target: ScanTarget): { locationId: string; d
   }
 
   if (target.type === 'location') return { locationId: target.locationId, divisionId: null }
+  if (target.type === 'area') return { locationId: target.locationId, divisionId: target.divisionId }
 
   return { error: 'Inspections cannot be started from a form QR code.' }
 }

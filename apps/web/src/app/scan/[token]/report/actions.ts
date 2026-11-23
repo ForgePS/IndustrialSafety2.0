@@ -113,8 +113,8 @@ export const submitIssueReport = async (token: string, input: Record<string, unk
       ? { id: target.id, location_id: target.locationId, division_id: target.divisionId, assigned_driver_personnel_id: target.assignedDriverPersonnelId }
       : null
 
-  const locationId = target.type === 'asset' || target.type === 'vehicle' || target.type === 'location' ? target.locationId : null
-  const divisionId = target.type === 'asset' || target.type === 'vehicle' ? target.divisionId : null
+  const locationId = target.type === 'asset' || target.type === 'vehicle' || target.type === 'location' || target.type === 'area' ? target.locationId : null
+  const divisionId = target.type === 'asset' || target.type === 'vehicle' || target.type === 'area' ? target.divisionId : null
   const noun = vehicle ? 'vehicle' : 'equipment'
 
   const { data: report, error: reportError } = await supabase
@@ -126,6 +126,7 @@ export const submitIssueReport = async (token: string, input: Record<string, unk
       target_id: target.id,
       asset_id: target.type === 'asset' ? target.id : null,
       vehicle_id: vehicle ? vehicle.id : null,
+      area_id: target.type === 'area' ? target.id : null,
       location_id: locationId,
       title: value.title,
       description: value.description,

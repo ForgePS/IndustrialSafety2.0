@@ -89,6 +89,18 @@ export const qrCodeWithinScope = async ({
   if (!scope) return false
   if (qrCode.target_type === 'form') return true
 
+  // Waypoint Area Cards follow the area's location.
+  if (qrCode.target_type === 'area') {
+    const { data: area } = await (createServiceRoleClient() as any)
+      .from('forge_areas')
+      .select('location_id')
+      .eq('organization_id', organizationId)
+      .eq('id', qrCode.target_id)
+      .maybeSingle()
+
+    return Boolean(area) && locationWithinScope({ organizationId, userId, scope, locationId: area.location_id })
+  }
+
   if (qrCode.target_type === 'location') {
     return locationWithinScope({ organizationId, userId, scope, locationId: qrCode.target_id })
   }
@@ -233,7 +245,7 @@ export const getScopedQrCodes = async ({
 }
 
 export type QrTarget = {
-  type: 'asset' | 'location' | 'form' | 'vehicle'
+  type: 'asset' | 'location' | 'form' | 'vehicle' | 'area'
   id: string
   name: string
   detail: string | null
@@ -273,6 +285,26 @@ export const getQrTarget = async ({
       .maybeSingle()
 
     return data ? { type: 'location', id: data.id, name: data.name, detail: data.code || null, href: null, asset: null } : null
+  }
+
+  if (targetType === 'area') {
+    const { data } = await supabase
+      .from('forge_areas')
+      .select('id, name, code, archived_at, locations(name)')
+      .eq('organization_id', organizationId)
+      .eq('id', targetId)
+      .maybeSingle()
+
+    return data
+      ? {
+          type: 'area',
+          id: data.id,
+          name: data.name,
+          detail: [data.code, data.locations?.name, data.archived_at ? 'Archived' : null].filter(Boolean).join(' · ') || null,
+          href: '/waypoint/' + data.id,
+          asset: null
+        }
+      : null
   }
 
   if (targetType === 'vehicle') {
