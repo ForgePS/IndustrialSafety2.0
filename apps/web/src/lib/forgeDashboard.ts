@@ -7,6 +7,8 @@ import { getScopedCompanyDrivers, getScopedDotRecords, getScopedDriverFiles } fr
 import { buildDotAttentionCards, dotDueOverdueLabel } from '@/lib/forgeDotRules'
 import type { EffectivePermission } from '@/lib/forgeEffectiveAccess'
 import type { EffectiveExperienceElement } from '@/lib/forgeExperience'
+import { covers as forkliftCovers, forkliftRights, listOperators } from '@/lib/forgeForkliftAccess'
+import { matchesStanding, operatorStandings } from '@/lib/forgeForkliftOperators'
 import { getScopedIncidents } from '@/lib/forgeIncidents'
 import { getScopedInspections } from '@/lib/forgeInspections'
 import { getScopedLockouts, getScopedLotoProcedures } from '@/lib/forgeLoto'
@@ -269,6 +271,20 @@ export const getDashboardData = async ({
       attention.push({ key: 'permits-waiting', label: 'Permits waiting for your approval', count: permits.waiting, href: '/permits', tone: 'warning' })
       attention.push({ key: 'permits-expired', label: 'Open permits past their end time', count: permits.expired, href: '/permits', tone: 'danger' })
     }
+  }
+
+  // Port slice 19: forklift operators the viewer authorizes whose evaluation has expired, is due within the reminder
+  // window, or who need refresher training.
+  if (allowed(access, 'forklifts.authorize')) {
+    const due = await quietly('forklift operators', async () => {
+      const rights = await forkliftRights(organizationId, userId, access)
+      const operators = (await listOperators({ organizationId, rights })).filter(operator => forkliftCovers(rights.authorize, operator.person.locationId))
+      const { standings } = await operatorStandings(organizationId, operators)
+
+      return operators.filter(operator => matchesStanding(standings.get(operator.id) || 'none', 'due')).length
+    })
+
+    if (due !== null) attention.push({ key: 'forklift-operators-due', label: 'Forklift operators due for re-evaluation', count: due, href: '/forklifts/operators?standing=due', tone: 'warning' })
   }
 
   if (oshaScope && incidents) {

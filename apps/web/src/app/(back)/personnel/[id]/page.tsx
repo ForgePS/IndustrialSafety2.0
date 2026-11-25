@@ -18,6 +18,7 @@ import { personnelRecordWithinScope } from '@/lib/forgeScope'
 import { requireTenantPermission } from '@/lib/forgeTenantAuth'
 import ForgeAiContextButton from '@/components/forge-ai/ForgeAiContextButton'
 import PersonnelTrainingCard from '@/components/training/PersonnelTrainingCard'
+import PersonnelForkliftCard from '@/components/forklifts/PersonnelForkliftCard'
 
 export const metadata: Metadata = { title: 'Personnel Profile' }
 
@@ -295,6 +296,8 @@ const PersonnelDetailPage = async ({ params }: { params: Promise<{ id: string }>
       ) : null}
 
       {canSeeTraining ? <PersonnelTrainingCard organizationId={organizationId} personnelId={record.id} canAttach={canAttachTraining} /> : null}
+
+      <PersonnelForkliftCard organizationId={organizationId} userId={context.user.id} access={context.access} personnelId={record.id} locationId={record.location_id || null} />
 
       <Card data-testid='personnel-employment-history'>
         <CardHeader>

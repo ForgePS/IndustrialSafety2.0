@@ -10,6 +10,7 @@ import AssetRecordForm from '../AssetRecordForm'
 import AssetRetireCard from '../AssetRetireCard'
 import type { AssetFormValues } from '../actions'
 import { assetWithinScope, getAssetDetailData } from '@/lib/forgeAssets'
+import { truckForAsset } from '@/lib/forgeForkliftAccess'
 import { incidentWithinScope } from '@/lib/forgeIncidents'
 import { getEffectiveForm } from '@/lib/forgeForms'
 import { getEffectiveLookup } from '@/lib/forgeLookups'
@@ -117,6 +118,8 @@ const AssetDetailPage = async ({ params }: { params: Promise<{ id: string }> }) 
     within(qrViewPermission)
   ])
 
+  const forklift = permissions.get('forklifts.view') ? await truckForAsset(organizationId, id) : null
+
   const lotoProcedures: any[] = (await within(lotoViewPermission))
     ? await getLotoProceduresForAsset({ organizationId, assetId: id })
     : []
@@ -210,6 +213,18 @@ const AssetDetailPage = async ({ params }: { params: Promise<{ id: string }> }) 
         <Card><CardHeader className='pb-2'><CardDescription>Location</CardDescription></CardHeader><CardContent><div className='font-semibold'>{asset.locations?.name || '—'}</div></CardContent></Card>
         <Card><CardHeader className='pb-2'><CardDescription>Custodian</CardDescription></CardHeader><CardContent><div className='font-semibold'>{asset.forge_personnel ? asset.forge_personnel.first_name + ' ' + asset.forge_personnel.last_name : '—'}</div></CardContent></Card>
       </div>
+
+      {forklift ? (
+        <Card data-asset-forklift>
+          <CardHeader className='flex flex-row flex-wrap items-center justify-between gap-2'>
+            <div>
+              <CardTitle>This is a forklift</CardTitle>
+              <CardDescription>Pre-shift checks, defects and operators are kept under Forklifts.</CardDescription>
+            </div>
+            <Button variant='outline' asChild><Link href={'/forklifts/trucks/' + forklift.id}>Open forklift</Link></Button>
+          </CardHeader>
+        </Card>
+      ) : null}
 
       {asset.retired_at ? (
         <Card>
